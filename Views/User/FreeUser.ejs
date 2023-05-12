@@ -1,0 +1,336 @@
+<%- include('../Layout/Header') %>
+<link rel="stylesheet" href="//cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css">
+import session from "express-session"
+
+<%- include('../Layout/Sidebar') %>
+<div id="main">
+  <div class="page-heading">
+    <div class="page-title mb-3">
+      <div class="row">
+        <div class="col-12 col-md-6 order-md-1 order-last">
+          <h3><a href="<%= baseUrl %>admin/dashboard" class="text-primary"><i class="fas fa-arrow-left me-2"></i></a>Free Users</h3>
+        </div>
+        <div class="col-12 col-md-6 order-md-2 order-first">
+          <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="<%= baseUrl %>admin/dashboard">Dashboard</a>
+              </li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+    <section class="section">
+      <div class="card-body">     
+        <div class="category-filter">
+            <label>
+                Country: 
+                <select id="categoryFilter" class="form-control">
+                  <option value="">Show All</option>
+                  <% var i=1; country1.forEach(function(v) { %>
+                    <option value="<%= v._id.country %>"><%= v._id.country %></option>
+                    <% }) %>
+                </select>        
+            </label>        
+          </div>
+        <div class="table-responsive">
+          <table class="table table-striped mb-0" id="filterTable">
+            <thead>
+              <tr>
+                <th>No.</th>
+                <th>Member Id</th>
+                <th>UserName</th>
+                <th>TG-id</th>
+                <th>Email</th>
+                <th>Country</th>
+                <th>JoinDate</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% var i=1; freeuser.forEach(function(v) { %>
+              <% if( v.usertype == 0) { %>
+              <tr data-id="<%= v._id%>">
+                <td><span class="name-field">
+                    <%= i %>
+                  </span></td>
+                <td><span class="name-field">
+                    <%= v.memberid%>
+                  </span></td>
+                <td><span class="name-field">
+                    <%= v.username%>
+                  </span></td>
+                <td><span class="name-field">
+                    <a href="https://t.me/<%= v.tgid%>"> https://t.me/<%= v.tgid%></a>
+                  </span></td>
+                <td><span class="name-field">
+                    <a href='mailto:<%= v.email%>'>
+                      <%= v.email%>
+                    </a>
+                  </span></td>
+                <td><span class="name-field">
+                    <%= v.country%>
+                  </span></td>
+                <td><span class="name-field">
+                    <%= moment(v.date).format('DD-MM-YYYY') %>
+                  </span></td>
+                <td>
+                  <div class="dropdown d-inline-block">
+
+                    <a class="btn icon icon-left btn-primary btn-sm delete-data1" id="refresh" data-id="<%= v._id %>" href="#">
+                      <!-- <button class="btn icon icon-left btn-primary btn-sm  "
+                                                        type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown"
+                                                        aria-expanded="false"> -->
+                      <!-- <i class="bi bi-fa-regular fa-arrows-repeat"></i> -->
+                      <i class="bi bi-file-arrow-up"></i>
+                      <!-- <i class="bi bi-fa-regular fa-arrows-rotate"></i> -->
+                    </a>
+                    <!-- <ul class="dropdown-menu  dropdown-menu-end"
+                                                        aria-labelledby="dropdownMenuButton1">
+                                                        <li><a class="dropdown-item delete-data2" id="refresh"
+                                                                data-id="<%= v._id %>" href="#">Switched to Premium</a>
+                                                        </li>
+                                                        <li><a class="dropdown-item delete-data1" id="refresh"
+                                                                data-id="<%= v._id %>" href="#">Switched to Donator</a>
+                                                        </li>
+                                                    </ul> -->
+                  </div>
+                  <!-- <button type="button" data-id="<%= v._id %>" id="refresh" class="btn icon icon-left btn-primary btn-sm "><i class="bi bi-pencil-square"></i></button> -->
+                  <button type="button" data-id="<%= v._id %>" id="refresh" class="btn icon icon-left btn-danger btn-sm delete-data"><i class="bi bi-trash"></i> </button>
+                  <!-- <a href="<%= baseUrl %>admin/viewuser?id=<%=  v._id %> "
+                                                            class="btn icon icon-left btn-primary btn-sm">
+                                                            <i class="bi bi-eye"></i></a> -->
+                </td>
+              </tr>
+              <% i++ %>
+              <% }%>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+  </div>
+</div>
+
+</section>
+<footer>
+  <div class="footer clearfix mb-0 text-muted">
+    <div class="float-start">
+      <p>2023 &copy; All rights are reserved</p>
+    </div>
+
+  </div>
+</footer>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="//cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+
+
+<script>
+//   $(document).ready(function() {
+//     var table = $('#table1').DataTable({
+//       "bSort": false
+//     });
+//   });
+$("document").ready(function () {
+      $("#filterTable").dataTable({
+        "searching": true
+      });
+      var table = $('#filterTable').DataTable();
+      $("#filterTable_filter.dataTables_filter").prepend($(".category-filter"));
+      
+      var categoryIndex = 5;
+    //   $("#filterTable th").each(function (i) {
+    //     if ($($(this)).html() == "Country") {
+    //       categoryIndex = i; return false;
+    //     }
+    //   });
+      $.fn.dataTable.ext.search.push(
+        function (settings, data, dataIndex) {
+          var selectedItem = $('#categoryFilter').val()
+          var category = data[categoryIndex];
+          console.log(selectedItem);
+          if (selectedItem === "" || category.includes(selectedItem)) {
+            return true;
+          }
+          return false;
+        }
+      );
+      $("#categoryFilter").change(function (e) {
+        table.draw();
+      });
+      table.draw();
+    });
+</script>
+
+
+<script>
+  $(document).on('click', '.delete-data2', function() {
+    var id = $(this).data("id");
+    var baseUrl = '<%= baseUrl %>'
+    swal({
+        title: "Are you sure?",
+        text: "You want to upgrade your user into premium user?",
+        icon: "warning",
+        buttons: true,
+        dangerMode: true,
+      })
+      .then((willDelete) => {
+        if (willDelete) {
+          $.ajax({
+            type: "GET",
+            url: `${baseUrl}admin/updatefreeuser?id=${id}`,
+            dataType: "json",
+            statusCode: {
+              200: function(xhr) {
+                dataResult = xhr;
+                $(`tr[data-id="${id}"]`).remove();
+                console.log(dataResult.message)
+
+                $.toast({
+                  heading: 'success',
+                  text: dataResult.message,
+                  position: 'top-right',
+                  icon: 'success',
+                  position: {
+                    right: 10,
+                    top: 90
+                  }
+                });
+                $.toast({
+                  text: dataResult.message,
+                  hideAfter: false
+                })
+                location.reload()
+              }
+            },
+            success: function(data) {
+              $('#data-table').DataTable().ajax.reload(null, false);
+            },
+          });
+          window.location.reload()
+          // $.ajax({
+          //     $('#data-table').DataTable().ajax.reload();
+          // });
+
+        }
+      });
+  });
+</script>
+<script>
+  $(document).on('click', '.delete-data1', function() {
+    var id = $(this).data("id");
+    var baseUrl = '<%= baseUrl %>'
+    swal({
+        title: "Are you sure?",
+        text: "You want to upgrade your user into donator user?",
+        icon: "warning",
+        buttons: true,
+        dangerMode: true,
+      })
+      .then((willDelete) => {
+        if (willDelete) {
+          $.ajax({
+            type: "GET",
+            url: `${baseUrl}admin/updatepremiumuser?id=${id}`,
+            dataType: "json",
+            statusCode: {
+              200: function(xhr) {
+                dataResult = xhr;
+                $(`tr[data-id="${id}"]`).remove();
+                console.log(dataResult.message)
+                window.location.reload()
+                Toastify({
+                  text: "Deleted successfully...",
+                  duration: 3000,
+                  newWindow: true,
+                  close: true,
+                  gravity: "top", // `top` or `bottom`
+                  position: "right", // `left`, `center` or `right`
+                  stopOnFocus: true, // Prevents dismissing of toast on hover
+                  style: {
+                    background: "#ff2c2c",
+                  },
+                }).showToast();
+              }
+            },
+          });
+        }
+      });
+  });
+</script>
+<script>
+  $(document).on('click', '.delete-data', function() {
+    var id = $(this).data("id");
+    var baseUrl = '<%= baseUrl %>'
+    swal({
+        title: "Are you sure?",
+        text: "You want to delete this User?",
+        icon: "warning",
+        buttons: true,
+        dangerMode: true,
+      })
+      .then((willDelete) => {
+        if (willDelete) {
+          $.ajax({
+            type: "GET",
+            url: `${baseUrl}admin/deleteuser?id=${id}`,
+            dataType: "json",
+            statusCode: {
+              200: function(xhr) {
+                dataResult = xhr;
+                $(`tr[data-id="${id}"]`).remove();
+                console.log(dataResult.message)
+                window.location.reload()
+                Toastify({
+                  text: "Deleted successfully...",
+                  duration: 3000,
+                  newWindow: true,
+                  close: true,
+                  gravity: "top", // `top` or `bottom`
+                  position: "right", // `left`, `center` or `right`
+                  stopOnFocus: true, // Prevents dismissing of toast on hover
+                  style: {
+                    background: "#ff2c2c",
+                  },
+                }).showToast();
+              }
+            },
+          });
+        }
+      });
+  });
+</script>
+<script>
+  let isTost = '<%= session.isTost %>'
+  let msg = '<%= session.tostMsg %>'
+  let tostBackground = '<%= session.tostBackground %>'
+  if (isTost == "true") {
+    Toastify({
+      text: msg,
+      duration: 3000,
+      newWindow: true,
+      close: true,
+      gravity: "top", // `top` or `bottom`
+      position: "right", // `left`, `center` or `right`
+      stopOnFocus: true, // Prevents dismissing of toast on hover
+      style: {
+        background: tostBackground,
+      },
+    }).showToast();
+    '<%= session.isTost = "false"%>'
+  }
+</script>
+
+<script>
+  jQuery(function() {
+    // remove the below comment in case you need chnage on document ready
+    // location.href=jQuery("#selectbox").val();
+    jQuery("#selectbox").change(function() {
+      location.href = jQuery(this).val();
+    })
+  })
+</script>
+
+<%- include('../Layout/Footer') %>

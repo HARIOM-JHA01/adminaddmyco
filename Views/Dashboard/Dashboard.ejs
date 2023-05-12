@@ -1,0 +1,69 @@
+<%- include('../Layout/Header') %>
+    <%- include('../Layout/Sidebar') %>
+
+        <div id="main">
+            <header class="mb-3">
+                <a href="#" class="burger-btn d-block d-xl-none">
+                    <i class="bi bi-justify fs-3"></i>
+                </a>
+            </header>
+            <div class="page-heading">
+                <section class="section">
+
+                    <div class="page-heading">
+                        <h3>Dashboard</h3>
+                        <div class="page-content">
+                            <section class="row">
+                                <div class="col-12 col-lg-12">
+                                    <div class="row">
+                                        <div class="col-6 col-lg-3 col-md-6">
+                                            <div class="card">
+                                                <div class="card-body px-3 py-4-5">
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <div class="stats-icon purple">
+                                                                <i class="bi-person-fill"></i>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-8">
+                                                            <h6 class="text-muted font-semibold">Total Users</h6>
+                                                            <h6 class="font-extrabold mb-0">
+                                                                <a href="">
+                                                                    <%= user %>
+                                                                </a>
+                                                            </h6>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                        </div>
+                </section>
+            </div>
+            <div class="page-content">
+                <section class="row">
+                </section>
+            </div>
+            <script>
+                let isTost = '<%= session.isTost %>'
+                let msg = '<%= session.tostMsg %>'
+                let tostBackground = '<%= session.tostBackground %>'
+                if (isTost == "true") {
+                    Toastify({
+                        text: msg,
+                        duration: 3000,
+                        newWindow: true,
+                        close: true,
+                        gravity: "top", // `top` or `bottom`
+                        position: "center", // `left`, `center` or `right`
+                        stopOnFocus: true, // Prevents dismissing of toast on hover
+                        style: {
+                            background: tostBackground,
+                        },
+                    }).showToast()
+                    '<%= session.isTost = "false" %>'
+                }
+            </script>
+            <%- include('../Layout/Footer') %>

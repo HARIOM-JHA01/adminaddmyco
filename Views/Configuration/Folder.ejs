@@ -1,0 +1,145 @@
+<%- include('../Layout/Header') %>
+import session from "express-session"
+<%- include('../Layout/Sidebar') %>
+
+<div id="main">
+  <div class="page-heading">
+    <div class="page-title mb-3">
+      <div class="row">
+        <div class="col-12 col-md-6 order-md-1 order-last">
+          <h3><a href="<%= baseUrl %>admin/dashboard" class="text-primary"><i
+            class="fas fa-arrow-left me-2"></i></a>Folder</h3>
+        </div>
+        <div class="col-12 col-md-6 order-md-2 order-first">
+          <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="<%= baseUrl %>admin/dashboard">Dashboard</a></li>
+              <li class="breadcrumb-item active" aria-current="page">Folder</li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+    <section class="section">
+      <div class="card">
+        <div class="card-header text-end">
+            <% if( folder.length >= 3){ %> 
+               
+            <% } else {%>
+                <a href="<%=baseUrl %>admin/addfolder" class="btn icon icon-left btn-primary btn-sm "><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg> Add Folder</a>
+                <% } %>
+        </div>
+             <div class="card-body">
+             <div class="dataTable-container">
+              <table class="table table-striped dataTable-table" id="table1">
+                  <thead>
+                      <tr>
+                          <th>No.</th>
+                          <th>Folder Name</th>
+                         <th>Action</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <%
+                      var i = 1;
+                      folder.forEach(function(v)  {  %>
+                          <tr data-id="<%= v._id%>">
+                              <td><%= i %></td>
+                          <td> <%= v.Folder %></td>
+                          <td>
+                         <a href="<%= baseUrl %>admin/editfolder?id=<%=  v._id %> " class="btn icon icon-left btn-primary btn-sm"><i class="bi bi-pencil-square"></i> </a>
+                          <button type="button"data-id="<%= v._id %>" id="refresh" class="btn icon  icon-left btn-danger btn-sm delete-data"><i class="bi bi-trash"></i> </button>
+                         </td>
+                 </tr>
+                      <% i++ %>
+                      <% }) %>
+                  </tbody>
+              </table>
+          </div>
+         
+      </div>
+  
+
+      </div>
+    </section>
+    <footer>
+      <div class="footer clearfix mb-0 text-muted">
+        <div class="float-start">
+          <p>2023 &copy; All rights are reserved</p>
+        </div>
+        
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    $(document).ready(function() {
+      var table = $('#data-table1').DataTable();
+    });
+    $(document).on('click', '.delete-data', function() {
+
+      var id = $(this).data("id");
+      var baseUrl = '<%= baseUrl %>'
+      swal({
+          title: "Are you sure?",
+          text: "You want to delete this Folder?",
+          icon: "warning",
+          buttons: true,
+          dangerMode: true,
+        })
+        .then((willDelete) => {
+          if (willDelete) {
+            $.ajax({
+              type: "GET",
+              url: `${baseUrl}admin/deletefolder?id=${id}`,
+              dataType: "json",
+              statusCode: {
+                200: function(xhr) {
+                  dataResult = xhr;
+                  $(`tr[data-id="${id}"]`).remove();
+                  console.log(dataResult.message)
+                  // window.location.reload(),
+                  Toastify({
+                    text: "Deleted successfully...",
+                    duration: 3000,
+                    newWindow: true,
+                    close: true,
+                    gravity: "top", // `top` or `bottom`
+                    position: "right", // `left`, `center` or `right`
+                    stopOnFocus: true, // Prevents dismissing of toast on hover
+                    style: {
+                      background: "#ff2c2c",
+                    },
+                  }).showToast();
+                }
+              },
+            });
+          }
+          
+        });
+    })
+    
+    let isTost = '<%= session.isTost %>'
+    let msg = '<%= session.tostMsg %>'
+    let tostBackground = '<%= session.tostBackground %>'
+    if (isTost == "true") {
+      Toastify({
+        text: msg,
+        duration: 3000,
+        newWindow: true,
+        close: true,
+        gravity: "top", // `top` or `bottom`
+        position: "right", // `left`, `center` or `right`
+        stopOnFocus: true, // Prevents dismissing of toast on hover
+        style: {
+          background: tostBackground,
+        },
+      }).showToast();
+      '<%= session.isTost = "false"%>'
+    }
+  </script>
+ 
+  <%- include('../Layout/Footer') %>

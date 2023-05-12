@@ -1,0 +1,100 @@
+<%- include('../Layout/Header') %>
+    <div id="app">
+        <%- include('../Layout/Sidebar') %>
+            <div id="main">
+                <section class="section">
+                    <div class="page-heading">
+                        <div class="page-title">
+                            <div class="row">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12 col-md-6 order-md-1 order-last">
+                                <h3><a href="<%= baseUrl %>admin/categories" class="text-primary"><i
+                                            class="fas fa-arrow-left me-2"></i>Edit Category</h3>
+                            </div>
+                            <div class="col-12 col-md-6 order-md-2 order-first">
+                                <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a
+                                                href="<%= baseUrl %>admin/dashboard">Dashboard</a></li>
+
+                                    </ol>
+                                </nav>
+                            </div>
+                        </div>
+                        <section class="section">
+                            <div class="card">
+                                <div class="card-content">
+                                    <div class="card-body">
+                                        <div class="col-xl-7 col-md-8">
+                                            <form class="form form-vertical" id="assessment_form"
+                                                action="<% baseUrl %>editcategory" method="post" novalidate="novalidate"
+                                                enctype="multipart/form-data">
+                                                <input type="hidden" name="_token"
+                                                    value="f9AhpSnBOfj6mWQNv1h3AqXMECftDNKFyoO2zp7C">
+                                                <input type="hidden" name="id" value="<%= categories._id %>">
+                                                <div class="form-body">
+                                                    <div class="row">
+                                                        <div class="col-12">
+                                                            <div class="form-group">
+                                                                <% if(typeof message=="string" ) { %>
+                                                                    <p class="text-danger">
+                                                                        <%= message %>
+                                                                    </p>
+                                                                    <% } %>
+                                                                        <label for="assessment_title">Category</label>
+                                                                        <input type="text" onchange="eventHandler(this)"
+                                                                            id="categoryname" class="form-control"
+                                                                            name="categoryname"
+                                                                            placeholder="Category Name"
+                                                                            value="<%=  categories.categoryname %>">
+                                                                        <% if(typeof errors=="object" ) { %>
+                                                                            <p style="color: red;" class="categoryname">
+                                                                                <%= errors.categoryname %>
+                                                                            </p>
+                                                                            <% } %>
+                                                            </div>
+
+
+                                                        </div>
+                                                        <div class="col-12 d-flex justify-content-end">
+                                                            <button type="submit" id="submit_btn"
+                                                                class="btn btn-primary me-1 mb-1"><span>Update</span></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </section>
+                        <footer>
+                            <div class="footer clearfix mb-0 text-muted">
+                                <div class="float-start">
+                                    <p>2023 &copy; All rights are reserved</p>
+                                </div>
+                                
+                            </div>
+                        </footer>
+                    </div>
+            </div>
+    </div>
+    <script>
+        function eventHandler(e) {
+            const {
+                id,
+                name,
+                value
+            } = e
+            console.log("name", name)
+            if (value.length > 0) {
+                $(`.${name}`).text("")
+            }
+        }
+    </script>
+
+
+    <%- include('../Layout/Footer') %>

@@ -1,0 +1,34 @@
+
+<%- include('../Elements/Header') %>
+
+<script>
+  var home = 'theme';
+</script>
+<div class="container-fluid text-center bg-theme setting py-4" style="background:#a542d7 !important">
+  <div class="container">
+    <div class="row ">
+      <div class="col-lg-6 col-md-8 col-12">
+        <div class="setting-btn">
+          <ul class="nav nav-pills justify-content-center mb-3 mt-5 purchase-pills" id="pills-tab" role="tablist">
+            <% if(system){ %>
+             <% let arr = system.Thumbnail.split(',');%>
+              <% arr.forEach(function(v)  {  %>
+                <li class="nav-item" role="presentation">
+                    <img class="img-fluid" src="<%= baseUrl %>assets/systemimage/<%= v %>" class="img-fluid" alt="image" />
+                </li>
+              <% }) %>
+            <% } else{ %>
+                <h1>coming soon</h1>
+            <% } %>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../Elements/Footer') %>
+
+</body>
+
+</html>

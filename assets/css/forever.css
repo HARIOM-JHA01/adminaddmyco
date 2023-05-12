@@ -1,0 +1,86 @@
+body{
+   background-color: #d3edfa !important;
+}
+
+ .tags{     
+     max-width: 767px;
+     margin: auto;
+     min-height: calc(100vh - 40px);
+     border: 2px solid #FFFFFF;
+     padding: 20px 15px;
+     margin-top: 20px;
+     border-radius: 5px;
+ }
+ .shows_tag{
+    border: 0px !important;    
+ }
+ 
+ .list_input::placeholder{
+      text-align: center !important;
+ }
+ .input-group>.form-control{
+    border-radius: 4px;    
+ }
+ .input-group>.form-control::placeholder{
+     text-align: center;
+ }
+ .your_tags h5{
+    margin-top: 100px;
+ }
+ .think_over{
+    text-decoration: none;    
+ }
+ @media only screen and (max-width: 991px) {
+
+    .tags{
+        height: 100%;
+    }
+    .your_tags h5{
+        margin-top: 2px;
+        
+    }
+ }
+
+
+  .shows_tag{
+     border: 0px !important;
+     /* color: white !important; */
+  }
+  
+  .list_input::placeholder{
+       text-align: center !important;
+  }
+  .input-group>.form-control{
+     border-radius: 4px;     
+  }
+  .input-group>.form-control::placeholder{
+      text-align: center;
+  }
+  .your_tags h5{
+     margin-top: 100px;
+  }
+  .think_over{
+     text-decoration: none;
+     /* color: white; */
+  }
+  @media only screen and (max-width: 991px) {
+ 
+     .tags{
+         height: 100%;
+     }
+     .your_tags h5{
+         margin-top: 2px;
+         
+     }
+  }
+
+<<<<<<< HEAD
+
+=======
+>>>>>>> 2ab8673062e90a59036c4574406a7f9aa8eaa111
+/* .purchase-pills .nav-link{
+   color: #ffffff;
+ }
+.purchase-pills .nav-link:hover{
+   color: #ffffff;
+ } */

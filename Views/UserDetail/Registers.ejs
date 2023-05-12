@@ -1,0 +1,374 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Register</title>
+  <link rel="stylesheet" href="assets/css/register.css">
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
+</head>
+<body>
+
+  <div class="container px-0 mt-4">
+
+    <div class="cold d-flex justify-content-center">
+      <h1>AddMy.Co</h1>
+      <img src="assets/images/telegram.png" height="40px" class="m-3 px-3 " alt="">
+    </div>
+
+
+    <div class="container-fluid mt-3 ">
+      <div class="into ">
+        <div class="phone  ">
+
+
+
+          <div class="more ">
+            <div class="think_in">
+
+              <form action="<%= baseUrl %>register" method="post">
+
+
+                <img src="assets/images/logo/logo.png" height="140px" class="hold_in mt-5 " alt="">
+                <div class="row justify-content-center ">
+                  <div class="col-10 ">
+                    <div class="shows mt-4">
+                      <p class="solution atg d-none">This Username is already taken</p>
+                      <div class=" mb-2 text_bold">
+                       
+                        <input type="text" id="username" class="form-control
+                              text-center" onkeyup="eventHandler(this)" name="username" placeholder="Username"
+                          aria-label="Username" aria-describedby="basic-addon1" maxlength="12" novalidate="novalidate">
+                        <% if(typeof errors=="object" ) { %>
+                          <p style="color:
+                                red;" class="username">
+                            <%= errors.username %>
+                          </p>
+                          <% } %>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+                <div class="row justify-content-center ">
+                  <div class="col-10  ">
+                    <div class="shows mt-0">
+                      <!-- <p class="solution atg d-none">Please Enter valid Telegram Id</p> -->
+                      <div class=" mb-2 text_bold">
+                        <input type="text" id="tgid" class="form-control text-center pattern" data-colomon="tgid"
+                          onkeyup="eventHandler(this)" name="tgid" placeholder="Telegram ID (Only user name)" aria-label="Telegram I/D"
+                          aria-describedby="basic-addon1"novalidate="novalidate">
+                        <% if(typeof errors=="object" ) { %>
+                          <p style="color: red;" class="tgid">
+                            <%= errors.tgid %>
+                          </p>
+                          <% } %>
+                          <p class="tgiderr" style="color: red;"></p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="row justify-content-center ">
+                  <div class="col-10   ">
+                    <div class="shows">
+                      <div class=" text_bold">
+                        <input type="email" id="email" class="form-control text-center " data-colomon="email"
+                          onkeyup="eventHandler(this)" name="email" placeholder="Email for get password"
+                          aria-label="Email" aria-describedby="basic-addon1" novalidate="novalidate">
+                        <% if(typeof errors=="object" ) { %>
+                          <p style="color: red;" class="email">
+                            <%= errors.email %>
+                          </p>
+                          <% } %>
+                      </div>
+                      <p class="solution">We recommend to use Gmail Ids</p>
+
+                    </div>
+                  </div>
+                </div>
+                <div class="row justify-content-center">
+                  <div class="col-10 ">
+                    <div class="shows">
+                      <div class="text_bold">
+                        </select>
+                        <input type="text" id="country" class="form-control text-center " onkeyup="eventHandler(this)"
+                          name="country"  placeholder="Select your Country" aria-label="Country"
+                          aria-describedby="basic-addon1"readonly>
+                        <input type="hidden" id="countryCode" name="countryCode">
+                        <% if(typeof errors=="object" ) { %>
+                          <p style="color: red;" class="country">
+                            <%= errors.country %>
+                          </p>
+                          <% } %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="row justify-content-center">
+                  <div class="col-10 pb-1">
+                    <div class="d-flex justify-content-center">
+                      <a href="<%= baseUrl %>forgotpassword" class="list_now">
+                        <p class="heading_in">ForgotPassword</p>
+                      </a>
+                      <p class="sold_it p-1 ps-1">Or</p>
+                      <a href="<%= baseUrl %>login" class="list_now ps-1">
+                        <p class="heading_in">Login</p>
+                      </a>
+                    </div>
+                    
+                    <button id="refresh" class="over_button p-2 btnID ">Register</button>
+                  </div>
+                </div>
+
+
+
+                <div class="bold">
+                  <p class="d-none">Lorem ipsum dolor sit amet.</p>
+                </div>
+                </from>
+            </div>
+
+            <div class="container-fluid mt-3 ">
+            <div class="into ">
+          <div class="phone  ">
+           
+
+              
+            <div class="more ">
+              <div class="think_in">
+                
+                <form action="<%= baseUrl %>register" method="post">
+              
+            
+                   <img src="assets/images/logo/logo.png" height="140px" class="hold_in mt-5 " alt="">
+                   <div class="row justify-content-center ">
+                    <div class="col-10  ">
+                           <div class="shows mt-4">
+                            <div class="input-group mb-2 text_bold">
+                              
+                              <input type="text" id="username" class="form-control text-center" data-colomon="username"class="namecard" onkeyup="eventHandler(this)" name="username" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1" maxlength="12" required>
+                              <% if(typeof errors == "object") { %><p style="color: red;" class="username">
+                                <%= errors.username %></p> <% } %>
+                            </div>
+                            <p class="solution atg d-none">This Username Alredy Register</p>
+                           </div>
+                          </div>
+                        </div>
+                        <div class="row justify-content-center ">
+                          <div class="col-10  ">
+                                 <div class="shows mt-0">
+                                  <div class="input-group mb-2 text_bold">
+                                    <input type="text" id="tgid" class="form-control text-center"data-colomon="tgid" class="namecard"onkeyup="eventHandler(this)" name="tgid" placeholder="Telegram ID" aria-label="Telegram I/D" aria-describedby="basic-addon1" required>
+                                    <% if(typeof errors == "object") { %><p style="color: red;" class="tgid">
+                                      <%= errors.tgid %></p> <% } %>
+                                  </div>
+                                 </div>
+                                </div>
+                              </div>
+                        <div class="row justify-content-center ">
+                          <div class="col-10 ">
+                                 <div class="shows">
+                                  <div class="input-group text_bold">
+                                    <input type="email" id="email" class="form-control text-center "data-colomon="email" class="namecard" onkeyup="eventHandler(this)" name="email" placeholder="Email for get password" aria-label="Email" aria-describedby="basic-addon1" required>
+                                    <% if(typeof errors == "object") { %><p style="color: red;" class="email">
+                                      <%= errors.email %></p> <% } %>
+                                  </div>
+                                  <p class="solution">We recommend to use Gmail Ids</p>
+                                 </div>
+                                </div>
+                              </div>
+                              <div class="row justify-content-center">
+                                <div class="col-10 ">
+                                  <div class="shows">
+                                    <div class="input-group text_bold">
+                                      <!-- <select class="form-control text-center">
+                                        <option>Select your Country</option> -->
+
+                                      </select>
+                                      <input type="text" id="country"class="form-control text-center" keyup="eventHandler(this)" name="country" placeholder="Select your Country" aria-label="Country" aria-describedby="basic-addon1"
+                                       pattern= "^[a-zA-Z]*$" required >
+                                      <% if(typeof errors == "object") { %><p style="color: red;" class="country">
+                                        <%= errors.country %></p> <% } %>
+                                    </div>
+                                   </div>
+                                </div>
+                               </div>
+                              <div class="row justify-content-center">
+                                <div class="col-10 pb-1">
+                                  <div class="d-flex justify-content-center">
+                                   <a href="<%= baseUrl %>forgotpassword" class="list_now"> <p class="heading_in">ForgotPassword</p></a>
+                                   <p class="sold_it p-1 ps-1">Or</p>
+                                   <a href="<%= baseUrl %>login" class="list_now ps-1"> <p class="heading_in">Login</p></a>
+                                  </div>
+                                  <button class="over_button p-2 ">Register</button>
+                                </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+
+
+  <div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+      <div class="col-10">
+
+
+        <div class="home-demo">
+
+          <div class="owl-carousel owl-theme">
+            <div class="item">
+              <img src="assets/images/even.png" width="100px" height="195px" alt="">
+            </div>
+            <div class="item">
+              <img src="assets/images/six.png" width="100px" height="195px" alt="">
+            </div>
+            <div class="item">
+              <img src="assets/images/seven.png" width="100px" height="195px" alt="">
+            </div>
+          </div>
+        </div>
+          </div>
+        </div>
+        
+        <script>
+       var baseUrl = '<%= baseUrl %>'
+      $(document).on('keyup', '.namecard', function(e) {
+          var val = $(this).val();
+          $.ajax({
+                url: `${baseUrl}checktg`,
+                type: "POST",
+                dataType: "json",
+                data: {'tgname':val},
+                statusCode: {
+                    200: function(xhr) {
+                      if(xhr.data != null){
+                          $('.atg').removeClass('d-none');        
+                       }else{
+                        console.log("hello");
+                          $('.atg').addClass('d-none');  
+                       }
+                     }
+                }
+            });
+      });
+    
+      
+          $(function() {
+          // Owl Carousel
+          var owl = $(".owl-carousel");
+          owl.owlCarousel({
+            items: 2,
+            margin: 70,
+            loop: true,
+            
+          });
+          $(".owl-dot").hide()
+        });
+        
+        </script>
+        
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+    <script>
+      var baseUrl = '<%= baseUrl %>'
+      $(document).on('keyup', '#username', function(e) {
+        e.preventDefault();
+        var val = $(this).val();
+        console.log("user",val)
+        $.ajax({
+          url: `${baseUrl}checktg`,
+          type: "POST",
+          dataType: "json",
+          data: {
+            'tgname': val
+          },
+          statusCode: {
+            200: function(xhr) {
+              if (xhr.data != null) {
+                $('.atg').removeClass('d-none');
+              } else {
+                console.log("hello");
+                $('.atg').addClass('d-none');
+              }
+            }
+          }
+        });
+      });
+
+      function eventHandler(e) {
+        const {
+          id,
+          name,
+          value
+        } = e
+        if (value.length > 0) {
+          $(`.${id}`).text("");
+        }
+      }
+      $(document).on('keyup', '#tgid', function(e) {
+        
+        var val = $(this).val();
+        const regex = /^[a-zA-Z0-9_]*$/;
+        const found = val.match(regex);
+        if(found == null) {
+          $(`.tgiderr`).html("Please Use(a-z,A-Z,0-9,_) this Characters")
+        } else{
+          $(`.tgiderr`).html("")
+        }
+       });
+    </script>
+    <script>
+      $.getJSON("http://ipinfo.io/163.53.179.124?token=86245e8218f941", function (response) {
+
+        $.ajax({
+          url: `${baseUrl}country`,
+          type: "POST",
+          dataType: "json",
+          data: {
+            'country': response.country
+          },
+          statusCode: {
+            200: function (xhr) {
+              console.log(xhr.data[0].country_name);
+              $('#country').val(xhr.data[0].country_name);
+              $('#countryCode').val(response.country);
+            }
+          }
+        });
+      }, "jsonp");
+
+    
+      let isTost = '<%= session.isTost %>'
+      let msg = '<%= session.tostMsg %>'
+      let tostBackground = '<%= session.tostBackground %>'
+      if (isTost == "true") {
+        Toastify({
+          text: msg,
+          duration: 3000,
+          newWindow: true,
+          close: true,
+          gravity: "top", // `top` or `bottom`
+          position: "right", // `left`, `center` or `right`
+          stopOnFocus: true, // Prevents dismissing of toast on hover
+          style: {
+            background: tostBackground,
+          },
+        }).showToast();
+        '<%= session.isTost = "false"%>'
+      }
+    </script>
+   
+</body>
+
+</html>

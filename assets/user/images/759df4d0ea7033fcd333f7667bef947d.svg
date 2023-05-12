@@ -1,0 +1,14 @@
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" width="80" height="61" viewBox="0 0 80 61">
+    <title>create_an_account</title>
+    <g id="_Group_" data-name="&lt;Group&gt;">
+        <g id="New_Symbol_179" data-name="New Symbol 179">
+            <rect x="1" y="1" width="78" height="59" rx="3" ry="3" fill="none" stroke="#babec5" stroke-miterlimit="10" stroke-width="2" />
+            <path d="M36,47H73c1.1,0,2,.4,2,1.5v2c0,1.1-.9,2.5-2,2.5H27c-1.1,0-2-1.4-2-2.5v-2c0-1.1.9-1.5,2-1.5h5" transform="translate(-10 -10)" fill="none" stroke="#babec5" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+            <path d="M42.43,34.75s-0.1-.8-0.21-1.63a2.4,2.4,0,0,1,1.67-2.25l7.24-2.66A3.12,3.12,0,0,0,53,25.5v-6c0-1.1-.9-1.5-2-1.5H48c-1.1,0-2,.4-2,1.5v5c0,1.1.45,2.5,1,2.5h1" transform="translate(-10 -10)" fill="none" stroke="#babec5" stroke-miterlimit="10" stroke-width="2" />
+            <path d="M56.57,34.5l-0.38,4.26A2.49,2.49,0,0,1,54,41H45a2.49,2.49,0,0,1-2.19-2.24l-0.38-4.13" transform="translate(-10 -10)" fill="none" stroke="#babec5" stroke-miterlimit="10" stroke-width="2" />
+            <path d="M54,30.5L55.5,31a1.93,1.93,0,0,1,1.29,2l-0.21,1.5" transform="translate(-10 -10)" fill="none" stroke="#babec5" stroke-miterlimit="10" stroke-width="2" />
+            <line x1="57" y1="40" x2="60" y2="40" fill="none" stroke="#babec5" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+        </g>
+        <path d="M64,61c0,1.65-1.8,3-4,3H41c-2.2,0-4-1.35-4-3s1.8-3,4-3H60C62.2,58,64,59.35,64,61Z" transform="translate(-10 -10)" fill="#53b700" />
+    </g>
+</svg>

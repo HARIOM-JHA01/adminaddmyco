@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- START META -->
+	<title>Profile</title>
+	<base href="<%= baseUrl %>assets/" />
+	<link rel="shortcut icon" href="<%= baseUrl %>assets/images/logo.png?v=1673331642">
+
+	<link href="<%= baseUrl %>assets/" rel="canonical">
+	<meta name="description" content="Hi I am Using MyNameCard" />
+	<meta name="keywords" content="my, name, card," />
+	<meta name="robots" content="index, follow" />
+	<meta name="author" content="mynamecard" />
+	<meta name="copyright" content="Copyright (c) 2023" />
+	<meta name="generator" content="" />
+	<meta http-equiv="vary" content="User-Agent">
+
+	<!--Og-Tags-->
+	<meta property="og:url" content="<%= baseUrl %>assets/" />
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content="Profile" />
+	<meta property="og:description" content="Hi I am Using MyNameCard" />
+	<meta property="og:image" content="<%= baseUrl %>assets/images/no-image.png?v=1673331642" />
+
+	<!-- END META -->
+
+	<!-- CSS -->
+
+
+	<link rel='stylesheet'
+		href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.1/css/bootstrap-datepicker.min.css'>
+	<link rel="stylesheet" href="../../assets/css/forever.css" />
+
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+
+	<link rel="stylesheet" href="<%= baseUrl %>assets/css/datepicker.css">
+	<!-- <script src="<%= baseUrl %>assets/js/duDatepicker.js"></script> -->
+	<script src="<%= baseUrl %>assets/js/datepicker.js"></script>
+	<link rel="stylesheet" href="<%= baseUrl %>assets/user/css/duDatepicker.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
+		integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w=="
+		crossorigin="anonymous" referrerpolicy="no-referrer" />
+	<!-- <link rel="stylesheet" type="text/css" href="<%= baseUrl %>assets/user/css/all.css?v=1673331642" /> -->
+	<link rel="stylesheet" type="text/css" href="<%= baseUrl %>assets/user/css/bootstrap.css" media="all" />
+	<link rel="stylesheet" type="text/css" href="<%= baseUrl %>assets/user/css/style.css?v=1673331642" media="all" />
+	<link rel="stylesheet" type="text/css" href="<%= baseUrl %>assets/user/css/media.css?v=1673331642" media="all" />
+    
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css" integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay" crossorigin="anonymous">
+	<link rel="stylesheet" type="text/css" href="https://owlcarousel2.github.io/OwlCarousel2/assets/owlcarousel/assets/owl.carousel.min.css">
+	<!-- FONTS -->
+	<!--GENERAL GOOGLE FONT-->
+	<link rel='stylesheet' type='text/css' href='https://fonts.googleapis.com/css?family=Lobster' />
+
+
+	<!-- jQuery -->
+	<script src="<%= baseUrl %>assets/js/jquery-3.3.1.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.2/jquery.validate.min.js"></script>
+	<script type="text/javascript">
+		var base_url = "<%= baseUrl %>assets/";
+		var asset_url = "<%= baseUrl %>assets/";
+		var controller = "Home";
+		//see UML - An-JGV for more information on below variables
+		var is_mobile = true;
+		var is_listing_page = false; 	//for scroll pagination
+		var is_sol_listing = false;
+		var p_id = 0;
+		var proConfig;
+		var baseDomain = '192.168.0.9';	//base domain for XMPP service
+		var sessions_id = '';	//used in setting default XMPP connection for front user(Exper...)
+		var is_download_app = "";	//When on mobile the webapp is first time launched show download app popup, when is app is launched. 
+		var filter_page = '';
+
+		/**
+		 * notification variables
+		 */
+		var type = "";
+		var message = "";
+
+	</script>
+
+	<script type='text/javascript'
+		src='//platform-api.sharethis.com/js/sharethis.js#property=5d14a888f67b520012461363&product=social-ab'
+		async='async'></script>
+	<script>
+		var isSignup = 0;
+    </script>
+     
+	 <style type="text/css">
+		 .button-color { background-color: #293ee0 !important }
+		 .button-color:hover { background-color: #fff; }
+		 .font-color { color: #fafaf9 !important }
+		 input, textarea, .form-control, .upload-img { border: 1px solid #293ee0 !important ; }
+
+		 .mini-container{
+			max-width: 767px;
+			width: 100%;
+			border-radius: 5px;
+			border: 2px solid #FFFFFF;
+			padding: 20px 15px;
+			margin-top: 20px;
+			min-height: calc(100vh - 40px);
+			margin-left: auto;
+			margin-right: auto;
+			position: relative;
+			padding-bottom: 75px;
+		 }
+
+		 .footer{
+			position: absolute;
+			bottom: 0;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 100%;
+		 }
+	 </style>
+</head>	
+
+<body class="cms-index-index cms-home-v4 cmspage4 session-body"
+		style="background-color:#a542d7 !important">
+<div class="mini-container">
+				<div class="container-fluid session-header top px-0" style="">
+					<div class="container-fluid px-0 mt-sm-2">
+						<div class="container">
+		
+							<div class="row justify-content-center">
+								<div class="col-12 bg-theme1">		
+									<div class="row">
+										<div class="col-6">
+											<div class="logo navbar-brand d-flex align-items-center mr-0">
+												<a
+													href="<%= baseUrl %>dashboard">
+													<img
+														src="<%= baseUrl %>assets/images/logo.png"
+														class="w-100 img-fluid" />
+												</a>
+												<p class="mb-0 ml-2 text-white">My Name Card</p>
+											</div>
+										</div>
+		
+										<div class="col-6 text-right">
+											<div class="social-icon">
+		
+												<a class=""
+													href="<%= baseUrl %>notification">
+													<img
+														src="<%= baseUrl %>assets/images/notification.png"
+														id="not_bounce" class="mb-1 " />
+												</a>
+												<div class="header-panel">
+													<a class=""
+													href="<%= baseUrl %>invitation">
+														
+														<!-- <i class="fas fa-comment-alt"></i> -->
+														<img
+															src="<%= baseUrl %>assets/images/message.png" >
+														<span></span>
+													</a>
+													<ul class="list-group">
+														<li class="list-group-item px-3 py-1 button-color ">
+															<a
+																href="<%= baseUrl %>assets/contact?item_id=Mjg=&A=MQ==&id=Mzk="
+																class="">
+																<span class="font-color">gautam1</span>
+															</a>
+														</li>
+													</ul> </div>
+												<a class="header-donation"
+													href="<%= baseUrl %>donation"><img
+														src="<%= baseUrl %>assets/images/donation.png"
+														class="mb-1" /></a>
+												<a class="" href="https://t.me/mynamecard"><i class="fab fa-telegram"></i></a>
+											</div>
+										</div>
+									</div>
+		
+								</div>
+							</div>
+						</div>
+		
+					</div>
+		
+		
+					<div class="container d-none" id="qrCode">
+						<div class="row justify-content-center">
+							<div class="col-lg-6 col-md-8 col-12">
+								<div class="qrcode-button pt-1 mt-0 mt-sm-2">
+									<input class="btn bg-theme1 text-white w-100 #293ee0 !important
+										font-color" value="Scan QR Code" disabled="disabled">
+								</div>
+							</div>
+						</div>
+					</div>
+		
+					<div class="container d-none" id="conList">
+						<div class="row justify-content-center">
+							<div class="col-lg-6 col-md-8 col-12">
+								<div class="con-search mb-1 mt-2">
+									<form
+										action="<%= baseUrl %>assets/contact-list"
+										method="get">
+										<input type="text" name="search" class="form-control"
+											placeholder="Search your list" value=""/>
+										<label for="submit-con" class="cursor-pointer">
+											<i class="fas fa-search text-theme1"></i>
+										</label>
+										<input type="submit" id="submit-con" class="d-none">
+									</form>
+								</div>
+							</div>
+						</div>
+					</div>
+		
+					<div class="container d-none" id="favList">
+						<div class="row justify-content-center">
+							<div class="col-lg-6 col-md-8 col-12">
+								<div class="con-search mb-1 mt-2">
+									<form
+										action="<%= baseUrl %>assets/favourite-list"
+										method="get">
+										<input type="text" name="search" class="form-control"
+											placeholder="Search your list" value="" />
+										<label for="submit-fav" class="cursor-pointer">
+											<i class="fas fa-search text-theme1"></i>
+										</label>
+										<input type="submit" id="submit-fav" class="d-none">
+									</form>
+								</div>
+							</div>
+						</div>
+					</div>
+		
+				</div>
+			

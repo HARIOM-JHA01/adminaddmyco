@@ -1,0 +1,475 @@
+<%- include('../Layout/Header') %>
+    <link rel="stylesheet" href="//cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css">
+    <%- include('../Layout/Sidebar') %>
+        <div id="main">
+            <div class="page-heading">
+                <div class="page-title mb-3">
+                    <div class="row">
+                        <div class="col-12 col-md-6 order-md-1 order-last">
+                            <h3><a href="<%= baseUrl %>admin/dashboard" class="text-primary"><i
+                                        class="fas fa-arrow-left me-2"></i></a>Toncoin</h3>
+                        </div>
+                        <div class="col-12 col-md-6 order-md-2 order-first">
+                            <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
+                                <ol class="breadcrumb">
+                                    <li class="breadcrumb-item"><a href="<%= baseUrl %>admin/dashboard">Dashboard</a>
+                                    </li>
+                                </ol>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+                <section class="section">
+                    <div class="card-body">
+                        <nav>
+                            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                                
+                                <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab"
+                                    data-bs-target="#nav-home" type="button" name="pending" role="tab" aria-controls="nav-home"
+                                    aria-selected="true">Pending</button>
+                                <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab"
+                                    data-bs-target="#nav-profile" type="button" name="approve"role="tab" aria-controls="nav-profile"
+                                    aria-selected="false">Approve</button>
+                                <button class="nav-link" id="nav-contact-tab" data-bs-toggle="tab"
+                                    data-bs-target="#nav-contact" type="button"name="reject" role="tab" aria-controls="nav-contact"
+                                    aria-selected="false">Reject</button>
+                            </div>
+                        </nav>
+                        <div class="tab-content mt-4" id="nav-tabContent">
+                            <div class="tab-pane fade show active" id="nav-home" role="tabpanel"
+                                aria-labelledby="nav-home-tab">
+                                <div class="table-responsive">
+                                    <table class="table table-striped mb-0" id="table1">
+                                        <thead>
+                                            <tr>
+                                                <th>No.</th>
+                                                <th>UserName</th>
+                                                <th>Membership Id</th>
+                                                <th>Telegram Id</th>
+                                                <th>Payer Name</th>
+                                                <th>Wallet Address</th>
+                                                <th>Transaction ID</th>
+                                                <th>Transaction Date</th>
+                                                <th> Tenure applied</th>
+                                                <th> Toncoin</th>
+                                                <th>Status</th>
+                                                <th> </th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% var i=1; toncoin.forEach(function(v) { %>
+                                                <% if( v.status==0 && v.paymenttype==1) { %>
+                                                    <tr data-id="<%= v._id%>">
+                                                        <td><span class="name-field">
+                                                                <%= i %>
+                                                            </span></td>
+                                                            <td><span class="name-field">
+                                                                <%= v.userDoc[0].username%>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                                <%= v.userDoc[0].memberid%>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                                <a href="https://t.me/<%= v.tgid%>"> https://t.me/<%=
+                                                                        v.userDoc[0].tgid%></a>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                                <%= v.firstname%>
+                                                                    <%= v.lastname%>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                                <%= v.address%>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                                <%= v.transactionid%>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                            <%= moment(v.userDoc[0].date).format('DD/MM/YYYY')%>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                                <%= v.membershiperiod%> Years
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                                <%= v.toncoin%>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                        
+                                                                <% if(v.status == 0){  %> Pending
+                                                                    <% } %>  
+                                                                   
+                                                            </span></td>
+                                                        <td>
+                                                            <div class="switch-color"><button data-id="<%= v._id %>"
+                                                                    data-value="1"
+                                                                    class="btn icon icon-left btn-success btn-sm verify-data approve_btn"
+                                                                    data-bs-toggle="tooltip" title="Approved">
+                                                                    <i class="bi bi-check"></i></button>
+                                                                <button data-id="<%= v._id %>" data-value="2"
+                                                                    class="btn icon icon-left btn-danger btn-sm verify-data reject_btn"
+                                                                    data-bs-toggle="tooltip" title="Reject">
+                                                                    <i class="bi bi-x"></i> </button>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <!-- <a href="<%= baseUrl %>edit-subscriptions?id=<%=  v._id %>" class="btn icon icon-left btn-primary btn-sm"><i class="bi bi-pencil-square"></i> </a> -->
+                                                            <button type="button" data-id="<%= v._id %>" id="refresh"
+                                                                class="btn icon icon-left btn-danger btn-sm delete-data"><i
+                                                                    class="bi bi-trash"></i> </button>
+                                                        </td>
+                                                    </tr>
+                                                    <% i++ %>
+                                                        <% }%>
+                                                            <% }) %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="nav-profile" role="tabpanel"
+                                aria-labelledby="nav-profile-tab">
+                                <div class="table-responsive">
+                                    <table class="table table-striped mb-0" id="table2">
+                                        <thead>
+                                            <tr>
+                                                <th>No.</th>
+                                                <th>UserName</th>
+                                                <th>Membership Id</th>
+                                                <th>Telegram Id</th>
+                                                <th>Payer Name</th>
+                                                <th>Wallet Address</th>
+                                                <th>Transaction ID</th>
+                                                <th>Transaction Date</th>
+                                                <th> Tenure applied</th>
+                                                <th> Toncoin</th>
+                                                <th>Status</th>
+                                                <!-- <th> </th> -->
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% var i=1; toncoin.forEach(function(v) { %>
+                                                <% if( v.status==1 && v.paymenttype==1) { %>
+                                                    <tr data-id="<%= v._id%>">
+                                                        <td><span class="name-field">
+                                                                <%= i %>
+                                                            </span></td>
+                                                            <td><span class="name-field">
+                                                                <%= v.userDoc[0].username%>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                                <%= v.userDoc[0].memberid%>
+                                                            </span></td>
+                                                            <td><span class="name-field">
+                                                                <a href="https://t.me/<%= v.tgid%>"> https://t.me/<%=
+                                                                        v.userDoc[0].tgid%></a>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                                <%= v.firstname%>
+                                                                    <%= v.lastname%>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                                <%= v.address%>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                                <%= v.transactionid%>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                            <%= moment(v.userDoc[0].date).format('DD/MM/YYYY')%>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                                <%= v.membershiperiod%> Years
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                                <%= v.toncoin%>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                            <% if(v.status == 1){  %> Approved
+                                                                <% } %>  
+                                                               
+                                                            </span></td>
+                                                        <td>
+                                                            <div class="switch-color">
+                                                                <button data-id="<%= v._id %>" data-value="2"
+                                                                    class="btn icon icon-left btn-danger btn-sm verify-data reject_btn"
+                                                                    data-bs-toggle="tooltip" title="Reject">
+                                                                    <i class="bi bi-x"></i> </button>
+                                                
+                                                            </div>
+                                                        </td>
+                                                        <!-- <a href="<%= baseUrl %>edit-subscriptions?id=<%=  v._id %>" class="btn icon icon-left btn-primary btn-sm"><i class="bi bi-pencil-square"></i> </a> -->
+                                                        <!-- <td>
+                                                            <button type="button" data-id="<%= v._id %>"
+                                                                id="refresh"
+                                                                class="btn icon icon-left btn-danger btn-sm delete-data"><i
+                                                                    class="bi bi-trash"></i> </button>
+                                                        </td> -->
+                                                    </tr>
+                                                    <% i++ %>
+                                                        <% }%>
+                                                            <% }) %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="nav-contact" role="tabpanel"
+                                aria-labelledby="nav-contact-tab">
+                                <div class="table-responsive">
+                                    <table class="table table-striped mb-0" id="table3">
+                                        <thead>
+                                            <tr>
+                                                <th>No.</th>
+                                                <th>UserName</th>
+                                                <th>Membership Id</th>
+                                                <th>Telegram Id</th>
+                                                <th>Payer Name</th>
+                                                <th>Wallet Address</th>
+                                                <th>Transaction ID</th>
+                                                <th>Transaction Date</th>
+                                                <th> Tenure applied</th>
+                                                <th> Toncoin</th>
+                                                <th>Status</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% var i=1; toncoin.forEach(function(v) { %>
+                                                <% if( v.status==2 && v.paymenttype==1) { %>
+                                                    <tr data-id="<%= v._id%>">
+                                                        <td><span class="name-field">
+                                                                <%= i %>
+                                                            </span></td>
+                                                            <td><span class="name-field">
+                                                                <%= v.userDoc[0].username%>
+                                                            </span></td>
+                                                            <td><span class="name-field">
+                                                                    <%= v.userDoc[0].memberid%>
+                                                                </span></td>
+                                                            <td><span class="name-field">
+                                                                <a href="https://t.me/<%= v.tgid%>"> https://t.me/<%=
+                                                                        v.userDoc[0].tgid%></a>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                                <%= v.firstname%>
+                                                                    <%= v.lastname%>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                                <%= v.address%>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                                <%= v.transactionid%>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                            <%= moment(v.userDoc[0].date).format('DD/MM/YYYY')%>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                                <%= v.membershiperiod%> Years
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                                <%= v.toncoin%>
+                                                            </span></td>
+                                                        <td><span class="name-field">
+                                                            <% if(v.status == 2){  %> Rejected
+                                                                <% } %>  
+                                                            </span></td>
+
+                                                        <td>
+                                                            <!-- <a href="<%= baseUrl %>edit-subscriptions?id=<%=  v._id %>" class="btn icon icon-left btn-primary btn-sm"><i class="bi bi-pencil-square"></i> </a> -->
+                                                            <button type="button" data-id="<%= v._id %>" id="refresh"
+                                                                class="btn icon icon-left btn-danger btn-sm delete-data"><i
+                                                                    class="bi bi-trash"></i> </button>
+                                                        </td>
+                                                    </tr>
+                                                    <% i++ %>
+                                                        <% }%>
+                                                            <% }) %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+
+        </section>
+        <footer>
+            <div class="footer clearfix mb-0 text-muted">
+                <div class="float-start">
+                    <p>2023 &copy; All rights are reserved</p>
+                </div>
+               
+            </div>
+        </footer>
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="//cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                var table = $('#table1').DataTable();
+                var table = $('#table2').DataTable();
+                var table = $('#table3').DataTable();
+            });
+        </script>
+        <script>
+            $(document).on('click', '.delete-data', function () {
+                var id = $(this).data("id");
+                var baseUrl = '<%= baseUrl %>'
+                swal({
+                    title: "Are you sure?",
+                    text: "You want to delete this paypal?",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                })
+                    .then((willDelete) => {
+                        if (willDelete) {
+                            $.ajax({
+                                type: "GET",
+                                url: `${baseUrl}admin/deletetoncoin?id=${id}`,
+                                dataType: "json",
+                                statusCode: {
+                                    200: function (xhr) {
+                                        dataResult = xhr;
+                                        $(`tr[data-id="${id}"]`).remove();
+                                        console.log(dataResult.message)
+                                        Toastify({
+                                            text: "Deleted successfully...",
+                                            duration: 3000,
+                                            newWindow: true,
+                                            close: true,
+                                            gravity: "top", // `top` or `bottom`
+                                            position: "right", // `left`, `center` or `right`
+                                            stopOnFocus: true, // Prevents dismissing of toast on hover
+                                            style: {
+                                                background: "#ff2c2c",
+                                            },
+                                        }).showToast();
+                                    }
+                                },
+                            });
+                        }
+                    });
+            });
+            let isTost = '<%= session.isTost %>'
+            let msg = '<%= session.tostMsg %>'
+            let tostBackground = '<%= session.tostBackground %>'
+            if (isTost == "true") {
+                Toastify({
+                    text: msg,
+                    duration: 3000,
+                    newWindow: true,
+                    close: true,
+                    gravity: "top", // `top` or `bottom`
+                    position: "right", // `left`, `center` or `right`
+                    stopOnFocus: true, // Prevents dismissing of toast on hover
+                    style: {
+                        background: tostBackground,
+                    },
+                }).showToast();
+                '<%= session.isTost = "false"%>'
+            }
+        </script>
+        <script>
+            $(document).on('click', '.approve_btn', function () {
+                var id = $(this).data("id");
+                var baseUrl = '<%= baseUrl %>'
+                swal({
+                    title: "Are you sure?",
+                    text: "You Want to Approve this user?",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                })
+                    .then((willDelete) => {
+                        if (willDelete) {
+                            $.ajax({
+                                type: "GET",
+                                url: `${baseUrl}admin/approvetoncoin?id=${id}`,
+                                dataType: "json",
+                                statusCode: {
+                                    200: function (xhr) {
+                                        // dataResult = xhr;
+                                        // $(`tr[data-id="${id}"]`).remove();
+                                        // console.log(dataResult.message)
+                                        // $.toast({
+                                        //     heading: 'success',
+                                        //     text: dataResult.message,
+                                        //     position: 'top-right',
+                                        //     icon: 'success',
+                                        //     position: {
+                                        //         right: 10,
+                                        //         top: 90
+                                        //     }
+                                        // });
+                                        // $.toast({
+                                        //     text: dataResult.message,
+                                        //     hideAfter: false
+                                        // })
+                                        location.reload(true);
+                                    }
+                                }
+                            });
+                            // window.location.reload()
+                            // $.ajax({
+                            //     $('#data-table').DataTable().ajax.reload();
+                            // });
+                        }
+                    });
+
+
+            });
+        </script>
+        <script>
+            $(document).on('click', '.reject_btn', function () {
+                var id = $(this).data("id");
+                var baseUrl = '<%= baseUrl %>'
+                swal({
+                    title: "Are you sure?",
+                    text: "You Want to Reject this user?",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                })
+                    .then((willDelete) => {
+                        if (willDelete) {
+                            $.ajax({
+                                type: "GET",
+                                url: `${baseUrl}admin/rejecttoncoin?id=${id}`,
+                                dataType: "json",
+                                statusCode: {
+                                    200: function (xhr) {
+                                        // dataResult = xhr;
+                                        // $(`tr[data-id="${id}"]`).remove();
+                                        // console.log(dataResult.message)
+
+                                        // $.toast({
+                                        //     heading: 'success',
+                                        //     text: dataResult.message,
+                                        //     position: 'top-right',
+                                        //     icon: 'success',
+                                        //     position: {
+                                        //         right: 10,
+                                        //         top: 90
+                                        //     }
+                                        // });
+                                        // $.toast({
+                                        //     text: dataResult.message,
+                                        //     hideAfter: false
+                                        // })
+                                        location.reload(true);
+                                        // window.location.reload()
+                                    }
+                                }
+                            });
+                            // window.location.reload(true)
+                            // $.ajax({
+                            //     $('#data-table').DataTable().ajax.reload();
+                            // });
+
+                        }
+                    });
+            });
+        </script>
+
+        <%- include('../Layout/Footer') %>

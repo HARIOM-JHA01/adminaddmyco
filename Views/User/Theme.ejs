@@ -1,0 +1,153 @@
+<%- include('../Elements/Header') %>
+<style>
+     .session-body{
+        background-image: url(<%=background.Thumbnail%>);
+     }
+ 
+</style>
+<script>
+  var home = 'theme';
+</script>
+<div class="container-fluid text-center bg-theme setting py-4" style="background:#a542d7 !important">
+  <div class="container">
+    <ul class="nav nav-pills mb-3 theme-pills" id="pills-tab" role="tablist">
+      <% var i = 1; %>
+      <% if(system){ %>
+        <% console.log(system) %>
+        <% system.forEach(function(v)  {  %>
+        <li class="nav-item">
+              <a class="nav-link" id="pills-<%= v.Title %>-tab" data-toggle="pill" href="#pills-<%= v.Title %>" role="tab"
+                    aria-controls="pills-<%= v.Title %>" aria-selected="true"><%= v.Title %></a>
+        </li>
+        <% i++ %>
+      <% }) %>
+      <%  } %>
+  </ul>
+  <button type="button" class="btn btn-primary" onclick="redirectFunc()">Color Theme</button><br>
+  <div class="tab-content" id="pills-tabContent">
+    <% if(system){ %>
+      <% system.forEach(function(v)  {  %>
+        <div class="tab-pane" id="pills-<%= v.Title %>" role="tabpanel" aria-labelledby="pills-<%= v.Title %>-tab">
+          <div class="row">
+            <% v.Thumbnail.forEach(function(i)  {  %>
+                <div class="col-md-4 ">
+                <img src="<%= baseUrl %>assets/systemimage/<%= i %>" class="img-fluid theme-img pop btnID"  alt="image" />
+                </div>
+            <% }) %>
+          </div>
+        </div>
+        <% }) %>
+    <%  } %>
+    </div> 
+    </div>
+    </div>
+
+<!-- <div class="d-grid gap-2 d-md-block">
+  <button class="btn btn-primary" type="submit">Set Background</button>
+</div> -->
+<div class="modal fade bd-example-modal-lg" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+          <div class="modal-header">
+              <!-- w-100 class so that header
+          div covers 100% width of parent div -->
+              <h5 class="modal-title w-100"
+                  id="exampleModalLabel">
+                  Image Preview
+              </h5>
+              <button type="button" class="close"
+                  data-bs-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">×</span>
+              </button>
+          </div>
+          <!--Modal body with image-->
+          <form action="<%= baseUrl %>addbackground" method="post">
+            <div class="modal-body">
+                <img src="" class="imagepreview" width="720px" height="700px">
+            </div>
+            <input type="hidden" name="userid" value="63c8c9effc2afb26bced2260">
+            <input type="hidden" name="systemid" id="systemid" value="">
+            
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary">Set Background</button>
+              <button type="button" class="btn btn-danger"
+              data-bs-dismiss="modal" >
+              Close
+          </button>
+          </div>
+          </form>
+          <div class="modal-footer">
+           
+          </div>
+      </div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+<script>
+  $(function() {
+  $(".img-w").each(function() {
+    $(this).wrap("<div class='img-c'></div>")
+    let imgSrc = $(this).find("img").attr("src");
+    $(this).css('background-image', 'url(' + imgSrc + ')');
+  })
+  $(document).on('click', '.pop', function() {
+      $('.imagepreview').attr('src', $(this).attr('src'));
+      $('#imagemodal #systemid').val($(this).attr('src'));
+      $('#imagemodal').modal('show');   
+  });
+
+  
+  $(".img-c").click(function() {
+    let w = $(this).outerWidth()
+    let h = $(this).outerHeight()
+    let x = $(this).offset().left
+    let y = $(this).offset().top
+    
+    
+    $(".active").not($(this)).remove()
+    let copy = $(this).clone();
+    copy.insertAfter($(this)).height(h).width(w).delay(500).addClass("active")
+    $(".active").css('top', y - 8);
+    $(".active").css('left', x - 8);
+    
+      setTimeout(function() {
+    copy.addClass("positioned")
+  }, 0)
+    
+  }) 
+ 
+})
+
+// $(document).on("click", ".img-c.active", function() {
+//   let copy = $(this)
+//   copy.removeClass("positioned active").addClass("postactive")
+//   setTimeout(function() {
+//     copy.remove();
+//   }, 500)
+// })
+
+
+
+// $(document).ready(function () {
+//         var table = $('#table1').DataTable();
+//     });
+//     $(".btnID").on("click", function () {                
+//         var images = $(this).find('.image').prop('src');
+
+//         $('#viewQRCode #image').prop('src', images);
+//         $('#viewQRCode').modal('show');
+//     });
+</script>
+
+<script>
+    function redirectFunc() {
+        window.location.href = "<%= baseUrl %>colorbackground";
+      }
+</script>
+
+<%- include('../Elements/Footer') %>
+
+</body>
+
+</html>

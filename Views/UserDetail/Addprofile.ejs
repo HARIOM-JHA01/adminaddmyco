@@ -1,0 +1,241 @@
+<%- include('../Elements/Header') %>
+
+
+	<script>
+		var home = 'personal-profile-edit';
+	</script>
+	<div class="container-fluid text-center bg-theme personal-edit py-1">
+		<div class="container">
+			<div class="text-right">
+				<div class="dropdown ml-auto">
+					<button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton"
+						data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						Add Social Media
+					</button>
+					<div class="dropdown-menu py-0" aria-labelledby="dropdownMenuButton">
+						<button type="button" class="dropdown-item addSoacial" data-name="WhatsApp">Whats App</button>
+						<button type="button" class="dropdown-item addSoacial" data-name="Instagram">Instagram</button>
+						<button type="button" class="dropdown-item addSoacial" data-name="Facebook">Facebook</button>
+						<button type="button" class="dropdown-item addSoacial" data-name="Twitter">Twitter</button>
+						<button type="button" class="dropdown-item addSoacial" data-name="Linkedin">Linkedin</button>
+						<button type="button" class="dropdown-item addSoacial" data-name="Youtube">Youtube</button>
+						<button type="button" class="dropdown-item addSoacial" data-name="WeChat">WeChat</button>
+						<button type="button" class="dropdown-item addSoacial" data-name="Line">Line</button>
+						<button type="button" class="dropdown-item addSoacial" data-name="SnapChat">SnapChat</button>
+						<button type="button" class="dropdown-item addSoacial" data-name="Skype">Skype</button>
+					</div>
+				</div>
+			</div>
+			<div class="row justify-content-center">
+				<div class="col-lg-6 col-md-8 col-12">
+					<form action="<%= baseUrl %>addprofile" method="post" enctype="multipart/form-data">
+						<input type="hidden" name="_token" value="f9AhpSnBOfj6mWQNv1h3AqXMECftDNKFyoO2zp7C">                        
+                        <input type="hidden" name="id" value="<%= user._id %>">    
+						<div class="modal-header text-center bg-theme1 text-white py-2 button-color d-none">
+							<h5 class="w-100 mb-0" id="profileModalLabel"><span class="font-color">Personal
+									Profile</span></h5>
+						</div>
+						<div class="">
+							<div class="row mt-1">
+								<div class="col-6">
+									<div class="form-group mb-0">
+										<label class="d-none">Owner name for English</label>
+										<input type="text" name="english" id="english" class="form-control"
+											placeholder="Owner Name for English" value="" />
+										<% if(typeof errors=="object" ) { %>
+											<p style="color: red;" class="english">
+												<%= errors.english %>
+											</p>
+											<% } %>
+									</div>
+									<span class="error text-left"> </span>
+								</div>
+								<div class="col-6">
+									<div class="form-group mb-0">
+										<label class="d-none">Owner name for Chinese</label>
+										<input type="text" name="chinese" id="chinese" class="form-control"
+											placeholder="Owner Name for Chinese" value="" />
+										<% if(typeof errors=="object" ) { %>
+											<p style="color: red;" class="chinese">
+												<%= errors.chinese %>
+											</p>
+											<% } %>
+									</div>
+									<span class="error text-left"> </span>
+								</div>
+								
+							</div>
+							<div class="form-group upload-img py-0 my-1 text-center">
+								<div class="mb-0">
+									<label class="w-100 mb-0"><span class="font-color">Profile Image ( 140X140
+											)</span></label>
+								</div>
+								<div class="image w-100">
+
+									<img src="<%= baseUrl %>profileimage" id="artPrevImage_00" class="image"
+										style="margin-bottom:0px;padding:3px;" alt="Personal Profile Image" /><br />
+									<input type="file" name="thumbnail" id="ariImg_00" onchange="readURL(this,'00');"
+										style="display: none;" accept="image/x-png,image/gif,image/jpeg">
+									<input type="hidden" value="assets/personal_profile/image2.jpeg" name="thumbnail"
+										id="hiddenArtImgLogo_0" />
+									<div class="text-center">
+										<a onclick="$('#ariImg_00').trigger('click');"><span
+												class="font-color">Browse</span></a>&nbsp;&nbsp;|&nbsp;&nbsp;<a
+											style="clear:both;"
+											onclick="javascript:clear_image('artPrevImage_00')"><span
+												class="font-color">Clear</span></a>
+									</div>
+								</div>
+							</div>
+
+							
+								<div class="row" id="socialContainer">
+								<div class="col-6">
+									<div class="form-group mb-1">
+										<label class="d-none">Telegram</label>
+										<input type="text" name="tgid" id="tgid" class="form-control"
+											placeholder="Telegram ID" value="<%= user.tgid %>" />
+										<% if(typeof errors=="object" ) { %>
+											<p style="color: red;" class="tgid">
+												<%= errors.tgid %>
+											</p>
+											<% } %>
+									</div>
+									<span class="error text-left"> </span>
+								</div>
+								<div class="col-6">
+									<div class="form-group mb-1">
+										<label class="d-none">Email</label>
+										<input type="email" name="email" id="email" class="form-control text-center"
+											placeholder="Enter email here" value="<%= user.email %>" />
+										<% if(typeof errors=="object" ) { %>
+											<p style="color: red;" class="email">
+												<%= errors.email %>
+											</p>
+											<% } %>
+												<span class="error text-left"> </span>
+									</div>
+								</div>
+								
+								<div class="col-6">
+									<div class="form-group mb-1">
+										<label class="d-none">Contact No</label>
+										<input type="text" name="contact" id="contact" class="form-control text-center"
+											placeholder="Enter Contact No" value="" />
+										<% if(typeof errors=="object" ) { %>
+											<p style="color: red;" class="contact">
+												<%= errors.contact %>
+											</p>
+											<% } %>
+												<span class="error text-left"> </span>
+									</div>
+								</div>
+								<div class="col-6">
+									<div class="form-group mb-1">
+										<label class="d-none">Address</label>
+										<input type="text" name="address" id="address" class="form-control text-center"
+											placeholder="Address" value="" />
+										<% if(typeof errors=="object" ) { %>
+											<p style="color: red;" class="address">
+												<%= errors.address %>
+											</p>
+											<% } %>
+												<span class="error text-left"> </span>
+									</div>
+								</div>
+
+
+								 <!-- <div class="form-group mb-1">
+    						<label class="d-none">Google Embeded/IFrame code for Address</label>
+    						<textarea rows="2" name="pp_address_embed" id="pp_address_embed" class="form-control" placeholder="Google Embeded/IFrame code for Address" ><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3720.1942810393048!2d72.80440521493155!3d21.184439787821283!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04e779ae35401%3A0xf9ea28deb738755!2sJawaharlal+Nehru+Garden!5e0!3m2!1sen!2sin!4v1563172680651!5m2!1sen!2sin" width="600" height="450" frameborder="0" style="border:0" allowfullscreen></iframe></textarea>
+    						<span class="error text-left"> </span>
+    					</div> -->
+
+							</div>
+							<div class="justify-content-center">
+
+								<button type="submit" class="btn btn-theme1 w-100 button-color"><span
+										class="font-color">Save Profile</span></button>
+							</div>
+					</form>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+	<script>
+
+		function eventHandler(e) {
+			const {
+				id,
+				name,
+				value
+			} = e
+			if (value.length > 0) {
+				$(`.${id}`).text("")
+			}
+		}
+
+	</script>
+	<!-- 
+<script>
+    $('.dropify').dropify({
+    tpl: {
+    wrap: '<div class="dropify-wrapper"></div>',
+    loader: '<div class="dropify-loader"></div>',
+    message: `<div class="dropify-message"><span class="icon"><svg width="24" height="27" viewBox="0 0 24 27"
+                fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                    d="M15.6484 0.766724H6.77911C4.03378 0.766724 1.66711 3.0429 1.66711 5.85233V20.4954C1.66711 23.4631 3.87778 25.7965 6.77911 25.7965H17.4298C20.1764 25.7965 22.4031 23.3049 22.4031 20.4954V7.96213L15.6484 0.766724Z"
+                    stroke="#0ABAB5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                <path
+                    d="M15.2982 0.750732V4.71802C15.2982 6.65462 16.8302 8.22572 18.7236 8.22981C20.4782 8.2339 22.2742 8.23526 22.3956 8.22708"
+                    stroke="#0ABAB5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                    d="M12.0577 9.35134C11.9165 9.2063 11.7227 9.12449 11.5203 9.12451C11.3178 9.12453 11.124 9.20637 10.9828 9.35143L7.19885 13.2396C6.90996 13.5365 6.91641 14.0113 7.21325 14.3002C7.51009 14.5891 7.98492 14.5826 8.27381 14.2858L10.7709 11.7199V18.8394C10.7709 19.2536 11.1067 19.5894 11.5209 19.5894C11.9351 19.5894 12.2709 19.2536 12.2709 18.8394V11.7207L14.7683 14.2859C15.0572 14.5827 15.532 14.589 15.8288 14.3001C16.1256 14.0112 16.132 13.5363 15.8431 13.2395L12.0577 9.35134Z"
+                    fill="#0ABAB5" />
+            </svg></span>
+        <p>Drag and Drop to <br />Upload or <span>Browse</span></p>
+    </div>',
+    // preview: '<div class="dropify-preview"><span class="dropify-render"></span>
+        <div class="dropify-infos">
+            <div class="dropify-infos-inner">
+                <p class="dropify-infos-message">Drag and drop or click to <span>replace</span></p>
+            </div>
+        </div>
+    </div>',
+    filename: '<p class="dropify-filename"><span class="file-icon"></span> <span class="dropify-filename-inner"></span>
+    </p>',
+    clearButton: '<button type="button" class="dropify-clear"> remove</button>',
+    errorsContainer: '<div class="dropify-errors-container">
+        <ul></ul>
+    </div>`
+    }
+    });
+    </script> -->
+	<script>
+		$(".addSoacial").click(function () {
+			const socialMedia = $(this).data("name");
+			const checkAvail = $("#socialContainer").find(`.${socialMedia}`).length
+			console.log("dfdg", checkAvail);
+			const appendHtml = `<div class="col-6 socialLink ${socialMedia}">
+    							<div class="form-group mb-1">
+    								<label class="d-none">${socialMedia}</label>
+									<div class="position-relative social-input">
+    								<input type="text" name="${socialMedia}" id="${socialMedia}" class="form-control" placeholder="${socialMedia}" value=""/>								
+									<button type="button" class="btn btn-remove-social">X</button>
+									</div> 
+    							</div>    							
+    						</div>`;
+
+			if (checkAvail == 0) {
+				$("#socialContainer").append(appendHtml);
+			}
+		});
+
+		$(document).on("click", ".btn-remove-social", function () {
+			$(this).parents(".socialLink").remove();
+		})
+	</script>
+	<%- include('../Elements/Footer') %>

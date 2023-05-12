@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login</title>
+  <link rel="stylesheet" href="assets/css/login.css">
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+  <script src="https://owlcarousel2.github.io/OwlCarousel2/assets/vendors/jquery.min.js"></script>
+  <script src="https://owlcarousel2.github.io/OwlCarousel2/assets/owlcarousel/owl.carousel.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
+</head>
+
+<body>
+
+  <div class="container px-0 mt-4">
+    <div class="cold d-flex justify-content-center">
+      <h1>AddMy.Co</h1>
+      <img src="assets/images/telegram.png" height="40px" class="m-3 px-3 " alt="">
+    </div>
+
+
+    <div class="container-fluid mt-3 ">
+      <div class="into ">
+        <div class="more ">
+          <div class="think_in">
+            <% if(typeof message=="string" ) { %>
+              <p class="text-danger">
+                <%= message %>
+              </p>
+              <% } %>
+                <form action="<%= baseUrl %>login" method="post">
+                  <img src="ControllersControllers" height="140px" class="hold_in mt-5" alt="">
+                  <div class="row justify-content-center ">
+                    <div class="col-10  ">
+                      <div class="shows mt-4">
+                        <div class="input-group mb-1 text_bold">
+                          <input type="text" id="username" onkeyup="eventHandler(this)" name="username"
+                            class="form-control text-center " placeholder="Username/Email" aria-label="Username"
+                            aria-describedby="basic-addon1">
+                          <% if(typeof errors=="object" ) { %>
+                            <p style="color: red;" class="username">
+                              <%= errors.username %>
+                            </p>
+                            <% } %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row justify-content-center ">
+                    <div class="col-10   ">
+                      <div class="shows mt-2">
+                        <div class="input-group mb-3 text_bold">
+                          <input type="password" id="password" class="form-control text-center "
+                            onkeyup="eventHandler(this)" name="password" placeholder="Password" aria-label="Password"
+                            aria-describedby="basic-addon1">
+                          <% if(typeof errors=="object" ) { %>
+                            <p style="color: red;" class="password">
+                              <%= errors.password %>
+                            </p>
+                            <% } %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="row justify-content-center">
+                    <div class="col-10    pb-3">
+                      <div class="d-flex justify-content-center">
+                        <a href="" class="list_now">
+                          <a href="<%= baseUrl %>forgotpassword" class="list_now">
+                            <p class="heading_in ">ForgotPassword </p>
+                          </a>
+                          <p class="sold_it px-2">Or</p>
+                          <a href="<%= baseUrl %>register" class="list_now">
+                            <p class="heading_in">Register</p>
+                          </a>
+                      </div>
+                      <button class="over_button p-2">Login</button>
+                    </div>
+
+                  </div>
+                </form>
+          </div>
+          <div class="bold ">
+            <p class="d-none">Lorem ipsum dolor sit amet.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous">
+  </script> 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+
+
+
+
+  <div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+      <div class="col-10">
+
+
+        <div class="home-demo">
+          <div class="owl-carousel owl-theme">
+            <div class="item">
+              <img src="assets/images/even.png" width="100px" height="195px" alt="">
+            </div>
+            <div class="item">
+              <img src="assets/images/six.png" width="100px" height="195px" alt="">
+            </div>
+            <div class="item">
+              <img src="assets/images/seven.png" width="100px" height="195px" alt="">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="viewQRCode" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header py-2">
+            <h5 class="mb-0">Your Registration done successfully </h5>
+            <button type="button" class="close btn p-0 btn-lg" data-bs-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true" class="h2">×</span>
+            </button>
+          </div>
+          <!--Modal body with image-->
+          <div class="modal-body">            
+            <p>Your login credentintials has been sent on your registered email </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+
+      $(document).ready(function () {
+        var myModal = new bootstrap.Modal(document.getElementById("viewQRCode"), {});
+        document.onreadystatechange = function () {
+          myModal.show();
+        };
+      });
+      $(".btnID").on("click", function () {
+        var images = $(this).find('.image').prop('src').modal('show');
+      });
+
+    </script>
+
+    <script>
+      $(function () {
+        // Owl Carousel
+        var owl = $(".owl-carousel");
+        owl.owlCarousel({
+          items: 2,
+          margin: 70,
+
+          loop: true,
+
+        });
+        $(".owl-dot").hide()
+      });
+
+    </script>
+
+    <script>
+      let isTost = '<%= session.isTost %>'
+      let msg = '<%= session.tostMsg %>'
+      let tostBackground = '<%= session.tostBackground %>'
+      if (isTost == "true") {
+        Toastify({
+          text: msg,
+          duration: 3000,
+          newWindow: true,
+          close: true,
+          gravity: "top", // `top` or `bottom`
+          position: "right", // `left`, `center` or `right`
+          stopOnFocus: true, // Prevents dismissing of toast on hover
+          style: {
+            background: tostBackground,
+          },
+        }).showToast();
+        '<%= session.isTost = "false"%>'
+      }
+    </script>
+    <script>
+      function eventHandler(e) {
+        const {
+          id,
+          name,
+          value
+        } = e
+        if (value.length > 0) {
+          $(`.${id}`).text("")
+        }
+      }
+    </script>
+    <script>
+
+      $(document).ready(function () {
+        var myModal = new bootstrap.Modal(document.getElementById("viewQRCode"), {});
+        document.onreadystatechange = function () {
+          myModal.show();
+        };
+      });
+      $(".btnID").on("click", function () {
+        var images = $(this).find('.image').prop('src').modal('show');
+      });
+
+    </script>
+</body>
+
+</html>

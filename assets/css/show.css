@@ -1,0 +1,37 @@
+body{
+  background-color: blueviolet !important;
+ }
+ .tags{
+  border: 2px solid white;
+  max-width: 764px;
+  margin: auto;
+  height: 100%;
+}
+.tags input{
+     border-radius: 17px;
+     box-shadow: none !important;
+}
+@font-face {
+  font-family: Space Bold;
+  src: url(space-bd-bt/Space_Bd_BT_Bold.ttf);
+}
+.tags h2{
+  font-family: Space Bold;
+
+}
+.over_list{
+  background-color:rgba(0,126,187,255);
+  margin-top: 20px;
+  color: white;
+  padding: 10px;
+  border-radius: 30px;
+}
+.control{
+  margin-top: -3px;
+}
+.your_list img{
+    margin: 6px;
+}
+.never_in{
+  background-color: white;
+}

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 145 80" height="80px" width="145px">
+	<g id="container-polishProfile-complete" >
+		<defs>
+			<style>
+				.a,.b{fill:none;stroke:#babec5;stroke-linecap:round;stroke-linejoin:round;}.a{stroke-width:1.91px;}.b{stroke-width:2px;}.c{fill:#babec5;}
+			</style>
+		</defs>
+		<title>setupWidget_Illustrations</title>
+		<line class="b" x1="53" y1="45.5" x2="72" y2="45.5"/>
+		<line class="b" x1="53" y1="38.5" x2="72" y2="38.5"/>
+		<line class="b" x1="53" y1="52.5" x2="62.5" y2="52.5"/>
+		<line class="b" x1="38" y1="10.5" x2="48" y2="10.5"/>
+		<path class="b" d="M59,70.5H9a5,5,0,0,1-5-5v-50a5,5,0,0,1,5-5H21"/>
+		<path class="b" d="M66,10.5H77a5,5,0,0,1,5,5v30"/>
+		<path class="b" d="M19,10.5H34V5c0-1.1.9-1.5,2-1.5H50.5c1.1,0,1.5.4,1.5,1.5v5.5H67"/>
+		<rect class="c" x="52" y="26.5" width="21" height="6" rx="2" ry="2"/>
+		<path class="b" d="M13,57.5V52.93c0-3.95,3.52-6.43,7.52-6.43H22v-20a6.69,6.69,0,0,1,6.78-7H36a6.76,6.76,0,0,1,7,6.87v7.15a6.86,6.86,0,0,1-7,7H30"/>
+		<path class="b" d="M38,24.5H32c-2.75,0-5,1.8-5,4v4"/>
+		<path class="b" d="M46,57.5V53c0-3.9-2.73-6.46-6.74-6.46H32a2,2,0,0,0-2,2v9"/>
+	</g>
+</svg>

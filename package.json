@@ -1,0 +1,66 @@
+{
+  "name": "mynamecard",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "body-parser": "^1.20.0",
+    "cls": "^0.1.5",
+    "connect-flash": "^0.1.1",
+    "connect-mongo": "^4.6.0",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.0.3",
+    "ejs": "^3.1.8",
+    "experss": "^0.0.1-security",
+    "express": "^4.18.1",
+    "express-fileupload": "^1.4.0",
+    "express-session": "^1.17.3",
+    "express-toastr": "^2.0.2",
+    "express-validator": "^6.14.2",
+    "fcm-node": "^1.6.1",
+    "fs": "^0.0.1-security",
+    "fs-extra": "^10.1.0",
+    "handlebars": "^4.7.7",
+    "joi": "^17.6.0",
+    "jquery-toast-plugin": "^1.3.2",
+    "jsonwebtoken": "^8.5.1",
+    "localStorage": "^1.0.4",
+    "make-dir": "^3.1.0",
+    "mime": "^3.0.0",
+    "moment": "^2.29.4",
+    "mongoose": "^6.6.0",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "node-input-validator": "^4.5.1",
+    "nodemailer": "^6.7.8",
+    "npm": "^8.19.2",
+    "otp-generator": "^4.0.0",
+    "path": "^0.12.7",
+    "qrcode": "^1.5.1",
+    "random-url": "^1.0.0",
+    "start": "^5.1.0",
+    "toastify-js": "^1.12.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://yogeshsixty13@github.com/yogeshsixty13/mynamecard-ne.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yogeshsixty13/mynamecard-ne/issues"
+  },
+  "homepage": "https://github.com/yogeshsixty13/mynamecard-ne#readme",
+  "description": ""
+}

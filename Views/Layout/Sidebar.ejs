@@ -1,0 +1,103 @@
+<div id="sidebar" class="active">
+  <div class="sidebar-wrapper active">
+    <div class="sidebar-header position-relative">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="logo">
+          <tr>
+
+            <a href="<%= baseUrl %>admin/dashboard"><img src="../assets/images/logo/logo1.png" alt="Logo" srcset=""></a>
+            <a href="<%= baseUrl %>admin/dashboard"><img src="../assets/images/logo/addmyco.png" alt="Logo"
+                srcset=""></a>
+          </tr>
+        </div>
+        <div class="sidebar-toggler  x">
+          <a href="#" class="sidebar-hide d-xl-none d-block"><i class="bi bi-x bi-middle"></i></a>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-menu">
+      <ul class="menu">
+        <li class="sidebar-title">Menu</li>
+        <li class="sidebar-item <%= ( path == 'dashboard') ? 'active' : ''  %>">
+          <a href="<%= baseUrl %>admin/dashboard" class='sidebar-link'>
+            <i class="bi bi-grid-fill"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li
+          class="sidebar-item has-sub <%= (path == 'freeuser') || (path == 'premium') || (path == 'donateduser') ? 'active' : '' %>">
+          <a href="#" class='sidebar-link'>
+            <i class="bi bi-stack"></i>
+            <span>Users</span>
+          </a>
+          <ul
+            class="submenu <%= (path == 'freeuser') || (path == 'premium') || (path == 'donateduser') ? 'active' : '' %>">
+            <li class="submenu-item <%= (path == 'freeuser') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/freeuser">Free Users</a>
+            </li>
+            <li class="submenu-item <%= (path == 'premium') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/premium">Premium Users</a>
+            </li>
+            <li class="submenu-item <%= (path == 'donateduser') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/donateduser">Donators</a>
+            </li>
+
+          </ul>
+        </li>
+        <li class="sidebar-item has-sub <%= (path == 'paypal') || (path == 'toncoin')  ? 'active' : '' %> ">
+          <a href="#" class='sidebar-link'>
+            <i class="bi bi-stack"></i>
+            <span>Membership Payment</span>
+          </a>
+          <ul class="submenu <%= (path == 'paypal') || (path == 'toncoin')  ? 'active' : '' %> ">
+            <li class="submenu-item <%= (path == 'paypal') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/paypal">Paypal</a>
+            </li>
+            <!-- <li class="submenu-item <%= (path == 'toncoin') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/toncoin">Toncoin</a>
+            </li> -->
+          </ul>
+        </li>
+        <li class="sidebar-item <%= ( path == 'banner') ? 'active' : ''  %>">
+          <a href="<%= baseUrl %>admin/banner" class='sidebar-link'>
+            <i class="bi bi-grid-fill"></i>
+            <span>Banners</span>
+          </a>
+        </li>
+        <li
+          class="sidebar-item has-sub <%= (path == 'membership') || (path == 'system') || (path == 'folder') ? 'active' : '' %> ">
+          <a href="#" class='sidebar-link'>
+            <i class="bi bi-stack"></i>
+            <span> System Configuration</span>
+          </a>
+          <ul
+            class="submenu <%= (path == 'membership') || (path == 'system') || (path == 'folder') || (path == 'currency') || (path == 'categories') ? 'active' : '' %> ">
+            <li class="submenu-item <%= (path == 'membership') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/membership">Membership Tenure</a>
+            </li>
+            <li
+              class="submenu-item arrow-color has-sub <%= (path == 'system') || (path == 'categories')  ? 'active1' : '' %> ">
+              <a href="#" class="sidebar-link ">Background Images</a>
+              <ul class="submenu pl-0">
+                <li class="submenu-item  <%= (path == 'system') ? 'active' : '' %> ">
+                  <a href="<%= baseUrl %>admin/system ">System Images</a>
+                </li>
+                <li class="submenu-item <%= (path == 'categories') ? 'active' : '' %> ">
+                  <a href="<%= baseUrl %>admin/categories">Category</a>
+                </li>
+              </ul>
+            </li>
+            <li class="submenu-item <%= (path == 'folder') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/folder">Contact Folders</a>
+            </li>
+            <li class="submenu-item <%= (path == 'configuration') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/configuration">Configuration </a>
+            </li>
+
+          </ul>
+        </li>
+
+
+    </div>
+  </div>
+</div>

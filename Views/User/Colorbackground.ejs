@@ -1,0 +1,43 @@
+
+<%- include('../Elements/Header') %>
+
+<script>
+var home = 'theme';
+</script>
+<div class="container-fluid text-center bg-theme setting py-4" style="background:#a542d7 !important">
+	<div class="container">
+
+		<div class="row justify-content-center">
+			<div class="col-lg-6 col-md-8 col-12">
+				<div class="setting-btn">
+					<div class="form-group">
+						<form action="<%= baseUrl %>colorbackground" method="post">
+						<label class="text-theme1 font-weight-bold font-color">Select your theme</label>
+						<input type="color" name="color" id="color" class="form-control p-0 border-0 button-color" value="#a542d7"/>
+						<% if(typeof errors == "object") { %><p style="color: red;" class="color">
+							<%= errors.color %></p> <% } %>
+					</div>
+					<div class="form-group">
+						<label class="text-theme1 font-weight-bold font-color">Select your button theme</label>
+						<input type="color" name="button" id="color" class="form-control p-0 border-0 button-color"  value="#293ee0"/>
+						<% if(typeof errors == "object") { %><p style="color: red;" class="button">
+							<%= errors.button %></p> <% } %>
+					</div>
+					<div class="form-group">
+						<label class="text-theme1 font-weight-bold font-color">Select your font color</label>
+						<input type="color" name="font" id="color" class="form-control p-0 border-0 button-color" value="#fafaf9"/>
+						<% if(typeof errors == "object") { %><p style="color: red;" class="font">
+							<%= errors.font %></p> <% } %>
+					</div>
+						
+				</div>
+			</div>
+		</div>
+
+	</div>
+</div>
+
+<%- include('../Elements/Footer') %>
+
+    </body>
+</html>

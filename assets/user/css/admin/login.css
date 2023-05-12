@@ -1,0 +1,397 @@
+@font-face {
+  font-family: 'Droid Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Droid Sans'), local('DroidSans'), url(../../fonts/admin/droid.woff) format('woff');
+}
+@font-face {
+  font-family: 'Droid Sans';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Droid Sans Bold'), local('DroidSans-Bold'), url(../../fonts/admin/droid-bold.woff) format('woff');
+}
+
+html, body {
+  font-size: 62.5%;
+  height: 100%;
+  overflow: hidden;
+  background: url("../../images/login-background.png") no-repeat center center fixed; 
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}
+
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike,  sub, sup, tt, var, b, u, i, center,dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed,  figure, figcaption, footer, header, hgroup,  menu, nav, output, ruby, section, summary, time, mark, audio, video { margin: 0; padding: 0; border: 0; font-size: 100%;	font: inherit; vertical-align: baseline; } article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {	display: block;} body { line-height: 1; } ol, ul { list-style: none; } blockquote, q { quotes: none; } blockquote:before, blockquote:after, q:before, q:after { content: ''; content: none; } table { border-collapse: collapse; border-spacing: 0; } 
+
+/** Base Body Styles **/
+body{ background: url(../../images/admin/body-bg.png); color:#838383; font:13px "Droid Sans", Arial, Helvetica, sans-serif;}
+
+h1,h2,h3,h4,h5,h6{ font-weight:bold; font-family: 'Droid Sans', sans-serif;  color:#434853;  text-shadow:0px 1px 0px #fff; letter-spacing: -0.5px;  }
+h1{ font-size:20px; color: #2d932b; padding: 0 0 13px 0; border-bottom: 1px solid #e0e0e0;}
+h2{ font-size:24px;}
+h3{ font-size:17px;}
+h4{ font-size:14px;}
+h5{ font-size:12px;}
+h6{ font-size:10px;}
+
+a{ text-decoration:none;}
+p{ line-height:20px;}
+
+#box_bg {
+	border: 1px solid #d5d5d5;
+	background: #f9f9f9;
+	width: 380px; display: block;
+	margin: 100px auto 0 auto;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	box-shadow:  0px 0px 2px #dadada, inset 0px -3px 0px #e6e6e6;
+}
+
+.social {padding: 13px 0 0 0; height: 75px;}
+.blue {color: #2b83b6;}
+
+/** Buttons **/
+.twitter {background: url(../../images/admin/twitter_btn.png) no-repeat; height: 32px; width: 157px; display: block; float: left; margin-top: 10px;}
+.twitter:hover {background: url(../../images/admin/twitter_btn.png) no-repeat; background-position: 0 -32px;}
+.twitter:active {margin-top: 11px}
+.btn_1 {padding: 8px 0 0 35px; text-shadow: -1px -1px 0px #0083b3; color:#fff; font-weight: bold; font-size: 12px; height: 32px; display: block;}
+
+.fb {background: url(../../images/admin/fb_btn.png) no-repeat; height: 32px; width: 157px; display: block; float: right; margin-top: 10px;}
+.fb:hover {background: url(../../images/admin/fb_btn.png) no-repeat; background-position: 0 -32px;}
+.fb:active {margin-top: 11px}
+.btn_2 {padding: 8px 0 0 31px; text-shadow: -1px -1px 0px #366c96; color:#fff; font-weight: bold; font-size: 12px; height: 32px; display: block;}
+
+.button {-webkit-border-radius: 3px; -moz-border-radius: 3px; border-radius: 3px; display: inline-block; float: right; margin-top: 18px; cursor:pointer}
+.button {padding: 9px 26px 8px 26px; color:#fff; font-weight: bold; font-size: 14px; display: block;}
+
+.button.green {
+	background-image: linear-gradient(bottom, #2D922B 0%, #58BD56 100%);
+	background-image: -o-linear-gradient(bottom, #2D922B 0%, #58BD56 100%);
+	background-image: -moz-linear-gradient(bottom, #2D922B 0%, #58BD56 100%);
+	background-image: -webkit-linear-gradient(bottom, #2D922B 0%, #58BD56 100%);
+	background-image: -ms-linear-gradient(bottom, #2D922B 0%, #58BD56 100%);
+	background-image: -webkit-gradient(linear,left bottom,left top,color-stop(0, #2D922B),color-stop(1, #58BD56));
+	-ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#58BD56, endColorstr=#2D922B)";
+	border: 1px solid #309230;
+	border-bottom: 2px solid #166d16;
+	box-shadow: inset 0px 1px 0px #a1daa0;
+	text-shadow: -1px -1px 0px #369135;
+	background-color: #49ac47;
+}
+
+.button.green:hover {background: #49ac47;}
+.button.green:active {margin-top: 19px;}
+
+.button.blue {
+	background-image: linear-gradient(bottom, #1F7FB6 0%, #4EABE0 100%);
+	background-image: -o-linear-gradient(bottom, #1F7FB6 0%, #4EABE0 100%);
+	background-image: -moz-linear-gradient(bottom, #1F7FB6 0%, #4EABE0 100%);
+	background-image: -webkit-linear-gradient(bottom, #1F7FB6 0%, #4EABE0 100%);
+	background-image: -ms-linear-gradient(bottom, #1F7FB6 0%, #4EABE0 100%);
+	background-image: -webkit-gradient(linear,left bottom,left top,color-stop(0, #1F7FB6),color-stop(1, #4EABE0));
+	-ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#4EABE0, endColorstr=#1F7FB6)";    
+	border: 1px solid #2a76a2; border-bottom: 2px solid #215f82;
+	box-shadow: inset 0px 1px 0px #9cd0ee;
+	text-shadow: -1px -1px 0px #246c95;
+	background-color: #3897cd;
+}
+
+.button.blue:hover {background: #3897cd;}
+.button.blue:active {margin-top: 19px;}
+
+/** Login Fields **/
+.user.error {background: url(../../images/admin/user_error.png) no-repeat; border:1px solid #f19d9d; background-color: #ffe0e0; box-shadow: inset 0px 0px 0px #fff ; color: #d95e5e;}
+
+.password {background: url(../../images/admin/password_new.png) no-repeat;}
+.password.error {background: url(../../images/admin/password_error.png) no-repeat; border:1px solid #f19d9d; background-color: #ffe0e0; box-shadow: inset 0px 0px 0px #fff ; color: #d95e5e;}
+
+/** Register Fields **/
+.register {
+	font-size: 14px;
+	color: #8e8d8d;
+	font-family: "Droid Sans";
+	padding: 11px 15px 10px 15px;
+	background-color: #fdfdfd;
+	width: 290px;
+	display: block;
+	border:1px solid #d8d8d8;
+	margin: 13px 0 -3px 0;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	box-shadow: inset 2px 2px 4px #f1f1f1;
+}
+
+.register.error {border:1px solid #f19d9d; background-color: #ffe0e0; box-shadow: inset 0px 0px 0px #fff ; color: #d95e5e;}
+
+/**  Custom Checkbox **/
+.checkbox {margin: 30px 0 15px 0;}
+.checkbox li {list-style: none; height: 15px;}
+
+.checkbox li:not(#foo) > fieldset > div > span > input[type='checkbox'] {
+    opacity: 0;
+    float: left;
+    width: 15px;
+}
+
+.checkbox li:not(#foo) > fieldset > div > span > input[type='checkbox'] + label {
+    margin: 0;
+    clear: none;
+    padding: 0 0 0 22px;
+    cursor: pointer;
+    background: url(../../images/admin/check.png) no-repeat;
+	height: 15px; display: block;
+}
+
+.checkbox li:not(#foo) > fieldset > div > span > input[type='checkbox']:checked + label {
+    background: url(../../images/admin/check.png) no-repeat;
+	height: 15px; display: block;
+	background-position: 0 -15px;
+}
+
+/** Text Under Box**/
+#bottom_text {margin: 12px auto; width: 300px; display: block; text-align: center; text-shadow: 1px 1px 0px #fff; line-height: 19px;}
+#bottom_text a {color: #2d932b; font-weight: bold; padding: 0 8px 0 0; background: url(../../images/admin/bullet.png) no-repeat 100% 50%;}
+#bottom_text a:hover {color: #878787; -webkit-transition:all 0.2s linear; -moz-transition:all 0.2s linear; -o-transition:all 0.3s linear; -transition:all 0.2s linear}
+#blue {color:#2b83b6 !important;}
+#blue:hover {color: #878787 !important;}
+
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike,  sub, sup, tt, var, b, u, i, center,dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed,  figure, figcaption, footer, header, hgroup,  menu, nav, output, ruby, section, summary, time, mark, audio, video { margin: 0; padding: 0; border: 0; font-size: 100%;	font: inherit; vertical-align: baseline; } article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {	display: block;} body { line-height: 1; } ol, ul { list-style: none; } blockquote, q { quotes: none; } blockquote:before, blockquote:after, q:before, q:after { content: ''; content: none; } table { border-collapse: collapse; border-spacing: 0; } 
+
+/** Base Body Styles **/
+body{ background: url(../../images/admin/body-bg.png); color:#838383; font:13px "Droid Sans", Arial, Helvetica, sans-serif;}
+
+h1,h2,h3,h4,h5,h6{ font-weight:bold; font-family: 'Droid Sans', sans-serif;  color:#434853;  text-shadow:0px 1px 0px #fff; letter-spacing: -0.5px;  }
+h1{ font-size:20px; color: #F4F4F5; padding: 0 0 13px 0; border-bottom: 1px solid #e0e0e0;}
+h2{ font-size:24px;}
+h3{ font-size:17px;}
+h4{ font-size:14px;}
+h5{ font-size:12px;}
+h6{ font-size:10px;}
+
+a{ text-decoration:none;}
+p{ line-height:20px;}
+
+#box_bg {
+	border: 1px solid #d5d5d5;
+	background: bottom;
+	width: 390px; 
+	display: block;
+	/* margin: 100px auto 0 auto; */
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+	box-shadow:  1px 1px 1px #dadada, inset 1px 0px 0px #e6e6e6;
+}
+
+#content {padding: 23px 28px;background: linear-gradient(to bottom, rgba(146, 135, 187, 0.7) 0%, rgba(0, 0, 0, 0.5) 100%);} 
+
+.social {padding: 13px 0 0 0; height: 75px;}
+/*.blue {color: #2b83b6;}*/
+
+/** Buttons **/
+.btn_1 {padding: 8px 0 0 35px; text-shadow: -1px -1px 0px #0083b3; color:#fff; font-weight: bold; font-size: 12px; height: 32px; display: block;}
+
+.fb {background: url(../../images/admin/fb_btn.png) no-repeat; height: 32px; width: 157px; display: block; float: right; margin-top: 10px;}
+.fb:hover {background: url(../../images/admin/fb_btn.png) no-repeat; background-position: 0 -32px;}
+.fb:active {margin-top: 11px}
+.btn_2 {padding: 8px 0 0 31px; text-shadow: -1px -1px 0px #366c96; color:#fff; font-weight: bold; font-size: 12px; height: 32px; display: block;}
+
+.button {-webkit-border-radius: 3px; -moz-border-radius: 3px; border-radius: 3px; display: inline-block; float: right; margin-top: 18px;}
+.button a {padding: 9px 26px 8px 26px; color:#fff; font-weight: bold; font-size: 14px; display: block;}
+
+.button.green {
+	background-image: linear-gradient(bottom, #2D922B 0%, #58BD56 100%);
+	background-image: -o-linear-gradient(bottom, #2D922B 0%, #58BD56 100%);
+	background-image: -moz-linear-gradient(bottom, #2D922B 0%, #58BD56 100%);
+	background-image: -webkit-linear-gradient(bottom, #2D922B 0%, #58BD56 100%);
+	background-image: -ms-linear-gradient(bottom, #2D922B 0%, #58BD56 100%);
+	background-image: -webkit-gradient(linear,left bottom,left top,color-stop(0, #2D922B),color-stop(1, #58BD56));
+	-ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#58BD56, endColorstr=#2D922B)";
+	border: 1px solid #309230;
+	border-bottom: 2px solid #166d16;
+	box-shadow: inset 0px 1px 0px #a1daa0;
+	text-shadow: -1px -1px 0px #369135;
+	background-color: #49ac47;
+}
+
+.button.green:hover {background: #49ac47;}
+.button.green:active {margin-top: 19px;}
+/** Login Fields **/
+#login {padding: 13px 0 0 0; border-top: 1px solid #e0e0e0; color: #fff; font-weight: 600;}
+
+.login {
+	font-size: 14px;
+	color: #fff;
+	font-family: "Droid Sans";
+	padding: 11px 15px 10px 50px;
+	background-color: #fdfdfd;
+	width: 255px;
+	display: block;
+	border:1px solid #d8d8d8;
+	margin: 13px 0 -3px 0;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	box-shadow: inset 0px 0px 0px #f1f1f1;
+}
+
+.user {background: url(../../images/admin/user.png) no-repeat;}
+.user.error {background: url(../../images/admin/user_error.png) no-repeat; border:1px solid #f19d9d; background-color: #ffe0e0; box-shadow: inset 0px 0px 0px #fff ; color: #d95e5e;}
+
+.password {background: url(../../images/admin/password_new.png) no-repeat;}
+.password.error {background: url(../../images/admin/password_error.png) no-repeat; border:1px solid #f19d9d; background-color: #ffe0e0; box-shadow: inset 0px 0px 0px #fff ; color: #d95e5e;}
+
+.forgot_pass{ margin:10px 0; float:left; position:absolute; color:#2D932B;}
+
+/** Register Fields **/
+.register {
+	font-size: 14px;
+	color: #8e8d8d;
+	font-family: "Droid Sans";
+	padding: 11px 15px 10px 15px;
+	background-color: #fdfdfd;
+	width: 290px;
+	display: block;
+	border:1px solid #d8d8d8;
+	margin: 13px 0 -3px 0;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	box-shadow: inset 2px 2px 4px #f1f1f1;
+}
+
+.register.error {border:1px solid #f19d9d; background-color: #ffe0e0; box-shadow: inset 0px 0px 0px #fff ; color: #d95e5e;}
+
+/**  Custom Checkbox **/
+.checkbox {margin: 30px 0 15px 0;}
+.checkbox li {list-style: none; height: 15px;}
+
+.checkbox li:not(#foo) > fieldset > div > span > input[type='checkbox'] {
+    opacity: 0;
+    float: left;
+    width: 15px;
+}
+
+.checkbox li:not(#foo) > fieldset > div > span > input[type='checkbox'] + label {
+    margin: 0;
+    clear: none;
+    padding: 0 0 0 22px;
+    cursor: pointer;
+    background: url(../../images/admin/check.png) no-repeat;
+	height: 15px; display: block;
+}
+
+.checkbox li:not(#foo) > fieldset > div > span > input[type='checkbox']:checked + label {
+    background: url(../../images/admin/check.png) no-repeat;
+	height: 15px; display: block;
+	background-position: 0 -15px;
+}
+
+
+/*************** Notifications ***************/
+
+.notification {
+                position: relative;
+                margin: 0 0 15px 0;
+                padding: 0;
+                border: 1px solid;
+                background-position: 10px 11px !important;
+                background-repeat: no-repeat !important;
+                font-size: 13px;
+                width: 99.8%;
+                }
+                
+
+.attention {
+                background: #fffbcc url('../../images/admin/exclamation.png') 10px 11px no-repeat;
+                border-color: #e6db55;
+                color: #666452;
+                }
+
+.information {
+                background: #dbe3ff url('../../images/admin/information.png');
+                border-color: #a2b4ee;
+                color: #585b66;
+                }
+
+.success {
+                background: #d5ffce url('../../images/admin/tick_circle.png');
+                border-color: #9adf8f;
+                color: #556652;
+                }
+
+.error {
+                background: #ffcece url('../../images/admin/cross_circle.png');
+                border-color: #df8f8f;
+                color: #665252;
+                }
+
+.notification div {
+                display:block;
+                font-style:normal;
+                padding: 10px 10px 10px 36px;
+                line-height: 1.5em;
+                }
+
+.notification .close {
+                color:#990000;
+                font-size:9px;
+                position:absolute;
+                right:5px;
+                top:5px;
+                }
+
+/* Notification for form inputs */
+
+/* __________ Alerts __________ */
+.alert {
+	position:relative;
+	margin-bottom:30px;
+	padding:10px 43px 8px 17px;
+	font-size:12px;
+	color:#333;
+	border-radius:0;
+	border-width:2px;
+	border-style:solid;
+}
+.alert strong {
+	display:block;
+	text-transform:uppercase;
+	font-weight:900;
+	line-height:18px;
+	font-size:14px;
+}
+.alert .close {
+	position:absolute;
+	top:50%;
+	right:17px;
+	float:none;
+	display:block;
+	width:9px;
+	height:9px;
+	margin-top:-5px;
+	line-height:9px;
+	font-size:18px;
+	opacity:1;
+	transition: all 0.3s ease-in-out;
+	-webkit-transition: all 0.3s ease-in-out;
+	border: 0 none;
+	cursor: pointer;
+	background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
+}
+.alert .close:hover {opacity:0.5;}
+
+.alert-danger, .alert-error {background-color:#ffeded; border-color:#cc3333;}
+.alert-danger strong, .alert-danger .close, .alert-error strong, .alert-error .close {color:#cc3333;}
+
+.alert-success {background-color:#e3ffde; border-color:#339933;}
+.alert-success strong, .alert-success .close {color:#339933;}
+
+.alert-info {background-color:#e8f8ff; border-color:#3399cc;}
+.alert-info strong, .alert-info .close {color:#3399cc;}
+
+.alert-warning {background-color:#fff6db; border-color:#cc9933;}
+.alert-warning strong, .alert-warning .close {color:#cc9933;}

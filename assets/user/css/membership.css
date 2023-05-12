@@ -1,0 +1,67 @@
+.container h1{
+  color: rgba(140, 225, 249, 255);
+}
+.tags{
+    border: 2px solid white;
+    height: 100%;
+    
+  max-width: 764px;
+  margin: auto;
+
+}
+ .over_in{
+  padding-left: 4px;
+ }
+ .into_link button{
+  border-radius: 0px;
+  
+  background-color: rgba(140, 225, 249, 255);
+ padding: 8px;
+ border: 0px;
+ }
+body{
+  background-color: blueviolet !important;
+}
+ .card{
+   border-radius: 0% !important;
+   width: 365px;
+ 
+ }
+ .list_in{
+  border-bottom: 1px solid #dddada;
+     
+    text-align: center;
+    background-color: darkgreen;
+    color: white;
+ }
+.control label{
+  border: 0px;
+  color: white !important;
+  border-radius: 0px;
+}
+.control h5{
+  border-bottom: 1px solid white;
+  padding-bottom: 5px;
+}
+.border_view {
+   font-size: 19px;
+}
+.border_view span{
+  font-weight: bold;
+}
+.take{
+  border: 2px solid #6060f3;
+}
+/* .stronger_in{
+     font-family:Space Bold;
+}
+@font-face {
+  font-family: Space Bold;
+  src: url("space-bd-bt/Space_Bd_BT_Bold.ttf");
+} */
+ @media only screen and (max-width:398px){
+    .tags{
+      width: 380px;
+      overflow: hidden;
+    }
+ }

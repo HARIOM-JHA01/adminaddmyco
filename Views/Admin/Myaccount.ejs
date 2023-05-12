@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Mirrored from zuramai.github.io/mazer/demo/auth-forgot-password.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 07 Jul 2022 12:33:51 GMT -->
+<!-- Added by HTTrack -->
+<meta http-equiv="content-type" content="text/html;charset=utf-8" /><!-- /Added by HTTrack -->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Login - MynameCard Admin Dashboard</title>
+    <link rel="stylesheet" href="/assets/css/main/app.css">
+    <link rel="stylesheet" href="/assets/css/pages/auth.css">
+    <link rel="shortcut icon" href="/assets/images/logo/favicon.svg" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/images/logo/favicon.png" type="image/png">
+</head>
+<%- include('../Layout/header') %>
+    import session from "express-session"
+
+    <div id="app"></div>
+    <%- include('../Layout/Sidebar') %>
+        <div id="main">
+            <div class="page-heading">
+                <div class="page-title mb-3">
+                    <div class="row">
+                        <div class="col-12 col-md-6 order-md-1 order-last">
+                            <h3><a href="<%= baseUrl %>admin/dashboard" class="text-primary"><i
+                                        class="fas fa-arrow-left me-2"></i></a>
+                                <h3 class="mb-0">My Account</h3>
+                        </div>
+                        <div class="col-12 col-md-6 order-md-2 order-first">
+                            <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
+                                <ol class="breadcrumb">
+                                    <li class="breadcrumb-item"><a href="<%= baseUrl %>admin/dashboard">Dashboard</a>
+                                    </li>
+
+                                </ol>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+
+                <body>
+                    <section>
+                        <div class="card-body">
+                            <div class="col-xl-7 col-md-8">
+                                <form class="form form-vertical" id="subscription_form" action="<% baseUrl %>MyAccount"
+                                    method="post" novalidate="novalidate">
+                                    <input type="hidden" name="myaccount_id" value="<%= myaccount._id%>">
+                                    <input type="hidden" name="_token" value="f9AhpSnBOfj6mWQNv1h3AqXMECftDNKFyoO2zp7C">
+                                    <div class="form-body">
+                                        <div class="row">
+                                            <div class="col-12">
+
+                                                <div class="form-group">
+                                                    <% if(typeof message=="string" ) { %>
+                                                        <p class="text-danger">
+                                                            <%= message %>
+                                                        </p>
+                                                        <% } %>
+                                                            <label for="fistname_name">FistName</label>
+                                                            <input type="text" onkeyup="eventHandler(this)"
+                                                                id="fistname" class="form-control" name="fistname"
+                                                                placeholder="FistName"
+                                                                value="<%=  myaccount.fistname %>">
+                                                            <% if(typeof errors=="object" ) { %>
+                                                                <p style="color: red;" class="fistname">
+                                                                    <%= errors.fistname %>
+                                                                </p>
+                                                                <% } %>
+                                                </div>
+                                                <div class="form-group">
+                                                    <% if(typeof message=="string" ) { %>
+                                                        <p class="text-danger">
+                                                            <%= message %>
+                                                        </p>
+                                                        <% } %>
+                                                            <label for="lastname_name">LastName</label>
+                                                            <input type="text" onkeyup="eventHandler(this)"
+                                                                id="lastname" class="form-control" name="lastname"
+                                                                placeholder="LastName"
+                                                                value="<%=  myaccount.lastname %>">
+                                                            <% if(typeof errors=="object" ) { %>
+                                                                <p style="color: red;" class="lastname">
+                                                                    <%= errors.lastname %>
+                                                                </p>
+                                                                <% } %>
+                                                </div>
+                                                <div class="form-group">
+                                                    <% if(typeof message=="string" ) { %>
+                                                        <p class="text-danger">
+                                                            <%= message %>
+                                                        </p>
+                                                        <% } %>
+                                                            <label for="username_name">UserName</label>
+                                                            <input type="text" onkeyup="eventHandler(this)"
+                                                                id="username" class="form-control" name="username"
+                                                                placeholder="UserName"
+                                                                value="<%=  myaccount.username %>">
+                                                            <% if(typeof errors=="object" ) { %>
+                                                                <p style="color: red;" class="username">
+                                                                    <%= errors.username %>
+                                                                </p>
+                                                                <% } %>
+                                                </div>
+                                                <div class="form-group">
+                                                    <% if(typeof message=="string" ) { %>
+                                                        <p class="text-danger">
+                                                            <%= message %>
+                                                        </p>
+                                                        <% } %>
+                                                            <label for="subscription_name">Email</label>
+                                                            <input type="text" onkeyup="eventHandler(this)" id="email"
+                                                                class="form-control" name="email" placeholder="Email"
+                                                                value="<%=  myaccount.email %>">
+                                                            <% if(typeof errors=="object" ) { %>
+                                                                <p style="color: red;" class="email">
+                                                                    <%= errors.email %>
+                                                                </p>
+                                                                <% } %>
+                                                </div>
+
+
+                                                <div class="form-group">
+                                                    <label for="amount">Password</label>
+                                                    <input type="number" onkeyup="eventHandler(this)" id="password"
+                                                        value="<%=  myaccount.password %>"
+                                                        class="form-control onlyNumber" name="password"
+                                                        placeholder="Password">
+                                                    <% if(typeof errors=="object" ) { %>
+                                                        <p style="color: red;" class="password">
+                                                            <%= errors.password %>
+                                                        </p>
+                                                        <% } %>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-12 d-flex justify-content-end">
+                                                <button type="submit" id="submit_btn" class="btn btn-primary me-1 mb-1">
+                                                    <span>Save</span></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </section>
+                </body>
+                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                <script>
+                    $("input").keyup(function () {
+                        $(".text-danger").text("");
+                    });
+                    function eventHandler(e) {
+                        const {
+                            id,
+                            name,
+                            value
+                        } = e
+                        if (value.length > 0) {
+                            $(`.${id}`).text("")
+                        }
+                    }
+                </script>
+                <script>
+                    let isTost = '<%= session.isTost %>'
+                    let msg = '<%= session.tostMsg %>'
+                    let tostBackground = '<%= session.tostBackground %>'
+                    if (isTost == "true") {
+                        Toastify({
+                            text: msg,
+                            duration: 3000,
+                            newWindow: true,
+                            close: true,
+                            gravity: "top", // `top` or `bottom`
+                            position: "right", // `left`, `center` or `right`
+                            stopOnFocus: true, // Prevents dismissing of toast on hover
+                            style: {
+                                background: tostBackground,
+                            },
+                        }).showToast();
+                        '<%= session.isTost = "false"%>'
+                    }
+                </script>
+
+</html>
+<%- include('../Layout/Footer') %>

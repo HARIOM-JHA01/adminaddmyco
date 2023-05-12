@@ -1,0 +1,228 @@
+<%- include('../Elements/Header') %>
+
+
+
+<form id="regForm" action="<%= baseUrl %>companyprofile" method="post" enctype="multipart/form-data">
+	<h1>Company Profile</h1>
+	<!-- One "tab" for each step in the form: -->
+	<div class="tab">
+	  <p><input class="form-control" placeholder="Company English" oninput="this.className = ''" name="companyenglish1"></p>
+	  <p><input class="form-control" placeholder="Company Chinese" oninput="this.className = ''" name="companychinese1"></p>
+	  <p><input class="form-control" placeholder="Company Designation" oninput="this.className = ''" name="companydesignation1"></p>
+	  <div class="form-group thumbnail-div">
+		<label for="thumbnail">video*</label>
+		<input name="video1" type="file" onchange="eventHandler(this)"class="dropify document"  accept="video/mp4,video/x-m4v,video/" id="video1" />
+		<% if(typeof errors == "object") { %><p style="color: red;" class="video1">
+			<%= errors.video1 %></p> <% } %>
+		<div class="col-md-12 mt-4 thumbnail-file d-none">
+			<div class="form-group mb-0">
+				<label for="">Chosen Files</label>
+				<ul class="thumbnail-list ps-0">
+				</ul>
+			</div>
+		</div>    
+</div>
+	  <!-- <p><input class="form-control" placeholder="video" oninput="this.className = ''" name="video"></p> -->
+	  <p><input class="form-control" placeholder="Address" oninput="this.className = ''" name="address1"></p>
+	  <p><input class="form-control" placeholder="Contact" oninput="this.className = ''" name="contact1"></p>
+	  <p><input class="form-control" placeholder="Website" oninput="this.className = ''" name="website1"></p>
+	  <p><input class="form-control" placeholder="Telegram ID" oninput="this.className = ''" name="tgid1"></p>
+	  <p><input class="form-control" placeholder="fax" oninput="this.className = ''" name="fax1"></p>
+	  <p><input class="form-control" placeholder="email" oninput="this.className = ''" name="email1"></p>
+	  <p><input class="form-control" placeholder="fanpage" oninput="this.className = ''" name="fanpage1"></p>
+	</div>
+
+	<div class="tab">
+		<p><input class="form-control" placeholder="Company English" oninput="this.className = ''" name="companyenglish2"></p>
+		<p><input class="form-control" placeholder="Company Chinese" oninput="this.className = ''" name="companychinese2"></p>
+		<p><input class="form-control" placeholder="Company Designation" oninput="this.className = ''" name="companydesignation2"></p>
+		<div class="form-group thumbnail-div">
+		  <label for="thumbnail">video*</label>
+		  <input name="video2" type="file" onchange="eventHandler(this)"class="dropify document"  accept="video/mp4,video/x-m4v,video/" id="video2" />
+		  <% if(typeof errors == "object") { %><p style="color: red;" class="video2">
+			  <%= errors.video2 %></p> <% } %>
+		  <div class="col-md-12 mt-4 thumbnail-file d-none">
+			  <div class="form-group mb-0">
+				  <label for="">Chosen Files</label>
+				  <ul class="thumbnail-list ps-0">
+				  </ul>
+			  </div>
+		  </div>    
+  </div>
+		<!-- <p><input class="form-control" placeholder="video" oninput="this.className = ''" name="video"></p> -->
+		<p><input class="form-control" placeholder="Address" oninput="this.className = ''" name="address2"></p>
+		<p><input class="form-control" placeholder="Contact" oninput="this.className = ''" name="contact2"></p>
+		<p><input class="form-control" placeholder="Website" oninput="this.className = ''" name="website2"></p>
+		<p><input class="form-control" placeholder="Telegram ID" oninput="this.className = ''" name="tgid2"></p>
+		<p><input class="form-control" placeholder="fax" oninput="this.className = ''" name="fax2"></p>
+		<p><input class="form-control" placeholder="email" oninput="this.className = ''" name="email2"></p>
+		<p><input class="form-control" placeholder="fanpage" oninput="this.className = ''" name="fanpage2"></p>
+	  </div>
+	
+	<div class="tab">
+		<p><input class="form-control" placeholder="Company English" oninput="this.className = ''" name="companyenglish3"></p>
+		<p><input class="form-control" placeholder="Company Chinese" oninput="this.className = ''" name="companychinese3"></p>
+		<p><input class="form-control" placeholder="Company Designation" oninput="this.className = ''" name="companydesignation3"></p>
+		<div class="form-group thumbnail-div">
+		  <label for="thumbnail">video*</label>
+		  <input name="video3" type="file" onchange="eventHandler(this)"class="dropify document"  accept="video/mp4,video/x-m4v,video/" id="video3" />
+		  <% if(typeof errors == "object") { %><p style="color: red;" class="video">
+			  <%= errors.video3 %></p> <% } %>
+		  <div class="col-md-12 mt-4 thumbnail-file d-none">
+			  <div class="form-group mb-0">
+				  <label for="">Chosen Files</label>
+				  <ul class="thumbnail-list ps-0">
+				  </ul>
+			  </div>
+		  </div>    
+  </div>
+		<!-- <p><input class="form-control" placeholder="video" oninput="this.className = ''" name="video"></p> -->
+		<p><input class="form-control" placeholder="Address" oninput="this.className = ''" name="address3"></p>
+		<p><input class="form-control" placeholder="Contact" oninput="this.className = ''" name="contact3"></p>
+		<p><input class="form-control" placeholder="Website" oninput="this.className = ''" name="website3"></p>
+		<p><input class="form-control" placeholder="Telegram ID" oninput="this.className = ''" name="tgid3"></p>
+		<p><input class="form-control" placeholder="fax" oninput="this.className = ''" name="fax3"></p>
+		<p><input class="form-control" placeholder="email" oninput="this.className = ''" name="email3"></p>
+		<p><input class="form-control" placeholder="fanpage" oninput="this.className = ''" name="fanpage3"></p>
+	  </div>
+	
+	<div style="overflow:auto;">
+	  <div style="float:right;">
+		<button type="button" id="prevBtn" onclick="nextPrev(-1)">Previous</button>
+		<button type="button" id="nextBtn" onclick="nextPrev(1)">Next</button>
+	  </div>
+	</div>
+	<!-- Circles which indicates the steps of the form: -->
+	<div style="text-align:center;margin-top:40px;">
+	  <span class="step"></span>
+	  <span class="step"></span>
+	  <span class="step"></span>
+
+	</div>
+  </form>
+	
+
+		<script>
+			var count = '0';
+			function addMoreField() {
+				count++;
+				var html = '';
+
+				html += '<div class="col-md-6">';
+				html += '<div class="row">';
+				html += '<div class="col-md-12">';
+				html += '<div class="form-group mb-1">';
+				html += '<input type="text" name="cp_website[]" id="cp_website_' + count + '" class="form-control" placeholder="Website ' + count + '" value="">';
+				html += '</div>';
+				html += '</div>';
+				html += '</div>';
+				html += '</div>';
+				html += '<div class="col-md-6">';
+				html += '<div class="row">';
+				html += '<div class="col-md-12">';
+				html += '<div class="form-group mb-1">';
+				html += '<input type="text" name="cp_link[]" id="cp_link_' + count + '" class="form-control" placeholder="Fanpage ' + count + '" value="">';
+				html += '</div>';
+				html += '</div>';
+				html += '</div>';
+				html += '</div>';
+
+				$(".add-more-rows").last().append(html);
+			}
+		</script>
+		<script>
+
+			//jQuery time
+			var current_fs, next_fs, previous_fs; //fieldsets
+			var left, opacity, scale; //fieldset properties which we will animate
+			var animating; //flag to prevent quick multi-click glitches
+
+			$(".next").click(function () {
+				if (animating) return false;
+				animating = true;
+
+				current_fs = $(this).parent();
+				next_fs = $(this).parent().next();
+
+				//activate next step on progressbar using the index of next_fs
+				$("#progressbar li").eq($("fieldset").index(next_fs)).addClass("active");
+
+				//show the next fieldset
+				next_fs.show();
+				//hide the current fieldset with style
+				current_fs.animate({ opacity: 0 }, {
+					step: function (now, mx) {
+						//as the opacity of current_fs reduces to 0 - stored in "now"
+						//1. scale current_fs down to 80%
+						scale = 1 - (1 - now) * 0.2;
+						//2. bring next_fs from the right(50%)
+						left = (now * 50) + "%";
+						//3. increase opacity of next_fs to 1 as it moves in
+						opacity = 1 - now;
+						current_fs.css({
+							'transform': 'scale(' + scale + ')',
+							'position': 'absolute'
+						});
+						next_fs.css({ 'left': left, 'opacity': opacity });
+					},
+					duration: 800,
+					complete: function () {
+						current_fs.hide();
+						animating = false;
+					},
+					//this comes from the custom easing plugin
+					easing: 'easeInOutBack'
+				});
+			});
+
+			$(".previous").click(function () {
+				if (animating) return false;
+				animating = true;
+
+				current_fs = $(this).parent();
+				previous_fs = $(this).parent().prev();
+
+				//de-activate current step on progressbar
+				$("#progressbar li").eq($("fieldset").index(current_fs)).removeClass("active");
+
+				//show the previous fieldset
+				previous_fs.show();
+				//hide the current fieldset with style
+				current_fs.animate({ opacity: 0 }, {
+					step: function (now, mx) {
+						//as the opacity of current_fs reduces to 0 - stored in "now"
+						//1. scale previous_fs from 80% to 100%
+						scale = 0.8 + (1 - now) * 0.2;
+						//2. take current_fs to the right(50%) - from 0%
+						left = ((1 - now) * 50) + "%";
+						//3. increase opacity of previous_fs to 1 as it moves in
+						opacity = 1 - now;
+						current_fs.css({ 'left': left });
+						previous_fs.css({ 'transform': 'scale(' + scale + ')', 'opacity': opacity });
+					},
+					duration: 800,
+					complete: function () {
+						current_fs.hide();
+						animating = false;
+					},
+					//this comes from the custom easing plugin
+					easing: 'easeInOutBack'
+				});
+			});
+
+
+		</script>
+		<script>
+			$('.dropify').dropify({
+			  tpl: {
+				wrap: '<div class="dropify-wrapper"></div>',
+				loader: '<div class="dropify-loader"></div>',
+				message: '<div class="dropify-message"><span class="icon" ><svg width="24" height="27" viewBox="0 0 24 27" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M15.6484 0.766724H6.77911C4.03378 0.766724 1.66711 3.0429 1.66711 5.85233V20.4954C1.66711 23.4631 3.87778 25.7965 6.77911 25.7965H17.4298C20.1764 25.7965 22.4031 23.3049 22.4031 20.4954V7.96213L15.6484 0.766724Z" stroke="#0ABAB5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.2982 0.750732V4.71802C15.2982 6.65462 16.8302 8.22572 18.7236 8.22981C20.4782 8.2339 22.2742 8.23526 22.3956 8.22708" stroke="#0ABAB5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12.0577 9.35134C11.9165 9.2063 11.7227 9.12449 11.5203 9.12451C11.3178 9.12453 11.124 9.20637 10.9828 9.35143L7.19885 13.2396C6.90996 13.5365 6.91641 14.0113 7.21325 14.3002C7.51009 14.5891 7.98492 14.5826 8.27381 14.2858L10.7709 11.7199V18.8394C10.7709 19.2536 11.1067 19.5894 11.5209 19.5894C11.9351 19.5894 12.2709 19.2536 12.2709 18.8394V11.7207L14.7683 14.2859C15.0572 14.5827 15.532 14.589 15.8288 14.3001C16.1256 14.0112 16.132 13.5363 15.8431 13.2395L12.0577 9.35134Z" fill="#0ABAB5"/></svg></span> <p>Drag and Drop to <br/>Upload or <span>Browse</span></p></div>',
+				// preview: '<div class="dropify-preview"><span class="dropify-render"></span><div class="dropify-infos"><div class="dropify-infos-inner"><p class="dropify-infos-message">Drag and drop or click to <span>replace</span></p></div></div></div>',
+				filename: '<p class="dropify-filename"><span class="file-icon"></span> <span class="dropify-filename-inner"></span></p>',
+				clearButton: '<button type="button" class="dropify-clear"> remove</button>',
+				errorsContainer: '<div class="dropify-errors-container"><ul></ul></div>'
+			  }
+			});
+		  </script>
+<%- include('../Elements/Footer') %>

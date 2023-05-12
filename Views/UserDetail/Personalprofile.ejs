@@ -1,0 +1,171 @@
+<%- include('../Elements/Header') %>
+	<script>
+		var home = 'personal-profile';
+	</script>
+	<div class="col-md-5 mx-auto">
+		<P class="text-center">Currently you are free member upgrade to business membrship to avail exciting features
+			 <a href="<%= baseUrl %>membership" style="color: #00aeef;">Upgrade now</a></P>
+	</div>
+	<div class="container-fluid text-center bg-theme profile py-1">
+		
+		<div class="container">
+			<div class="row justify-content-center">
+				<div class="col-lg-6 col-md-8 col-12">
+					<div class="modal-header text-center bg-theme1 text-white py-2 button-color d-none">
+						<h5 class="w-100 mb-0 font-color" id="profileModalLabel">Personal Profile</h5>
+					</div>
+				</div>
+			</div>
+
+			<div class="row justify-content-center">
+				<div class="col-lg-6 col-md-8 col-12">
+					<div class="lan-profile">
+						<a class="lan-icon text-danger">
+							<img src="<%= baseUrl %>assets/user/assets/personal_profile/image2.jpeg"
+								class="img-fluid" alt="image">
+						</a>
+						<div class="d-none"><span class="font-color"> </span></div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row justify-content-center mt-1">
+				<div class="col-lg-6 col-md-8 col-12">
+					<div class="pro-button">
+
+						<div class="row">
+							<div class="col-6">
+								<a class="btn btn-theme1 w-100 button-color mb-1">
+									<span class="font-color">
+										<i class="fa fa-user"></i>
+										Gautam </span>
+								</a>
+							</div>
+							<div class="col-6">
+								<a class="btn btn-theme1 w-100 button-color mb-1">
+									<span class="font-color">
+										<i class="fa fa-user"></i>
+										幸福 </span>
+								</a>
+							</div>
+						</div>
+
+					</div>
+				</div>
+			</div>
+
+			<div class="row justify-content-center">
+
+				<div class="col-lg-6 col-md-8 col-12">
+					<div class="pro-button">
+
+						<div class="row">
+							<div class="col-4">
+								<a class="w-100 icon" onClick="popupOpen( 'https://t.me/gurave' );"
+									data-toggle="tooltip" title="gurave">
+									<img src="<%= baseUrl %>assets/images/logo/telegram.png"
+										class="img-fluid">
+								</a>
+							</div>
+							<div class="col-4">
+								<a class="w-100 icon"
+									onClick="popupOpen( 'https://api.whatsapp.com/send?phone=919428855599' );"
+									data-toggle="tooltip" title="919428855599">
+									<img src="<%= baseUrl %>assets/images/logo/wtp.png"
+										class="img-fluid">
+								</a>
+							</div>
+							<div class="col-4 d-none">
+								<a class="w-100 icon" onClick="popupOpen( 'https://web.wechat.com/Gaurav' );"
+									data-toggle="tooltip" title="Gaurav">
+									<img src="http://192.168.0.3/codeigniter/bcit-ci-CodeIgniter-bcb17eb/images/wechat.png?v=1673509023"
+										class="img-fluid">
+								</a>
+							</div>
+							<div class="col-4 d-none">
+								<a class="w-100 icon"
+									onClick="popupOpen( 'https://social-plugins.line.me/lineit/share?url=http://192.168.0.3/codeigniter/bcit-ci-CodeIgniter-bcb17eb/landing?U=MjhAZ2F1dGFtMQ==&H=MQ==' );"
+									data-toggle="tooltip" title="https://line.me/ti/p/DOH_kNnl7s">
+									<img src="http://192.168.0.3/codeigniter/bcit-ci-CodeIgniter-bcb17eb/images/line.png?v=1673509023"
+										class="img-fluid">
+								</a>
+							</div>
+							<div class="col-4 mt-0">
+								<a class="w-100 icon" onClick="">
+									<img src="http://192.168.0.3/codeigniter/bcit-ci-CodeIgniter-bcb17eb/images/mail2.png?v=1673509023"
+										class="img-fluid">
+								</a>
+							</div>
+							<div class="col-4 mt-1">
+								<a class="w-100 icon" onClick="popupOpen( 'http://gkakdiya.90' );" data-toggle="tooltip"
+									title="gkakdiya.90">
+									<img src="<%= baseUrl %>assets/images/logo/call.png"
+										class="img-fluid">
+								</a>
+							</div>
+							<div class="col-4 mt-1">
+								<a class="w-100 icon" onClick="popupOpen('http://')" data-toggle="tooltip"
+									title="http://">
+									<img src="http://192.168.0.3/codeigniter/bcit-ci-CodeIgniter-bcb17eb/images/facebook.png?v=1673509023"
+										class="img-fluid">
+								</a>
+							</div>
+							<div class="col-4 mt-1">
+								<a class="w-100 icon" onClick="" data-toggle="tooltip" title="123456789">
+									<img src="http://192.168.0.3/codeigniter/bcit-ci-CodeIgniter-bcb17eb/images/phone.png?v=1673509023"
+										class="img-fluid" onClick="phone( '123456789' );">
+								</a>
+							</div>
+
+							<div class="col-12 mt-1 d-none">
+								<a class="btn btn-theme1 text-center w-100 button-color"
+									onClick="popupOpen( 'mailto:kakdiya.gautam288@gmail.com' );">
+									<i class="fa fa-envelope font-color"></i>
+									<span class="font-color">kakdiya.gautam288@gmail.com</span>
+								</a>
+							</div>
+							<div class="col-12 mt-1">
+								<textarea rows="2" name="pp_address" id="pp_address" class="form-control"
+									placeholder="Enter Your Full Address"
+									disabled="disabled">Surat - Dumas Rd, Chopati, Police Line, Athwa Gate, Surat, Gujarat 395001</textarea>
+							</div>
+						</div>
+
+					</div>
+				</div>
+
+			</div>
+			
+
+			<div class="row justify-content-center">
+				<div class="col-lg-6 col-md-8 col-12">
+					<a class="font-bold" href="<%= baseUrl %>addprofile">
+					<button type="button" class="btn btn-theme1 w-100 mt-0 button-color"><span class="font-color"> Update
+							Profile</span></button></a>
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		let isTost = '<%= session.isTost %>'
+		let msg = '<%= session.tostMsg %>'
+		let tostBackground = '<%= session.tostBackground %>'
+		if (isTost == "true") {
+		  Toastify({
+			text: msg,
+			duration: 3000,
+			newWindow: true,
+			close: true,
+			gravity: "top", // `top` or `bottom`
+			position: "right", // `left`, `center` or `right`
+			stopOnFocus: true, // Prevents dismissing of toast on hover
+			style: {
+			  background: tostBackground,
+			},
+		  }).showToast();
+		  '<%= session.isTost = "false"%>'
+		}
+	  </script>
+	<%- include('../Elements/Footer') %>

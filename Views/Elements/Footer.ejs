@@ -1,0 +1,795 @@
+
+<footer class="footer">
+	<div class="container-fluid text-center bg-theme qrcode pb-2">
+		<div class="container">
+
+			<div class="row justify-content-center">
+				<div class="col-lg-6 col-md-8 col-12">
+					<div class="lan-panel">
+
+						<div class="row justify-content-center">
+							<div class="col-3">
+								<div class="lan-icon py-0 "><!-- button-color -->
+									<a class="panel-icon ">
+										<!-- <i class="fas fa-user"></i> -->
+										<img src="<%= baseUrl %>assets/images/logo/person.png">
+									</a>
+									<div class="setting-panel profile-panel">
+										<!-- <p class="panel-icon mb-0"><i class="fas fa-tools"></i></p> -->
+										<ul class="list-group">
+											<!-- <li class="list-group-item px-3 py-1 button-color "><a href="<%= baseUrl %>assets/contact-list" class=""><span class="font-color">Contact List</span></a></li> -->
+											<li class="list-group-item px-3 py-1 button-color "><a
+													href="<%= baseUrl %>contact" class=""><span
+														class="font-color">Contact List</span></a></li>
+											<li class="list-group-item px-3 py-1 d-none button-color"><a
+													href="<%= baseUrl %>dashboard"><span
+														class="font-color">Dashboard</span></a></li>
+											<li class="list-group-item px-3 py-1 button-color"><a
+													href="<%= baseUrl %>personal-profile" class=""><span
+														class="font-color">Personal Profile</span></a></li>
+											<li class="list-group-item px-3 py-1 button-color"><a
+													href="<%= baseUrl %>companyprofile" class=""><span
+														class="font-color">Company Profile</span></a></li>
+										</ul>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-3">
+								    <a href="<%= baseUrl %>chamber" class="panel-icon ">
+    									<div class="lan-icon py-0 "><!-- button-color -->
+    										<!-- <i class="fas fa-users font-color"></i> -->
+    										<img src="<%= baseUrl %>assets/images/chamber.png">
+    									</div>
+    								</a>
+							    							</div>
+						
+							<div class="col-3">
+								<a href="<%= baseUrl %>qr-code" class="panel-icon">
+									<div class="lan-icon py-0 "><!-- button-color -->
+										<!-- <i class="fas fa-qrcode font-color"></i> -->
+										<img src="../../assets/images/qr_code_panel.png">
+									</div>
+								</a>
+							</div>
+							<div class="col-3">
+								<div class="lan-icon py-0 active"><!-- button-color -->
+								    <div class="setting-panel">
+								        <p class="panel-icon mb-0">
+								        	<!-- <i class="fas fa-tools font-color"></i> -->
+								        	<img src="<%= baseUrl %>assets/images/setting.png">
+								        </p>
+								        <ul class="list-group">
+								        
+								        	    <li class="list-group-item px-3 py-1 button-color ">
+    								        		<a href="<%= baseUrl %>chamber" class="">
+    								        			<span class="font-color">Chamber</span>
+								        			</a>
+							        			</li>
+    	    						            <li class="list-group-item px-3 py-1 button-color">
+    	    						            	<a href="<%= baseUrl %>theme" class="">
+    	    						            		<span class="font-color">Select your theme</span>
+	    						            		</a>
+    						            		</li>
+    	    						            <li class="list-group-item px-3 py-1 button-color">
+    	    						            	<div class="social-icon" style="cursor: pointer; color: #fff;">
+    							    					<div class="dropdown lan-dropdown">
+    							    						<a class="" id="navbarDropdown" data-toggle="dropdown"><span class="font-color">Adjust languages</span></a>
+    							    						<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+    							    							<a class="dropdown-item" onclick="changeLanguage('ch');"><span class="">中</span></a>
+    							    							<a class="dropdown-item" onclick="changeLanguage('en');"><span class="">Eng</span></a>
+    							    						</div>
+    							    					</div>
+    							    			    </div>
+    	    						            </li>
+    	    						            <li class="list-group-item px-3 py-1 button-color">
+    	    						            	<a href="<%= baseUrl %>login">
+    	    						            		<span class="font-color">Log Out</span>
+	    						            		</a>
+    	    						            </li>
+								        		    						            
+	    						        </ul>
+								    </div>
+								</div>
+							</div>
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<a href="#loginModal" data-toggle="modal" class="btn btn-theme1 w-100 d-none" id="sign_in_footer">Sign In</a>
+
+	<!-- Join us telegram account -->
+	<div class="modal fade" id="telegramModal" tabindex="-1" role="dialog" aria-labelledby="telegramModalLabel"
+		aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header bg-theme1 text-white text-center">
+					<h5 class="modal-title w-100" id="telegramModalLabel">Join us by Telegram</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">×</span>
+					</button>
+				</div>
+				<form onsubmit="return false;" method="post" id="form-validate-account" class="mb-0">
+					<div class="modal-body py-2">
+
+						<p class="text-theme1 align-items-center mb-2 d-none">
+							<label class="d-flex align-items-center m-0">
+								<i class="fa fa-user text-theme1 mt-1 mr-0"></i>
+								<span class="mr-4 mb-0"></span>
+							</label>
+							<input type="text" name="name" id="name" class="form-control" value=""
+								placeholder="Enter name here" autofocus="">
+						</p>
+						<div for="name" class="input-notification error ml-5 ml-sm-5"></div>
+						<p></p>
+
+						<p class="text-theme1 d-flex align-items-center mb-2">
+							<label class="d-flex align-items-center m-0">
+								<i class="fa fa-envelope text-theme1 mt-1 mr-0"></i>
+								<span class="mr-4 mb-0"></span>
+							</label>
+							<input type="text" name="ju_email" id="ju_email" class="form-control" value=""
+								placeholder="Enter email here">
+						</p>
+						<div for="ju_email" class="input-notification error ml-5 ml-sm-5"></div>
+						<p></p>
+
+						<p class="text-theme1 d-flex align-items-center mb-2">
+							<label class="d-flex align-items-center m-0">
+								<i class="fa fa-phone text-theme1 mt-1 mr-0"></i>
+								<span class="mr-4 mb-0"></span>
+							</label>
+							<input type="text" name="ju_whats_up" id="ju_whats_up" class="form-control" value=""
+								placeholder="Enter phone here">
+						</p>
+						<div for="ju_whats_up" class="input-notification error ml-5 ml-sm-5"></div>
+						<p></p>
+
+						<p class="text-theme1 d-flex align-items-center mb-2">
+							<label class="d-flex align-items-center m-0">
+								<i class="fa fa-flag text-theme1 mt-1 mr-0"></i>
+								<span class="mr-4 mb-0"></span>
+							</label>
+							<select name="country_id" id="country_id" class="form-control">
+								<option value="" selected="selected">Please select country</option>
+								<option value="1">Afghanistan</option>
+								<option value="2">Albania</option>
+								<option value="3">Algeria</option>
+								<option value="4">American Samoa</option>
+								<option value="5">Andorra</option>
+								<option value="6">Angola</option>
+								<option value="7">Anguilla</option>
+								<option value="8">Antarctica</option>
+								<option value="9">Antigua And Barbuda</option>
+								<option value="10">Argentina</option>
+								<option value="11">Armenia</option>
+								<option value="12">Aruba</option>
+								<option value="13">Australia</option>
+								<option value="14">Austria</option>
+								<option value="15">Azerbaijan</option>
+								<option value="16">Bahamas The</option>
+								<option value="17">Bahrain</option>
+								<option value="18">Bangladesh</option>
+								<option value="19">Barbados</option>
+								<option value="20">Belarus</option>
+								<option value="21">Belgium</option>
+								<option value="22">Belize</option>
+								<option value="23">Benin</option>
+								<option value="24">Bermuda</option>
+								<option value="25">Bhutan</option>
+								<option value="26">Bolivia</option>
+								<option value="27">Bosnia and Herzegovina</option>
+								<option value="28">Botswana</option>
+								<option value="29">Bouvet Island</option>
+								<option value="30">Brazil</option>
+								<option value="31">British Indian Ocean Territory</option>
+								<option value="32">Brunei</option>
+								<option value="33">Bulgaria</option>
+								<option value="34">Burkina Faso</option>
+								<option value="35">Burundi</option>
+								<option value="36">Cambodia</option>
+								<option value="37">Cameroon</option>
+								<option value="38">Canada</option>
+								<option value="39">Cape Verde</option>
+								<option value="40">Cayman Islands</option>
+								<option value="41">Central African Republic</option>
+								<option value="42">Chad</option>
+								<option value="43">Chile</option>
+								<option value="44">China</option>
+								<option value="45">Christmas Island</option>
+								<option value="46">Cocos (Keeling) Islands</option>
+								<option value="47">Colombia</option>
+								<option value="48">Comoros</option>
+								<option value="51">Cook Islands</option>
+								<option value="52">Costa Rica</option>
+								<option value="53">Cote D\'Ivoire (Ivory Coast)</option>
+								<option value="54">Croatia (Hrvatska)</option>
+								<option value="55">Cuba</option>
+								<option value="56">Cyprus</option>
+								<option value="57">Czech Republic</option>
+								<option value="50">Democratic Republic Of The Congo</option>
+								<option value="58">Denmark</option>
+								<option value="59">Djibouti</option>
+								<option value="60">Dominica</option>
+								<option value="61">Dominican Republic</option>
+								<option value="62">East Timor</option>
+								<option value="63">Ecuador</option>
+								<option value="64">Egypt</option>
+								<option value="65">El Salvador</option>
+								<option value="66">Equatorial Guinea</option>
+								<option value="67">Eritrea</option>
+								<option value="68">Estonia</option>
+								<option value="69">Ethiopia</option>
+								<option value="70">External Territories of Australia</option>
+								<option value="71">Falkland Islands</option>
+								<option value="72">Faroe Islands</option>
+								<option value="73">Fiji Islands</option>
+								<option value="74">Finland</option>
+								<option value="75">France</option>
+								<option value="76">French Guiana</option>
+								<option value="77">French Polynesia</option>
+								<option value="78">French Southern Territories</option>
+								<option value="79">Gabon</option>
+								<option value="80">Gambia The</option>
+								<option value="81">Georgia</option>
+								<option value="82">Germany</option>
+								<option value="83">Ghana</option>
+								<option value="84">Gibraltar</option>
+								<option value="85">Greece</option>
+								<option value="86">Greenland</option>
+								<option value="87">Grenada</option>
+								<option value="88">Guadeloupe</option>
+								<option value="89">Guam</option>
+								<option value="90">Guatemala</option>
+								<option value="91">Guernsey and Alderney</option>
+								<option value="92">Guinea</option>
+								<option value="93">Guinea-Bissau</option>
+								<option value="94">Guyana</option>
+								<option value="95">Haiti</option>
+								<option value="96">Heard and McDonald Islands</option>
+								<option value="97">Honduras</option>
+								<option value="98">Hong Kong S.A.R.</option>
+								<option value="99">Hungary</option>
+								<option value="100">Iceland</option>
+								<option value="101">India</option>
+								<option value="102">Indonesia</option>
+								<option value="103">Iran</option>
+								<option value="104">Iraq</option>
+								<option value="105">Ireland</option>
+								<option value="106">Israel</option>
+								<option value="107">Italy</option>
+								<option value="108">Jamaica</option>
+								<option value="109">Japan</option>
+								<option value="110">Jersey</option>
+								<option value="111">Jordan</option>
+								<option value="112">Kazakhstan</option>
+								<option value="113">Kenya</option>
+								<option value="114">Kiribati</option>
+								<option value="115">Korea North</option>
+								<option value="116">Korea South</option>
+								<option value="117">Kuwait</option>
+								<option value="118">Kyrgyzstan</option>
+								<option value="119">Laos</option>
+								<option value="120">Latvia</option>
+								<option value="121">Lebanon</option>
+								<option value="122">Lesotho</option>
+								<option value="123">Liberia</option>
+								<option value="124">Libya</option>
+								<option value="125">Liechtenstein</option>
+								<option value="126">Lithuania</option>
+								<option value="127">Luxembourg</option>
+								<option value="128">Macau S.A.R.</option>
+								<option value="129">Macedonia</option>
+								<option value="130">Madagascar</option>
+								<option value="131">Malawi</option>
+								<option value="132">Malaysia</option>
+								<option value="133">Maldives</option>
+								<option value="134">Mali</option>
+								<option value="135">Malta</option>
+								<option value="136">Man (Isle of)</option>
+								<option value="137">Marshall Islands</option>
+								<option value="138">Martinique</option>
+								<option value="139">Mauritania</option>
+								<option value="140">Mauritius</option>
+								<option value="141">Mayotte</option>
+								<option value="142">Mexico</option>
+								<option value="143">Micronesia</option>
+								<option value="144">Moldova</option>
+								<option value="145">Monaco</option>
+								<option value="146">Mongolia</option>
+								<option value="147">Montserrat</option>
+								<option value="148">Morocco</option>
+								<option value="149">Mozambique</option>
+								<option value="150">Myanmar</option>
+								<option value="151">Namibia</option>
+								<option value="152">Nauru</option>
+								<option value="153">Nepal</option>
+								<option value="154">Netherlands Antilles</option>
+								<option value="155">Netherlands The</option>
+								<option value="156">New Caledonia</option>
+								<option value="157">New Zealand</option>
+								<option value="158">Nicaragua</option>
+								<option value="159">Niger</option>
+								<option value="160">Nigeria</option>
+								<option value="161">Niue</option>
+								<option value="162">Norfolk Island</option>
+								<option value="163">Northern Mariana Islands</option>
+								<option value="164">Norway</option>
+								<option value="165">Oman</option>
+								<option value="166">Pakistan</option>
+								<option value="167">Palau</option>
+								<option value="168">Palestinian Territory Occupied</option>
+								<option value="169">Panama</option>
+								<option value="170">Papua new Guinea</option>
+								<option value="171">Paraguay</option>
+								<option value="172">Peru</option>
+								<option value="173">Philippines</option>
+								<option value="174">Pitcairn Island</option>
+								<option value="175">Poland</option>
+								<option value="176">Portugal</option>
+								<option value="177">Puerto Rico</option>
+								<option value="178">Qatar</option>
+								<option value="49">Republic Of The Congo</option>
+								<option value="179">Reunion</option>
+								<option value="180">Romania</option>
+								<option value="181">Russia</option>
+								<option value="182">Rwanda</option>
+								<option value="183">Saint Helena</option>
+								<option value="184">Saint Kitts And Nevis</option>
+								<option value="185">Saint Lucia</option>
+								<option value="186">Saint Pierre and Miquelon</option>
+								<option value="187">Saint Vincent And The Grenadines</option>
+								<option value="188">Samoa</option>
+								<option value="189">San Marino</option>
+								<option value="190">Sao Tome and Principe</option>
+								<option value="191">Saudi Arabia</option>
+								<option value="192">Senegal</option>
+								<option value="193">Serbia</option>
+								<option value="194">Seychelles</option>
+								<option value="195">Sierra Leone</option>
+								<option value="196">Singapore</option>
+								<option value="197">Slovakia</option>
+								<option value="198">Slovenia</option>
+								<option value="199">Smaller Territories of the UK</option>
+								<option value="200">Solomon Islands</option>
+								<option value="201">Somalia</option>
+								<option value="202">South Africa</option>
+								<option value="203">South Georgia</option>
+								<option value="204">South Sudan</option>
+								<option value="205">Spain</option>
+								<option value="206">Sri Lanka</option>
+								<option value="207">Sudan</option>
+								<option value="208">Suriname</option>
+								<option value="209">Svalbard And Jan Mayen Islands</option>
+								<option value="210">Swaziland</option>
+								<option value="211">Sweden</option>
+								<option value="212">Switzerland</option>
+								<option value="213">Syria</option>
+								<option value="214">Taiwan</option>
+								<option value="215">Tajikistan</option>
+								<option value="216">Tanzania</option>
+								<option value="217">Thailand</option>
+								<option value="218">Togo</option>
+								<option value="219">Tokelau</option>
+								<option value="220">Tonga</option>
+								<option value="221">Trinidad And Tobago</option>
+								<option value="222">Tunisia</option>
+								<option value="223">Turkey</option>
+								<option value="224">Turkmenistan</option>
+								<option value="225">Turks And Caicos Islands</option>
+								<option value="226">Tuvalu</option>
+								<option value="227">Uganda</option>
+								<option value="228">Ukraine</option>
+								<option value="229">United Arab Emirates</option>
+								<option value="230">United Kingdom</option>
+								<option value="231">United States</option>
+								<option value="232">United States Minor Outlying Islands</option>
+								<option value="247">United States of America</option>
+								<option value="233">Uruguay</option>
+								<option value="234">Uzbekistan</option>
+								<option value="235">Vanuatu</option>
+								<option value="236">Vatican City State (Holy See)</option>
+								<option value="237">Venezuela</option>
+								<option value="238">Vietnam</option>
+								<option value="239">Virgin Islands (British)</option>
+								<option value="240">Virgin Islands (US)</option>
+								<option value="241">Wallis And Futuna Islands</option>
+								<option value="242">Western Sahara</option>
+								<option value="243">Yemen</option>
+								<option value="244">Yugoslavia</option>
+								<option value="245">Zambia</option>
+								<option value="246">Zimbabwe</option>
+							</select>
+						</p>
+						<div for="country_id" class="input-notification error ml-5 ml-sm-5"></div>
+						<p></p>
+
+						<p class="text-theme1 d-flex align-items-center mb-2">
+							<label class="d-flex align-items-center m-0">
+								<i class="fab fa-telegram text-theme1 mt-1 mr-1"></i>
+								<span class="mr-1 mb-0">@</span>
+							</label>
+							<input type="text" name="ju_telegram" id="ju_telegram" class="form-control" value=""
+								placeholder="Telegram id – This will be  user name">
+						</p>
+						<div for="ju_telegram" class="input-notification error ml-5 ml-sm-5"></div>
+						<div class="input-notification success ml-5 ml-sm-5 mb-2 mt-2" id="joinus"></div>
+						<div class="text-right mb-2">
+							<a href="#loginModal" onclick="closeAllPopup();" data-toggle="modal">Already have account?
+								Login</a>
+						</div>
+
+						<div class="ml-4 mb-2 text-theme1 font-14">
+							<span id="tme" class="d-none">https://t.me/Mynamecard</span>
+							<span id="">Please note : you must join our Telegram channel in order to complete the signup
+								process , Please use same telegram id. </span>
+						</div>
+					</div>
+
+					<div class="modal-footer bg-theme1 py-2">
+						<button type="submit" class="btn btn-primary" name="create_account" id="signup">
+							<p class="mb-0 text">Submit</p>
+							<span id="signup_loading_img" class="d-none">
+								<img class="login_priloaded" src="<%= baseUrl %>assets/images/preloader-white.gif"
+									alt="loader">
+							</span>
+						</button>
+						<button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- END Join us telegram account -->
+
+	<!-- Login telegram account -->
+
+	<div class="modal login-modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="loginModalLabel"
+		aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<form onsubmit="return false;" method="get" id="login-form" class="mb-0">
+					<div class="modal-header bg-theme1 text-white text-center d-block">
+						<h5 class="modal-title" id="loginModalLabel">Login</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">×</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<div class="input-group mb-1">
+							<div class="input-group-prepend">
+								<label class="mb-0"> <span class="text-danger ml-1"><sup>*</sup></span>User id </label>
+							</div>
+							<input type="text" class="form-control" name="ju_telegram" id="ju_telegram"
+								placeholder="Enter Your Telegram Username" value="" autofocus="">
+						</div>
+						<div for="ju_telegram" class="input-notification error mb-1" id="login-error-msg"></div>
+
+						<div class="input-group mb-1">
+							<div class="input-group-prepend">
+								<label class="mb-0"> <span class="text-danger ml-1"><sup>*</sup></span>Password </label>
+							</div>
+							<input type="password" class="form-control" name="password" id="password"
+								placeholder="Enter Your Password" value="">
+						</div>
+						<div for="password" class="input-notification error mb-1" id="login-error"></div>
+						<div for="login_not_match" class="input-notification error mb-1" id="login-error"></div>
+						<div class="input-notification success ml-5 ml-sm-5" id="Error_login"></div>
+
+						<div class="form-group text-right mb-0">
+							<a href="#forgotModal" onclick="closeAllPopup();" data-toggle="modal"
+								class="text-right forgot_password">Forgot Password ?</a>
+						</div>
+					</div>
+					<div class="modal-footer bg-theme1">
+						<button type="submit" class="btn btn-primary" title="Login" name="sign_in" id="login">
+							<p class="mb-0 text">Submit</p>
+							<span id="signup_loading_img" class="d-none">
+								<img class="login_priloaded" src="<%= baseUrl %>assets/images/preloader-white.gif"
+									alt="loader">
+							</span>
+						</button>
+						<button type="button" class="btn btn-danger close-model" data-dismiss="modal">Cancel</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- END Login telegram account -->
+
+	<!-- Forgot telegram account -->
+
+	<div class="modal login-modal fade" id="forgotModal" tabindex="-1" role="dialog" aria-labelledby="forgotModalLabel">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<form action="#" method="post" id="forgot" onclick="return false;" class="mb-0">
+					<div class="modal-header bg-theme1 text-white text-center d-block">
+						<h5 class="modal-title" id="forgotModalLabel">Forgot Password ?</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">×</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<div class="input-group">
+							<div class="input-group-prepend">
+								<label class="col-form-label"><span class="text-danger ml-1"><sup>*</sup></span>
+									Telegram ID</label>
+							</div>
+							<input type="email" class="form-control" name="id" id="id" placeholder="Username" value="">
+						</div>
+						<div for="forgot_not_match" class="input-notification error forgot_not_match ml-5 ml-sm-5">
+						</div>
+						<div for="success" id="success" class="input-notification text-success success ml-5 ml-sm-5">
+						</div>
+						<div for="id" class="input-notification error ml-5 ml-sm-5"></div>
+					</div>
+					<div class="modal-footer bg-theme1">
+						<input class="btn btn-primary" type="submit" value="Submit" id="forgot_password"
+							name="forgot_password">
+						<button type="button" class="btn btn-danger close-model" data-dismiss="modal">Cancel</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- End Forgot telegram account -->
+
+	<!-- Company Profile -->
+
+	<div class="modal fade profile-modal" id="profileModal" tabindex="-1" role="dialog"
+		aria-labelledby="profileModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<form class="mb-0">
+					<div class="modal-header text-center bg-theme1 text-white">
+						<h5 class="modal-title w-100" id="profileModalLabel">Select Profile</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">×</span>
+						</button>
+					</div>
+					<div class="modal-body">
+
+						<div class="form-group text-center mb-0">
+							<div class="pro-radio mb-0">
+								<input type="radio" class="d-none" name="profile" id="personal" value="1"
+									checked="checked">
+								<label for="personal" class="mb-0">Personal Profile</label>
+							</div>
+							<div class="pro-radio mb-0">
+								<input type="radio" class="d-none" name="profile" id="company" value="2">
+								<label for="company" class="mb-0">Company Profile</label>
+							</div>
+						</div>
+						<div class="clearfix"></div>
+
+					</div>
+					<div class="modal-footer bg-theme1 justify-content-center">
+						<button type="button" id="visit_link" class="btn btn-primary w-25">Visit</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- End Company Profile -->
+
+	<!-- Scan QR Code -->
+
+	<div class="modal fade scan-qr-modal" id="scanQRModal" tabindex="-1" role="dialog"
+		aria-labelledby="scanQRModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<form class="mb-0">
+					<div class="modal-header text-center bg-theme1 text-white">
+						<h5 class="modal-title w-100" id="profileModalLabel">Touch to QR</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">×</span>
+						</button>
+					</div>
+					<div class="modal-body">
+
+						<div class="form-group text-center mb-0">
+							<div class="pro-radio mb-0">
+								<!-- <input type=text size=16 placeholder="Tracking Code" class=qrcode-text> -->
+								<label class="qrcode-text-btn">
+									<input type="file" accept="image/*" capture="environment"
+										onclick="return showQRIntro();" onchange="openQRCamera(this);" tabindex="-1">
+								</label>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer bg-theme1 justify-content-center d-none">
+						<button type="button" id="visit_link" class="btn btn-primary w-25">Visit</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- Setting Page contact , theme, language in pop up -->
+
+	<div class="modal fade setting-modal" id="settingModal" tabindex="-1" role="dialog"
+		aria-labelledby="settingModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<form class="mb-0">
+					<div class="modal-header text-center bg-theme1 text-white">
+						<h5 class="modal-title w-100" id="profileModalLabel">Setting</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">×</span>
+						</button>
+					</div>
+					<div class="modal-body">
+
+						<div class="row justify-content-center">
+							<div class="col-lg-6 col-md-8 col-12">
+
+								<div class="setting-btn">
+									<a href="<%= baseUrl %>assets/theme"
+										class="btn btn-theme1 w-100 mb-3 button-color "><span class="font-color">Select
+											your theme</span></a>
+									<a class="btn btn-theme1 w-100 button-color cursor-no-drop"><span
+											class="font-color">Contact List</span></a>
+									<!-- <a href="#" class="btn btn-theme1 w-100 mt-3">Join us by Telegram</a> -->
+									<div class="social-icon mt-3" style="cursor: pointer; color: #fff;">
+										<div class="dropdown lan-dropdown ">
+											<a class="btn btn-theme1 w-100 button-color" id="navbarDropdown"
+												data-toggle="dropdown"><span class="font-color"> Adjust languages
+												</span></a>
+											<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+												<a class="dropdown-item" onclick="changeLanguage('ch');"><span
+														class="">中</span></a>
+												<a class="dropdown-item" onclick="changeLanguage('en');"><span
+														class="">Eng</span></a>
+											</div>
+										</div>
+									</div>
+
+									<a href="#scanQRModal" data-toggle="modal"
+										class="btn btn-theme1 w-100 mt-3 d-none scanQRModalBtn button-color"
+										style="cursor: pointer; color: #fff;"><span class="font-color">Scan QR Code<span
+												class="font-color"></span></span></a>
+									<a onclick="checkIsMobileDevice();"
+										class="d-none btn btn-theme1 w-100 mt-3 button-color"
+										style="cursor: pointer; color: #fff;"><span class="font-color">Scan QR
+											Code</span></a>
+									<a href="" target="_blank"
+										class="btn btn-theme1 w-100 mt-3 d-none button-color "><span
+											class="font-color">Get QR Code</span></a>
+
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer bg-theme1 justify-content-center d-none">
+						<button type="button" id="visit_link" class="btn btn-primary w-25">Visit</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- End Scan QR Code -->
+
+	<!-- Send link to telegram channel-->
+
+	<div class="modal telegram-channel-modal fade" id="telegramChannelModal" tabindex="-1" role="dialog"
+		aria-labelledby="telegramChannelModalLabel">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<form action="#" method="post" id="telegramChannel" onclick="return false;" class="mb-0">
+					<div class="modal-header bg-theme1 text-white text-center d-block">
+						<h5 class="modal-title" id="telegramChannelLabel">Join Channel Now</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">×</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<div class="input-group">
+							<div class="input-group-prepend">
+								<label class="col-form-label"><span class="text-danger"></span> Join our telegram
+									channel to complete registration process and enjoy the stunning features of
+									Mynamecard Services.</label>
+							</div>
+							<div class="input-notification success"></div>
+						</div>
+					</div>
+					<div class="modal-footer bg-theme1 justify-content-center">
+						<input class="btn btn-primary" type="submit" value="Yes" id="telegram_channel"
+							name="telegram_channel">
+						<button type="button" class="btn btn-danger close-model" data-dismiss="modal">No</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<!-- phon model-->
+
+	<button type="button" class="btn btn-info btn-lg d-none phoneModal" data-toggle="modal"
+		data-target="#phoneModal"></button>
+	<div id="phoneModal" class="modal fade" role="dialog">
+		<div class="modal-dialog text-center">
+			<!-- Modal content-->
+			<div class="modal-content" style="width: 60%; margin: 0 auto;">
+				<div class="modal-header bg-theme1 text-white text-center">
+					<h5 class="modal-title w-100" id="telegramModalLabel">Contact No</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">×</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<!-- Call Me @  --><span id="phone"></span>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+	<!-- fax model-->
+
+	<button type="button" class="btn btn-info btn-lg d-none faxModal" data-toggle="modal"
+		data-target="#faxModal"></button>
+	<div id="faxModal" class="modal fade" role="dialog">
+		<div class="modal-dialog text-center">
+			<!-- Modal content-->
+			<div class="modal-content" style="width: 60%; margin: 0 auto;">
+				<div class="modal-header bg-theme1 text-white text-center">
+					<h5 class="modal-title w-100" id="telegramModalLabel">Fax</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">×</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					Fax Us @ <span id="fax"></span>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+	<!-- End Forgot telegram account -->
+
+	<script>
+		function closeAllPopup() {
+			$(".close").click();
+			// 		$(".modal").css("display","none");
+		}
+	</script>
+	<div class="container-fluid bg-blue text-center text-white d-none">
+		<div class="row">
+			<div class="col-md-12 py-3">
+				<p class="m-0">© Telegram , <a href="http://bluemarketer.com" target="_blank">Bluemarketer.com</a> 2019
+				</p>
+			</div>
+		</div>
+	</div>
+</footer>
+</div>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous">
+</script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
+integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous">
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous">
+</script>
+<script src="<%= baseUrl %>assets/js/bootstrap.bundle.min.js"></script>
+<script src="<%= baseUrl %>assets/js/common.js?v=1673331642"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+	integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+	crossorigin="anonymous"></script>
+<script src="<%= baseUrl %>assets/js/bootstrap.min.js"></script>
+<script src="https://owlcarousel2.github.io/OwlCarousel2/assets/owlcarousel/owl.carousel.min.js"></script>
+<script src="<%= baseUrl %>assets/js/qr_packed.js"></script>
+<script src="<%= baseUrl %>assets/js/stepper.js"></script>
+</body>
+
+</html>

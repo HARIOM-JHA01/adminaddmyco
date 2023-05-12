@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Mirrored from zuramai.github.io/mazer/demo/table-datatable.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 07 Jul 2022 12:33:41 GMT -->
+<!-- Added by HTTrack -->
+<meta http-equiv="content-type" content="text/html;charset=utf-8" /><!-- /Added by HTTrack -->
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Addmy.co</title>
+  <link rel="stylesheet" href="/assets/css/main/app.css">
+  <link rel="shortcut icon" href="/assets/images/logo/favicon.svg" type="image/x-icon">
+  <link rel="shortcut icon" href="/assets/images/logo/favicon.png" type="image/png">
+  <link rel="stylesheet" href="/assets/css/shared/iconly.css">
+  <link rel="stylesheet" href="/assets/css/pages/fontawesome.css">
+  <link rel="stylesheet" href="/assets/css/pages/filepond.css">
+  <link rel="stylesheet" href="/assets/css/pages/form-element-select.css">
+  <link rel="stylesheet" href="/assets/css/chosen.css">
+  <link rel="stylesheet" type="text/css" href="https://jeremyfagis.github.io/dropify/dist/css/dropify.min.css">
+
+  <link rel="stylesheet" href="/assets/css/mdtimepicker.css">
+  <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css'>
+  <link rel='stylesheet'
+    href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.1/css/bootstrap-datepicker.min.css'>
+  <link rel="stylesheet" href="/assets/css/select2.min.css">
+  <link rel="stylesheet" href="/assets/css/datepicker.css">
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/toastr.js/2.0.2/css/toastr.min.css">
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/2.0.2/js/toastr.min.js"></script>
+
+  <link rel="stylesheet" href="/assets/css/duDatepicker.css">
+
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="/assets/js/app.js">
+
+  <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.18.0/mapbox-gl.css' rel='stylesheet' />
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+    integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
+    crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
+    integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
+    crossorigin=""></script>
+  <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.css" />
+  <link rel="stylesheet" href="//cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" type="text/css"
+    href="https://cdn-geoweb.s3.amazonaws.com/esri-leaflet-geocoder/0.0.1-beta.5/esri-leaflet-geocoder.css">
+
+  <style>
+    .map.mode-create {
+      cursor: crosshair;
+    }
+
+    .active {
+      background: "deepskyblue"
+    }
+
+    .leaflet-pm-toolbar .icon-freedraw {
+      background: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjwhRE9DVFlQRSBzdmcgIFBVQkxJQyAnLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4nICAnaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkJz48c3ZnIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDEyOCAxMjgiIGhlaWdodD0iMTI4cHgiIGlkPSJMYXllcl8xIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAxMjggMTI4IiB3aWR0aD0iMTI4cHgiIHhtbDpzcGFjZT0icHJlc2VydmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxwYXRoIGQ9Ik0xMjMuMzE1LDE2TDExMi4wMDMsNC42ODZDMTA4Ljg3OCwxLjU2MywxMDQuNzgsMCwxMDAuNjg3LDBzLTguMTg4LDEuNTYzLTExLjMxMyw0LjY4NmwtNjguNjksNjguNjg5ICBDMTcuNTYzLDc2LjUsOC4wMDQsODguNTg2LDgsOTIuNjhMMCwxMjhsMzUuMzEzLThjMCwwLDE2LjE4OC05LjU2MywxOS4zMTMtMTIuNjg4bDY4LjY5LTY4LjY4NyAgQzEyOS41NjIsMzIuMzc1LDEyOS41NjIsMjIuMjQzLDEyMy4zMTUsMTZ6IE0xMC42MDUsMTE3LjM5OGw1LjE5NS0yMi45NTNjMC4wNzQtMC4zMjgsMC4xMjktMC42NjQsMC4xNi0wLjk5MiAgYzAuMDE2LTAuMDQ3LDAuMDU5LTAuMTE3LDAuMDc4LTAuMTY0bDE4LjA5LDE4LjA5NGMtMC42MDUsMC4zNjctMS4yMTUsMC43MzQtMS44MTMsMS4wOTRMMTAuNjA1LDExNy4zOTh6IE00OC45ODQsMTAxLjY0MSAgYy0wLjkwNiwwLjg1OS00LjAzOSwyLjk3Ny03Ljg2Nyw1LjQxNEwyMC4zOTEsODYuMzI4YzIuMTI1LTIuOTE0LDQuNDkyLTUuODQ0LDUuOTQ5LTcuMjk3bDUxLjcyMi01MS43MThsMjIuNjI1LDIyLjYyNSAgTDQ4Ljk4NCwxMDEuNjQxeiBNMTE3LjY1OSwzMi45NjlsLTExLjMxNiwxMS4zMTNMODMuNzE4LDIxLjY1N2wxMS4zMTYtMTEuMzEzQzk2LjU0Miw4LjgyOSw5OC41NSw4LDEwMC42ODcsOCAgczQuMTQ4LDAuODM2LDUuNjYsMi4zNDRsMTEuMzEzLDExLjMxM2MxLjUxMiwxLjUwOCwyLjM0LDMuNTE2LDIuMzQsNS42NTZDMTE5Ljk5OSwyOS40NDYsMTE5LjE2NywzMS40NjEsMTE3LjY1OSwzMi45Njl6IiBmaWxsPSIjNTQ2RTdBIi8+PC9zdmc+');
+      background-size: 20px;
+    }
+  </style>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>  
+  <script src="https://cdn.ckeditor.com/4.19.1/standard/ckeditor.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js" integrity="sha512-CryKbMe7sjSCDPl18jtJI5DR5jtkUWxPXWaLCst6QjH8wxDexfRJic2WRmRXmstr2Y8SxDDWuBO6CQC6IE4KTA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script type="text/javascript" src="https://jeremyfagis.github.io/dropify/dist/js/dropify.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div id="main" class="layout-horizontal">
+      <header class="mb-5">
+        <div class="header-top">
+          <div class="container-fluid">
+            <div class="header-top-right">
+              <div class="dropdown ms-auto">
+                <a href="#" id="topbarUserDropdown"
+                  class="user-dropdown d-flex align-items-center dropend dropdown-toggle " data-bs-toggle="dropdown"
+                  aria-expanded="false">
+                  <div class="avatar avatar-md2">
+                    <img src="<%= baseUrl %>assets/images/faces/164.png" alt="Avatar">
+                  </div>
+                  <div class="text">
+                    <h6 class="user-dropdown-name">BlueMarketer</h6>
+                  </div>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg" aria-labelledby="topbarUserDropdown">
+                  <li>
+                    <a class="dropdown-item" href="<%= baseUrl %>admin/ChangePassword">Change Password</a>
+                  </li>
+                  <!-- <li>
+                    <a class="dropdown-item" href="<%= baseUrl %>admin/MyAccount">My Account</a>
+                  </li> -->
+                  <li>
+                    <button type="button" class="btn btn-defualt logout-btn"><i class="align-middle me-1"
+                        data-feather="log-out"></i> Logout</button>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Burger button responsive -->
+              <a href="#" class="burger-btn d-block d-xl-none">
+                <i class="bi bi-justify fs-3"></i>
+              </a>
+            </div>
+            <div class="header-top-right">
+            </div>
+          </div>
+        </div>
+      </header>
+    </div>
+  </div>

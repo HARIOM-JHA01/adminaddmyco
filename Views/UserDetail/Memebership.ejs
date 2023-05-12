@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Membership</title>
+  <link rel="stylesheet" href="../../assets/css/forever.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous" />
+</head>
+
+<body>
+  <div class="container  ">
+    <div class="tags">
+      <!-- <form action="<%= baseUrl %>membership" method="post"> -->
+      <h1 class="text-center stronger_in mt-lg-3 mb-5">Upgrade your membership</h1>
+      <div class="row mx-3 mb-5 over_in">
+        <div class="col-lg-6 ">
+          <div class="card m-auto">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-12">
+                  <table class="table">
+                    <thead>
+                      <h5 class="list_in px-5 p-2 text-center">Free Membership</h5>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Contact list</td>
+                        <td>500</td>
+                      </tr>
+                      <tr>
+                        <td>Tags</td>
+                        <td>No</td>
+                      </tr>
+
+                      <tr>
+                        <td>Folder</td>
+                        <td>Default 3 folder</td>
+                      </tr>
+                      <tr>
+                        <td>Profile image</td>
+                        <td>image</td>
+                      </tr>
+                      <tr>
+                        <td>Background image upload</td>
+                        <td>System image</td>
+                      </tr>
+                      <tr>
+                        <td>Subsidiary company</td>
+                        <td>3</td>
+                      </tr>
+                      <tr>
+                        <td>Chamber</td>
+                        <td>3</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div class="into_link">
+                    <button class="btn-outline w-100 m-0 btn btn-info">
+                      This is your current mebership
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6 mt-lg-0 mt-5 ">
+          <div class="card m-auto">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-12">
+                  <table class="table">
+                    <thead>
+                      <h5 class="list_in px-5 p-2 text-center">Business Membership</h5>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Contact list</td>
+                        <td>Unlimited</td>
+                      </tr>
+                      <tr>
+                        <td>Tags</td>
+                        <td>3 tags</td>
+                      </tr>
+
+                      <tr>
+                        <td>Folder</td>
+                        <td>Unlimited</td>
+                      </tr>
+                      <tr>
+                        <td>Profile image</td>
+                        <td>image or Video</td>
+                      </tr>
+                      <tr>
+                        <td>Background image upload</td>
+                        <td>Yes</td>
+                      </tr>
+                      <tr>
+                        <td>Subsidiary company</td>
+                        <td>Unlimited</td>
+                      </tr>
+                      <tr>
+                        <td>Chamber</td>
+                        <td>Unlimited</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div class="into_link">
+                    <button type="button" class="btn-outline btn  btn-info w-100 m-0 click">
+                      Upgrade to business membership
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="control mb-4 mt-4 text-center mx-auto col-md-6 tenure d-none ">
+          <h5 class="text-center  mb-3 pb-2  border-bottom ">Select your tenure</h5>
+          <% var i=1; membership.forEach(function(v) { %>
+            <input type="hidden" name="id" value="<%= membership._id %>"> 
+            <div class="btn-group take " role="group" aria-label="Basic radio toggle button group">
+              <input type="radio" class="btn-check" name="btnradio" id="<%= v._id %>" autocomplete="off">
+              <label class="btn btn-outline-primary shows_tag p-2 px-4 itemSelect" data-paypal='<%= v.paypal %>' data-id="<%= v._id %>"
+                data-toncoin='<%= v.toncoin %>' for="<%= v._id %>">
+                <%= v.periodofmembership %>Years
+              </label>
+         
+            </div>
+            <% i++ %>
+            <% }) %>
+            <!-- </form> -->
+                <div class="think text-start">
+                  <p class="mt-4 border_view"> <span class="paypal"></span></p>
+                  <div class="sold text-center">
+                    <a href="" id="proceedurl"><button class="btn btn-primary px-4 p-2">Proceed</button></a>
+                  </div>
+                </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="//cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+    crossorigin="anonymous"></script>
+  <script>
+    $('.click').click(function () {
+      $(".tenure").toggleClass("d-none");
+    });
+    $('.itemSelect').on('click', function () {
+      var paypal = $(this).attr('data-paypal');
+      //console.log("price",price)
+      var toncoin = $(this).attr('data-toncoin');
+      var id = $(this).attr('data-id');
+      var proceedurl = '<%= baseUrl %>purchase/'+id;
+      $("#proceedurl").attr("href", proceedurl)
+      //console.log(proceedurl);
+     
+    })
+  </script>
+ 
+</body>
+
+</html>

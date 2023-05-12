@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 145 80" height="80px" width="145px">
+	<g id="container-seeProfits-focused" >
+		<defs>
+			<style>
+				.a,.b{fill:none;stroke:#babec5;stroke-linecap:round;stroke-linejoin:round;}.a{stroke-width:1.91px;}.b{stroke-width:2px;}.c{fill:#7fd000;}.d{fill:#53b700;}
+			</style>
+			<symbol id="a" viewBox="0 0 70 70">
+				<path class="c" d="M18,54v7a2,2,0,0,0,2,2h4a2,2,0,0,0,2-2V54" />
+				<path class="b" d="M10,46V41a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2v5"/>
+				<path class="b" d="M25,46V34a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V46"/>
+				<path class="d" d="M48,46V26a2,2,0,0,0-2-2H42a2,2,0,0,0-2,2V46"/>
+				<line class="b" x1="10" y1="50" x2="43.94" y2="50"/>
+			</symbol>
+		</defs>
+		<title>setupWidget_Illustrations</title>
+		<path class="b" d="M57,44.26V20a5.58,5.58,0,0,0-1.41-3.42L42.46,3.42C41.68,2.64,41,2.9,41,4l0,12a2,2,0,0,0,2,2h9"/>
+		<path class="b" d="M37.36,2H5A2,2,0,0,0,3,4V67a2,2,0,0,0,2,2H37.58"/>
+		<use width="70" height="70" transform="translate(0, 0)" xlink:href="#a"/>
+	</g>
+</svg>
+

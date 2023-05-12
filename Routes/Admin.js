@@ -1,0 +1,115 @@
+import express from "express"
+const admin = express.Router();
+import DashboardController from "../Controllers/DashboardController.js";
+import AdminController from '../Controllers/AdminController.js'
+import { isAdmin } from "../Middleware/AdminAuthentication.js";
+
+
+// .........................DASHBOARD-CONTROLLER........................
+admin.get("/",DashboardController.signIn);
+admin.get("/signup",DashboardController.signUp);  
+admin.get("/signin",DashboardController.signIn);
+admin.get("/dashboard",isAdmin,DashboardController.home);
+admin.get("/forgotpassword",isAdmin,DashboardController.ForgotPassword);
+admin.get("/resetpassword",isAdmin,DashboardController.ResetPassword);
+admin.get("/changepassword",isAdmin,DashboardController.ChangePassword);
+admin.get("/myaccount",isAdmin,DashboardController.MyAccount); 
+
+// .................................USERS................................
+admin.get("/freeuser",isAdmin,DashboardController.FreeUser);
+admin.get("/premium",isAdmin,DashboardController.PremiumUser);
+admin.get("/donateduser",isAdmin,DashboardController.DonatedUser);
+
+// .............................BANNERS..................................
+admin.get("/banner",isAdmin,DashboardController.Banner);
+admin.get("/addbanner",isAdmin,DashboardController.AddBanner);
+admin.get("/editbanner",isAdmin,DashboardController.EditBanner);
+admin.get("/view-banner",isAdmin,DashboardController.Viewbanner);
+
+// ..........................MEMBERSHIP[CONFIGURATION]...................
+admin.get("/membership",isAdmin,DashboardController.MembershipTenure);
+admin.get("/addmembership",isAdmin,DashboardController.AddMembershipTenure);
+admin.get("/editmembership",isAdmin,DashboardController.EditMembershipTenure);
+
+// .........................SYSTEM[CONFIGURATION]........................
+admin.get("/system",isAdmin, DashboardController.SystemImages);
+admin.get("/addsystem",isAdmin, DashboardController.AddsystemImages);
+admin.get("/editsystem",isAdmin, DashboardController.EditsystemImages);
+
+// .........................FOLDERS[CONFIGURATION]........................
+admin.get("/folder",isAdmin,DashboardController.Folder);
+admin.get("/addfolder",isAdmin,DashboardController.AddFolder);
+admin.get("/editfolder",isAdmin,DashboardController.EditFolder);
+
+// .........................CURRENCY......................................
+// admin.get("/currency",DashboardController.Currency);
+
+// .......................PAYMENT[PAYPAL].................................
+admin.get("/paypal",isAdmin,DashboardController.Paypal);
+
+// .......................PAYMENT[TONCOIN]................................
+admin.get("/toncoin",isAdmin,DashboardController.Toncoin);
+
+// ..........................ADMIN-CONTROLLER.............................
+admin.post("/Register",AdminController.Adminregister);
+admin.post("/login",AdminController.Adminlogin);
+admin.get("/Logout",AdminController.Adminlogout);
+admin.post("/ForgotPassword",AdminController.ForgotPassword);
+admin.post("/OtpVarify",AdminController.OtpVarify);
+admin.post("/ResetPassword",AdminController.ResetPassword);
+admin.post("/ChangePassword",isAdmin,AdminController.ChangePassword);
+admin.post("/MyAccount",AdminController.MyAccount);
+
+// ..........................BANNERS......................................
+admin.post("/banner",AdminController.Banner);
+admin.post("/editbanner",AdminController.EditBanner);
+admin.get("/deletebanner",AdminController.DeleteBanner);
+
+// .....................MEMEBRSHIP[CONFIGURATION].........................
+admin.post("/membership",AdminController.MembershipTenure);
+admin.post("/editmembership",AdminController.EditMembershipTenure);
+admin.get("/deletemembership",AdminController.DeleteMembershipTenure)
+
+// .........................SYSTEM[CONFIGURATION].........................
+admin.post("/system", AdminController.SystemImages);
+admin.post("/updatesystem", AdminController.EditSystemImages);
+admin.get("/deletesystem", AdminController.DeletesystemImages);
+admin.get("/deletesystempic", AdminController.Deletesystempic);
+
+// .........................FOLDERS[CONFIGURATION]........................
+admin.post("/folder",AdminController.Folder);
+admin.post("/editfolder",AdminController.EditFolder);
+admin.get("/deletefolder",AdminController.DeleteFolder)
+
+// .......................DELETUSERS[FREE,PREMIUM,DONATED]................
+admin.get("/deleteuser",AdminController.DeleteUser)
+admin.get("/viewuser",AdminController.ViewUser)
+admin.get("/updatefreeuser",AdminController.UpdateUser)
+admin.get("/deletepremiumuser",AdminController.DeletePremiumUser)
+admin.get("/updatepremiumuser",AdminController.UpdatePremiumUser)
+admin.get("/viewpremiumuser",AdminController.ViewPremiumUser)
+admin.get("/deletedonateduser",AdminController.DeleteDonatedUser)
+admin.get("/viewdonateduser",AdminController.ViewDonatedUser)
+
+// ........................TONCOIN & PAYPAL...............................
+admin.get("/approvetoncoin",AdminController.ApproveToncoin)
+admin.get("/rejecttoncoin",AdminController.RejectToncoin)
+admin.get("/deletetoncoin",AdminController.DeleteToncoin)
+
+// ....................CONFIGURATION......................................
+admin.get("/configuration",AdminController.Configuration);
+admin.get("/addconfiguration",AdminController.add_configuration);
+admin.get("/editconfiguration",AdminController.edit_configuration);
+admin.post("/configuration",AdminController.configuration);
+admin.post("/editconfiguration",AdminController.editconfiguration);
+admin.get("/deleteconfiguration",AdminController.deleteconfiguration);
+
+// .....................CATEGORIES........................................
+admin.get("/categories",AdminController.Categories);
+admin.get("/addcategories",AdminController.Addcategories);
+admin.get("/editcategories",AdminController.Editcategories);
+admin.post("/category",AdminController.Category);
+admin.post("/editcategory",AdminController.Editcategory);
+admin.get("/deletecategories",AdminController.Deletecategory);
+
+export default admin

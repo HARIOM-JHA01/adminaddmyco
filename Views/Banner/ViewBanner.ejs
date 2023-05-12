@@ -1,0 +1,50 @@
+<%- include('../Layout/Header') %>
+<div id="app">
+  <%- include('../Layout/Sidebar') %>
+  <div id="main">
+    <section class="section">
+      <div class="page-heading">
+        <div class="row">
+          <div class="col-12 col-md-6 order-md-1 order-last">
+            <h3><a href="<%= baseUrl %>admin/banner" class="text-primary"><i class="fas fa-arrow-left me-2"></i></a> View Banner</h3>
+          </div>
+          <div class="col-12 col-md-6 order-md-2 order-first">
+            <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="<%= baseUrl %>admin/dashboard">Dashboard</a>
+                </li>
+                <li class="breadcrumb-item"><a href="<%= baseUrl %>admin/gallery">Banner </a></li>
+                <li class="breadcrumb-item active" aria-current="page">Add</li>
+              </ol>
+            </nav>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-content">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-xl-6 col-md-7">
+              <p><b>Name: </b>
+                <%= banner.Title %>
+              </p>
+              <div class="row">
+                <% banner.Thumbnail.forEach(function(i)  {  %>
+                <div class="col-xl-3 col-md-4 gallery-img">
+                  <img class="max-height" src="<%= baseUrl %>assets/bannerimage/<%= i  %>" class="img-fluid" alt="image" />
+                </div>
+                <% }) %>
+              </div>
+            </div>
+          </div>
+    </section>
+    <footer>
+      <div class="footer clearfix mb-0 text-muted">
+        <div class="float-start">
+          <p>2023 &copy; All rights are reserved</p>
+        </div>
+        
+      </div>
+    </footer>
+  </div>
+</div>
+<%- include('../Layout/Footer') %>

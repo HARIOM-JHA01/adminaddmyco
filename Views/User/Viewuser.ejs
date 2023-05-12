@@ -1,0 +1,125 @@
+<%- include('../Layout/Header') %>
+
+    <div id="app">
+        <%- include('../Layout/Sidebar') %>
+            <div id="main">
+                <section class="section">
+                    <div class="page-heading">
+                        <div class="row">
+                            <div class="col-12 col-md-6 order-md-1 order-last">
+                                <h3><a href="<%= baseUrl %>admin/freeuser" class="text-primary"><i
+                                            class="fas fa-arrow-left me-2"></i></a> View Freeuser</h3>
+                            </div>
+                            <div class="col-12 col-md-6 order-md-2 order-first">
+                                <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="<%= baseUrl %>dashboard">Dashboard</a>
+                                        </li>
+                                        
+                                    </ol>
+                                </nav>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-content">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-xl-6 col-md-7">
+                                            
+                                            
+                                                <% if (user.username){ %>
+                                                    <div class=" detail-row">
+                                                        <div class="cards-icon">
+                                                            <i class="fa-solid fa-person"></i>
+                                                        </div>
+                                                        <span>
+                                                            <%= user.username %>
+                                                        </span>
+                                                    </div>
+                                                    <% } %>
+                                                        <% if (user.memberid){ %>
+                                                            <div class="detail-row">
+                                                                <div class="cards-icon">
+                                                                    <i class="fa-solid fa-id-card-clip"></i>
+                                                                </div>
+                                                                <span>
+                                                                    <%= user.memberid %>
+                                                                </span>
+                                                            </div>
+                                                            <% } %>
+                                                                <% if (user.tgid){ %>
+                                                                    <div class="detail-row">
+                                                                        <div class="cards-icon">
+                                                                            <i class="fa-brands fa-telegram"></i>
+                                                                        </div>
+                                                                        <span>
+                                                                            <%= user.tgid %>
+                                                                        </span>
+                                                                    </div>
+                                                                    <% } %>
+                                                                        <% if (user.email){ %>
+                                                                            <div class="detail-row">
+                                                                                <div class="cards-icon">
+                                                                                    <i class="fa-solid fa-envelopes"></i>
+                                                                                </div>
+                                                                                <span>
+                                                                                    <%= user.email %>
+                                                                                </span>
+                                                                            </div>
+                                                                            <% } %>
+                                                                                <% if (user.country){ %>
+                                                                                    <div class="detail-row">
+                                                                                        <div class="cards-icon">
+                                                                                           
+ 
+ 
+<i class="fa-solid fa-earth-americas"></i>
+                                                                                        </div>
+                                                                                        <span>
+                                                                                            <%= user.country %>
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <% } %>
+                                                                                        <% if (user.joindate){ %>
+                                                                                            <div class="detail-row">
+                                                                                                <div class="cards-icon">
+                                                                                                    <i class="fa-regular fa-calendar-days"></i>
+                                                                                                </div>
+                                                                                                <span>
+                                                                                                    <%= user.joindate
+                                                                                                        %>
+                                                                                                </span>
+                                                                                            </div>
+                                                                                            <% } %>
+                                                                                                
+                                                                                                           
+
+                                            </div>
+                                        </div>
+
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </section>
+                <footer>
+                    <div class="footer clearfix mb-0 text-muted">
+                        <div class="float-start">
+                            <p>2023 &copy;  All rights are reserved</p>
+                        </div>
+                       
+                    </div>
+                </footer>
+            </div>
+    </div>
+
+    <script src="assets/js/app.js"></script>
+
+    <script src="assets/js/extensions/simple-datatables.js"></script>
+
+
+
+    <!-- Mirrored from zuramai.github.io/mazer/demo/table-datatable.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 07 Jul 2022 12:33:42 GMT -->
+
+    <%- include('../Layout/Footer') %>
