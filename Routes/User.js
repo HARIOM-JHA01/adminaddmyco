@@ -15,9 +15,9 @@ user.post("/language", isUser, UserController.Language);
 user.post("/addtocontact", isUser, UserController.AddToContact)
 user.get("/getcontact", isUser, UserController.GetContact)
 user.post("/invitationcontact", isUser, UserController.InvitationContact);
-user.get("/contactlist/:id", UserController.ContactList);
-user.delete("/removefromcontact/:id", UserController.RemoveFromContact);
-user.post("/searchcontact", UserController.SearchContact);
+user.get("/contactlist/:id", isUser, UserController.ContactList);
+user.delete("/removefromcontact/:id", isUser, UserController.RemoveFromContact);
+user.post("/searchcontact", isUser, UserController.SearchContact);
 
 // ..........................CONTACT-FOLDER...................................
 user.post("/addcontactfolder", isUser, UserController.AddContactFolder)

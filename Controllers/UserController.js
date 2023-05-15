@@ -2145,7 +2145,8 @@ class UserController {
 
     // ::::::::::::::::::: REMOVE FROM CONTACT :::::::::::::API::::::::::::::::
     static RemoveFromContact = async (req, res) => {
-        let contact = await ContactModel.findByIdAndDelete(req.params.id);
+        await ContactFolderModel.find({contact_id : req.params.id , user_id : req.user._id} ).deleteMany();
+        let contact = await ContactModel.find({contact_id : req.params.id  , user_id : req.user._id} ).deleteMany();
         return res.status(200).json({
             success: true,
             data: contact,
