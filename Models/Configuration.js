@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const configurationSchema = new mongoose.Schema({
     ConfigKey : { type: String },
-    ConfigValue: {type: Number},
+    ConfigValue: {type: String},
   
 });
 //  Compiling Schema
