@@ -995,31 +995,31 @@ class AdminController {
 
   static editconfiguration = async (req, res) => {
     let data = req.body;
-    let validator = new Validator(
-      data,
-      {
-        configkey: "required",
-        configvalue: "required",
-      },
-      {
-        configkey: " Key is necessary",
-        configvalue: " Value is necessary",
-      }
-    );
-    await validator.check();
-    // validation error
-    let error = validatorError(res, validator.errors);
-    if (error && JSON.stringify(error) != "{}") {
-      let configuration = await ConfigurationModel.findByIdAndUpdate(
-        req.body.id
-      );
-      res.render("Configuration/Editconfiguration", {
-        baseUrl,
-        errors: error,
-        configuration: configuration,
-        path: "configuration",
-      });
-    } else {
+    // let validator = new Validator(
+    //   data,
+    //   {
+    //     configkey: "required",
+    //     configvalue: "required",
+    //   },
+    //   {
+    //     configkey: " Key is necessary",
+    //     configvalue: " Value is necessary",
+    //   }
+    // );
+    // await validator.check();
+    // // validation error
+    // let error = validatorError(res, validator.errors);
+    // if (error && JSON.stringify(error) != "{}") {
+    //   let configuration = await ConfigurationModel.findByIdAndUpdate(
+    //     req.body.id
+    //   );
+    //   res.render("Configuration/Editconfiguration", {
+    //     baseUrl,
+    //     errors: error,
+    //     configuration: configuration,
+    //     path: "configuration",
+    //   });
+    // } else {
       const doc = await ConfigurationModel.findByIdAndUpdate(req.body.id, {
         ConfigKey: req.body.configkey,
         ConfigValue: req.body.configvalue,
@@ -1029,7 +1029,7 @@ class AdminController {
       req.session.tostMsg = " Data Updated Successfully..."
       req.session.tostBackground = "#0b6a3c"
       res.redirect(`${baseUrl}admin/configuration`);
-    }
+    // }
   };
 
   static deleteconfiguration = async (req, res) => {
