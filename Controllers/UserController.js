@@ -1929,11 +1929,46 @@ class UserController {
         var data = req.body;
         let user = await UserModel.findById(req.user._id)
         let add = await ContactModel.findOne({ contact_id: req.user._id, user_id: req.body.contact_id })
+
         if (add) {
-            return res.status(422).json({
-                success: false,
-                message: "This Contact Is Already Present...",
-            })
+            let add1 = await ContactModel.findOne({ user_id: req.body.contact_id, contact_id: req.user._id })
+            console.log('add1', add1);
+            if (add1) {
+                if (add1.status == 2) {
+                    await ContactModel.findByIdAndUpdate({ _id: add1._id }, {
+                        status: 0,
+                    });
+                    return res.status(200).json({
+                        success: true,
+                        message: "Contact Added Successfully...",
+                    });
+                } else {
+                    const doc = {
+                        contact_id: req.body.contact_id,
+                        user_id: req.user._id,
+                        flag: 1
+                    };
+                    let result1 = await ContactModel.create(doc)
+                    return res.status(422).json({
+                        success: false,
+                        message: "This Contact Is Already Present...",
+                        data: result1
+                    })
+                }
+            } else {
+                const doc = {
+                    contact_id: req.body.contact_id,
+                    user_id: req.user._id,
+                    flag: 1
+                };
+                let result = await ContactModel.create(doc)
+                return res.status(422).json({
+                    success: false,
+                    message: "This Contact Is Already Present...",
+                    data: result
+                })
+            }
+
         } else {
             const doc = {
                 user_id: req.body.contact_id,
