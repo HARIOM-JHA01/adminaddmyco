@@ -1814,7 +1814,7 @@ class UserController {
                                         },
                                     },
                                     {
-                                        $project: { _id: 1, username: 1, owner_name_english: 1, owner_name_chinese: 1, profile_image: 1, tag: 1 }
+                                        $project: { _id: 1, username: 1, owner_name_english: 1, owner_name_chinese: 1, profile_image: 1, tag: 1, video: 1 }
                                     },
                                     {
                                         $lookup: {
@@ -1834,6 +1834,7 @@ class UserController {
                                             as: 'contacts'
                                         }
                                     },
+
                                 ],
                                 as: "userdetails"
                             },
@@ -1849,7 +1850,6 @@ class UserController {
             a['profile_image'] = baseUrl + 'assets/';
             return a;
         });
-        console.log("Folder", folder)
         return res.status(200).json({
             success: true,
             data: folder
