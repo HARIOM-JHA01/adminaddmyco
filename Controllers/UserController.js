@@ -1810,11 +1810,27 @@ class UserController {
                                 pipeline: [
                                     {
                                         $match: {
-                                            $expr: { $eq: ["$_id", "$$contact_id"] }
-                                        },
+                                            $expr: {
+                                                $and: [{ $eq: ["$_id", "$$contact_id"] }],
+                                            },
+                                        }
                                     },
                                     {
-                                        $project: { _id: 1, username: 1, owner_name_english: 1, owner_name_chinese: 1, profile_image: 1, tag: 1, video: 1 }
+                                        $lookup: {
+                                            from: "companies",
+                                            let: { "user_id": "$_id" },
+                                            pipeline: [
+                                                {
+                                                    $match: {
+                                                        $expr: { $eq: ["$user_id", "$$user_id"] }
+            
+                                                    }
+                                                },
+                                                { $sort: { company_order: 1 } },
+                                                { $limit: 1 }
+                                            ],
+                                            as: "companydetails"
+                                        }
                                     },
                                     {
                                         $lookup: {
@@ -1834,10 +1850,9 @@ class UserController {
                                             as: 'contacts'
                                         }
                                     },
-
                                 ],
                                 as: "userdetails"
-                            },
+                            }
                         },
                         { $unwind: { path: "$userdetails", preserveNullAndEmptyArrays: true } },
                     ],
