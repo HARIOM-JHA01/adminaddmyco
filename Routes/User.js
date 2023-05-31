@@ -2,6 +2,7 @@ import express from "express";
 const user = express.Router();
 import UserController from "../Controllers/UserController.js"
 import { isUser } from "../Middleware/UserAuthentication.js";
+import ReferralController from "../Controllers/ReferralController.js";
 // import DashboardController from "../Controllers/DashboardController.js";
 import multer from "multer"
 
@@ -15,9 +16,9 @@ user.post("/language", isUser, UserController.Language);
 user.post("/addtocontact", isUser, UserController.AddToContact)
 user.get("/getcontact", isUser, UserController.GetContact)
 user.post("/invitationcontact", isUser, UserController.InvitationContact);
-user.get("/contactlist/:id", isUser, UserController.ContactList);
-user.delete("/removefromcontact/:id", isUser, UserController.RemoveFromContact);
-user.post("/searchcontact", isUser, UserController.SearchContact);
+user.get("/contactlist/:id", isUser , UserController.ContactList);
+user.delete("/removefromcontact/:id", isUser , UserController.RemoveFromContact);
+user.post("/searchcontact", isUser , UserController.SearchContact);
 
 // ..........................CONTACT-FOLDER...................................
 user.post("/addcontactfolder", isUser, UserController.AddContactFolder)
@@ -114,5 +115,15 @@ user.delete("/deletefolder/:id", isUser, UserController.DeleteFolder);
 // ...............................IMAGES.......................................
 user.post("/image", isUser, UserController.Images);
 user.get("/getimage", isUser, UserController.GetImages);
+
+// ...............................REFERRAL.......................................
+user.post("/addReferral", isUser, ReferralController.ReferralRequest);
+user.post("/refimageupload", isUser, ReferralController.RefImageUpload);
+user.get("/categorylist", isUser, ReferralController.Categorylist);
+user.get("/getrefimageupload", isUser, ReferralController.GetRefImageUpload);
+// user.post("/refimageupload", isUser, ReferralController.RefImageUpload1);
+user.post("/refimageupload/:id", isUser, ReferralController.EditRefImage);
+user.delete("/deleteimage/:id/:name", isUser, ReferralController.DeleteRerPic);
+user.get("/referralmembership", isUser, ReferralController.ReferralMembershipList);
 
 export default user

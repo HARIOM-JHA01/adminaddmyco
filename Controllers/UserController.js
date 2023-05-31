@@ -30,6 +30,7 @@ import ImageModel from "../Models/Image.js";
 import moment from "moment";
 import mime from "mime"
 import mongoose from "mongoose";
+import LogoModel from "../Models/Logo.js";
 import crypto from "crypto"
 // import UserTokenModel from "../Models/UserToken.js"
 import user from "../Routes/User.js"
@@ -508,6 +509,8 @@ class UserController {
     }
 
     static GetProfile = async (req, res) => {
+        let logoDetails = await LogoModel.findOne()
+        console.log("logoDetails", logoDetails);
         let profile = await UserModel.aggregate([
             {
                 $match: {
@@ -523,6 +526,15 @@ class UserController {
                 }
             },
             { $unwind: { path: "$theme", preserveNullAndEmptyArrays: true } },
+            // {
+            //     "$lookup": {
+            //         "from": "logos",
+            //         "localField": "_id",
+            //         "foreignField": "user_id",
+            //         "as": "logo"
+            //     }
+            // },
+            // { $unwind: { path: "$theme", preserveNullAndEmptyArrays: true } },
             {
                 "$lookup": {
                     "from": "companies",
@@ -533,7 +545,9 @@ class UserController {
             },
             { $unwind: { path: "$companydata", preserveNullAndEmptyArrays: true } }
         ])
-
+        console.log("?", profile[0]['refstatue']);
+        profile[0]['logoImage'] = logoDetails.Banner
+        profile[0]['logoTelegramUrl'] = logoDetails.Link
         if (profile[0]['profile_image'] != '') {
             profile[0]['profile_image'] = baseUrl + 'assets/' + profile[0]['profile_image'];
             profile[0]['video'] = ''
@@ -542,6 +556,19 @@ class UserController {
             profile[0]['video'] = baseUrl + 'assets/' + profile[0]['video'];
             profile[0]['profile_image'] = ''
         }
+        if (!profile[0]['refstatue']) {
+            profile[0]['refstatue'] = 0
+        }
+        if (!profile[0]['refimgstatue']) {
+            profile[0]['refimgstatue'] = 0
+        }
+        if (!profile[0]['logoImage']) {
+            profile[0]['logoImage'] = ''
+        }
+        if (!profile[0]['logoTelegramUrl']) {
+            profile[0]['logoTelegramUrl'] = ''
+        }
+        console.log(" profile[0]", profile[0]);
         return res.status(200).json({
             success: true,
             data: profile[0],
@@ -1823,7 +1850,7 @@ class UserController {
                                                 {
                                                     $match: {
                                                         $expr: { $eq: ["$user_id", "$$user_id"] }
-            
+
                                                     }
                                                 },
                                                 { $sort: { company_order: 1 } },
@@ -2050,11 +2077,11 @@ class UserController {
                     let: { "contact_id": "$contact_id" },
                     pipeline: [
                         {
-                          $match: {
-                            $expr: {
-                                $and: [{ $eq: ["$_id","$$contact_id"] }],
-                            },
-                          }
+                            $match: {
+                                $expr: {
+                                    $and: [{ $eq: ["$_id", "$$contact_id"] }],
+                                },
+                            }
                         },
                         {
                             $lookup: {
@@ -2195,8 +2222,8 @@ class UserController {
 
     // ::::::::::::::::::: REMOVE FROM CONTACT :::::::::::::API::::::::::::::::
     static RemoveFromContact = async (req, res) => {
-        await ContactFolderModel.find({contact_id : req.params.id , user_id : req.user._id} ).deleteMany();
-        let contact = await ContactModel.find({contact_id : req.params.id  , user_id : req.user._id} ).deleteMany();
+        await ContactFolderModel.find({ contact_id: req.params.id, user_id: req.user._id }).deleteMany();
+        let contact = await ContactModel.find({ contact_id: req.params.id, user_id: req.user._id }).deleteMany();
         return res.status(200).json({
             success: true,
             data: contact,

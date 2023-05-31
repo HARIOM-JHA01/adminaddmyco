@@ -1,21 +1,22 @@
 import express from "express"
 const admin = express.Router();
 import DashboardController from "../Controllers/DashboardController.js";
+import ReferralController from "../Controllers/ReferralController.js";
 import AdminController from '../Controllers/AdminController.js'
 import { isAdmin } from "../Middleware/AdminAuthentication.js";
 
 
 // .........................DASHBOARD-CONTROLLER........................
 admin.get("/",DashboardController.signIn);
-admin.get("/signup",DashboardController.signUp);  
+admin.get("/signup",DashboardController.signUp);
 admin.get("/signin",DashboardController.signIn);
 admin.get("/dashboard",isAdmin,DashboardController.home);
-admin.get("/forgotpassword",isAdmin,DashboardController.ForgotPassword);
-admin.get("/resetpassword",isAdmin,DashboardController.ResetPassword);
-admin.get("/changepassword",isAdmin,DashboardController.ChangePassword);
-admin.get("/myaccount",isAdmin,DashboardController.MyAccount); 
+admin.get("/forgotpassword",DashboardController.ForgotPassword);
+admin.get("/resetpassword",DashboardController.ResetPassword);
+admin.get("/changepassword",DashboardController.ChangePassword);
+admin.get("/myaccount",isAdmin,DashboardController.MyAccount);
 
-// .................................USERS................................
+// .................................USERS................................   
 admin.get("/freeuser",isAdmin,DashboardController.FreeUser);
 admin.get("/premium",isAdmin,DashboardController.PremiumUser);
 admin.get("/donateduser",isAdmin,DashboardController.DonatedUser);
@@ -49,6 +50,7 @@ admin.get("/paypal",isAdmin,DashboardController.Paypal);
 
 // .......................PAYMENT[TONCOIN]................................
 admin.get("/toncoin",isAdmin,DashboardController.Toncoin);
+
 
 // ..........................ADMIN-CONTROLLER.............................
 admin.post("/Register",AdminController.Adminregister);
@@ -111,5 +113,28 @@ admin.get("/editcategories",AdminController.Editcategories);
 admin.post("/category",AdminController.Category);
 admin.post("/editcategory",AdminController.Editcategory);
 admin.get("/deletecategories",AdminController.Deletecategory);
+
+
+// ..........................REFERRAL..............................
+admin.get("/referral",DashboardController.Referral);
+admin.get("/deletereferraluser",ReferralController.DeleteRefer);
+admin.get("/approvereferral",ReferralController.ApproveReferral);
+admin.get("/approvepremium",ReferralController.ApprovePrimium);
+admin.put("/update-referral/:id",DashboardController.UpdateReferral);
+// admin.get("/referralrequest",DashboardController.ReferralRequest);
+
+
+// .............................BANNERS..................................
+admin.get("/logo",isAdmin,DashboardController.Logo);
+admin.get("/addlogo",isAdmin,DashboardController.AddLogo);
+admin.get("/editlogo",isAdmin,DashboardController.EditLogo);
+
+// ..........................BANNERS......................................
+admin.post("/logo",AdminController.Logo);
+admin.post("/editlogo",AdminController.EditLogo);
+
+
+
+
 
 export default admin

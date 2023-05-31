@@ -8,6 +8,7 @@ import SystemModel from "../Models/Systemimage.js"
 import FolderModel from "../Models/Folder.js";
 import ToncoinModel from "../Models/Toncoinpaypal.js";
 import CategoryModel from "../Models/Category.js";
+import LogoModel from "../Models/Logo.js";
 import moment from "moment";
 
 class DashboardController {
@@ -46,20 +47,20 @@ class DashboardController {
   static FreeUser = async (req, res) => {
     let freeuser = await UserModel.find({ usertype: 0 }).sort({ _id: -1 });
     let country1 = await UserModel.aggregate([
-     
+
       {
-          $match: {
-            $and: [{ usertype:0 }]
-          }
+        $match: {
+          $and: [{ usertype: 0 }]
+        }
       },
       {
         $group: {
-          _id: { country : "$country" }
+          _id: { country: "$country" }
         }
       },
- 
+
     ]);
-    
+
     res.render('User/FreeUser', { baseUrl, freeuser: freeuser, country1: country1, path: 'freeuser', session: req.session, moment: moment });
   }
 
@@ -75,36 +76,36 @@ class DashboardController {
       },
       {
         $match: {
-          $and: [{ usertype:1 }]
+          $and: [{ usertype: 1 }]
         }
-    },
+      },
     ]).sort({ _id: -1 })
 
     let country = await UserModel.aggregate([
       {
         $group: {
-          _id: { country : "$country" }
+          _id: { country: "$country" }
         }
       }
     ]);
-    res.render('User/Premium', { baseUrl, premium: premium, path: 'premium', session: req.session, moment: moment, country:country });
+    res.render('User/Premium', { baseUrl, premium: premium, path: 'premium', session: req.session, moment: moment, country: country });
   }
 
   static DonatedUser = async (req, res) => {
     let donateduser = await UserModel.find({ usertype: 2 }).sort({ _id: -1 });
     let country1 = await UserModel.aggregate([
-      { 
-          $match: {
-            $and: [{ usertype:0 }]
-          }
+      {
+        $match: {
+          $and: [{ usertype: 0 }]
+        }
       },
       {
         $group: {
-          _id: { country : "$country" }
+          _id: { country: "$country" }
         }
       }
     ]);
-  // console.log("vinit",donateduser)
+    // console.log("vinit",donateduser)
     res.render('User/Donated', { baseUrl, donateduser: donateduser, country1: country1, path: 'donateduser', session: req.session, moment: moment });
   }
 
@@ -226,5 +227,72 @@ class DashboardController {
     ]).sort({ _id: -1 })
     res.render('MemberPayment/Toncoin', { baseUrl, toncoin: toncoin, path: 'toncoin', session: req.session, moment: moment });
   }
+
+  // .......................REFERRAL.............................
+
+  static Referral = async (req, res) => {
+    let referral = await UserModel.aggregate([
+      {
+        "$lookup": {
+          "from": "referral",
+          "localField": "_id",
+          "foreignField": "user_id",
+          "as": "userDoc"
+        }
+      },
+      {
+        $match: {
+          $and: [{ isReferral: 1 }]
+        }
+      },
+    ]).sort({ _id: -1 })
+
+    console.log("253", referral)
+
+    let country = await UserModel.aggregate([
+      {
+        $group: {
+          _id: { country: "$country" }
+        }
+      }
+    ]);
+
+    res.render('Referral/Referral', { baseUrl, data: {}, referral: referral, path: 'referral', session: req.session, country: country });
+  }
+
+  static UpdateReferral = async (req, res) => {
+    let data = req.body;
+    console.log("data", data)
+    if (data.type == 'refstatue') {
+      let data1 = await UserModel.findByIdAndUpdate(req.params.id, { refstatue: Number(data.status) });
+    } else {
+      let data1 = await UserModel.findByIdAndUpdate(req.params.id, { refimgstatue: Number(data.status) });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: data,
+      message: "status update Successfully.."
+    })
+
+  }
+
+  // ..........................LOGO.................................
+  static Logo = async (req, res) => {
+    let logo = await LogoModel.findOne().sort({ _id: -1 })
+    console.log("log", logo);
+    res.render('Configuration/Logo', { baseUrl, data: {}, logo: logo, path: 'logo', session: req.session });
+  }
+
+  static AddLogo = async (req, res) => {
+    let logo = await LogoModel.find({});
+    res.render('Configuration/AddLogo', { baseUrl, data: {}, logo: logo, path: 'logo' });
+  }
+
+  static EditLogo = async (req, res) => {
+    let logo = await LogoModel.findById(req.query.id);
+    res.render('Configuration/EditLogo', { baseUrl, logo: logo, path: 'logo' });
+  }
 }
+
 export default DashboardController;
