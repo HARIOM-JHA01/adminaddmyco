@@ -286,7 +286,7 @@ class DashboardController {
 
   static AddLogo = async (req, res) => {
     let logo = await LogoModel.find({});
-    res.render('Configuration/AddLogo', { baseUrl, data: {}, logo: logo, path: 'logo' });
+    res.render('Configuration/Addlogo', { baseUrl, data: {}, logo: logo, path: 'logo' });
   }
 
   static EditLogo = async (req, res) => {
