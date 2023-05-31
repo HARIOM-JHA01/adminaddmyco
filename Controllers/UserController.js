@@ -30,7 +30,7 @@ import ImageModel from "../Models/Image.js";
 import moment from "moment";
 import mime from "mime"
 import mongoose from "mongoose";
-import LogoModel from "../Models/Logo.js";
+// import LogoModel from "../Models/Logo.js";
 import crypto from "crypto"
 // import UserTokenModel from "../Models/UserToken.js"
 import user from "../Routes/User.js"

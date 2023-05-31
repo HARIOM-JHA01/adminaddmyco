@@ -51,12 +51,7 @@ const userSchema = new mongoose.Schema({
   enddate: { type: String , default: null},
   startdate: { type: String , default: null},
   paymentstatus: { type: Number, default: null },
-  date: { type: Date, default: Date.now },
-  isReferral: { type: Number, default: 0 },
-  refstatue:{type:Number, default:0},
-  refimgstatue:{type:Number, default:0},
-  logoImage: { type: String },
-  logoTelegramUrl: { type: String },
+  date: { type: Date, default: Date.now }
 });
 
 //  Compiling Schema
