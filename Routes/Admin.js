@@ -130,8 +130,8 @@ admin.get("/addlogo",isAdmin,DashboardController.AddLogo);
 admin.get("/editlogo",isAdmin,DashboardController.EditLogo);
 
 // ..........................BANNERS......................................
-admin.post("/logo",AdminController.Logo);
-admin.post("/editlogo",AdminController.EditLogo);
+admin.post("/logo", AdminController.Logo);
+admin.post("/editlogo", AdminController.EditLogo);
 
 
 

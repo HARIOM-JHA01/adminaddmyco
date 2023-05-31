@@ -101,7 +101,7 @@ class AdminController {
           fcmtoken: req.body.fcmtoken,
         });
         let user1 = await AdminModel.findById(user._id)
-        localStorage.setItem('token',token ) 
+        localStorage.setItem('token', token)
         console.log("localStorage",)
         req.session.token = token
         req.session.tostMsg = "You Are Logged in Successfully..."
@@ -233,7 +233,7 @@ class AdminController {
       }, {
         password: hashedPassword
       })
-      console.log("hashedPassword",hashedPassword)
+      console.log("hashedPassword", hashedPassword)
       const userData = await AdminModel.findOne({ _id: user._id })
       let jwt_secret = process.env.JWT_SECRET || 'mysecret'
       let token = jwt.sign({ data: userData }, jwt_secret, { expiresIn: '12h' })
@@ -1134,7 +1134,107 @@ class AdminController {
       Url: `${baseUrl}admin/categories`,
     });
   };
+  // .........LOGO.............
+  static Logo = async (req, res) => {
+    var data = req.body;
+    console.log("DATA", data)
+    data.thumbnail = req.files?.thumbnail;
+    let validator = new Validator(data, {
+      link: "required|url",
+      thumbnail: "required",
 
+    }, {
+      link: "Link is necessary",
+      thumbnail: "Thumbnail is necessary",
+    });
+
+    const path = await makeDir("./assets/logoimage/")
+    let thumbnail = req.files?.thumbnail;
+    let imagename;
+
+    if (req.files?.thumbnail) {
+      thumbnail = req.files?.thumbnail;
+      var d = new Date()
+      var photo = thumbnail.name
+      photo = photo.replace(/\s/g, '')
+      let r = (Math.random() + 1).toString(36).substring(7)
+      var imname = d.getSeconds() + "." + r + "." + photo
+      imagename = 'logoimage/' + imname;
+      let uploadPath = path + "/" + imname;
+      thumbnail.mv(uploadPath, function (err) {
+        if (err) return res.status(500).send(err);
+      });
+    }
+    await validator.check();
+    let error = validatorError(res, validator.errors);
+    if (error && JSON.stringify(error) != "{}") {
+      res.render("Configuration/AddLogo", { baseUrl, errors: error, path: "logo" })
+    } else {
+      const doc = new LogoModel({
+        Link: req.body.link,
+        Banner: imagename
+      })
+      const result = await doc.save();
+      req.session.tostMsg = "Logo Added Successfully..."
+      req.session.tostBackground = "#0b6a3c"
+      req.session.isTost = true
+      res.redirect(`${baseUrl}admin/logo`);
+    }
+  }
+
+  static EditLogo = async (req, res) => {
+    let data = req.body;
+    data.thumbnail = req.files?.thumbnail;
+    let validator = new Validator({
+      link: "required|url",
+      thumbnail: "required",
+    }, {
+      link: "Link is necessary",
+      thumbnail: "Thumbnail is necessary",
+    });
+    let logo = await LogoModel.findById(req.body.id)
+    const path = await makeDir("./assets/logoimage/");
+    let thumbnail;
+    let imagename;
+    if (req.files?.thumbnail != undefined) {
+      const url = logo.Banner
+      let filename = new URL(url).pathname.split('/').pop();
+      let photo = path + "/" + filename;
+      if (fs.existsSync(photo)) fs.unlinkSync(photo);
+      thumbnail = req.files?.thumbnail;
+      var d = new Date()
+      photo = thumbnail.name
+      photo = photo.replace(/\s/g, '')
+      let r = (Math.random() + 1).toString(36).substring(7)
+      var imname = d.getSeconds() + "." + r + "." + photo
+      let uploadPath = path + "/" + imname;
+      imagename = 'logoimage/' + imname;
+      thumbnail.mv(uploadPath, function (err) {
+        if (err) return res.status(500).send(err);
+      });
+    }
+    // await validator.check();
+    let error = validatorError(res, validator.errors);
+    if (error && JSON.stringify(error) != "{}") {
+      let logo = await LogoModel.findByIdAndUpdate(req.body.id);
+      res.render("Logo/EditLogo", {
+        baseUrl,
+        errors: error,
+        logo: logo,
+        path: "logo",
+      });
+    } else {
+      const doc = await LogoModel.findByIdAndUpdate(req.body.id, {
+        Link: req.body.link,
+        Banner: imagename
+        ,
+      });
+      req.session.tostMsg = "Logo Updated Successfully..."
+      req.session.tostBackground = "#0b6a3c"
+      req.session.isTost = true
+      res.redirect(`${baseUrl}admin/logo`);
+    }
+  }
 }
 
 export default AdminController
