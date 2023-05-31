@@ -124,6 +124,6 @@ user.get("/getrefimageupload", isUser, ReferralController.GetRefImageUpload);
 // user.post("/refimageupload", isUser, ReferralController.RefImageUpload1);
 user.post("/refimageupload/:id", isUser, ReferralController.EditRefImage);
 user.delete("/deleteimage/:id/:name", isUser, ReferralController.DeleteRerPic);
-user.get("/referralmembership", isUser, ReferralController.ReferralMembershipList);
+// user.get("/referralmembership", isUser, ReferralController.ReferralMembershipList);
 
 export default user
