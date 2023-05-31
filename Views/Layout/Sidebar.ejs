@@ -96,6 +96,20 @@
 
           </ul>
         </li>
+        <li class="sidebar-item has-sub <%= (path == 'paypal')  ? 'active' : '' %> ">
+          <a href="#" class='sidebar-link'>
+            <i class="bi bi-stack"></i>
+            <span>Referral</span>
+          </a>
+          <ul class="submenu <%= (path == 'referral') ? 'active' : '' %> ">
+            <!-- <li class="submenu-item <%= (path == 'referral') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/referralrequest">Referral Request</a>
+          </li> -->
+            <li class="submenu-item <%= (path == 'referral') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/referral">Referral User</a>
+            </li>
+          </ul>
+        </li>
 
     </div>
   </div>
