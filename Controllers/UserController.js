@@ -26,6 +26,7 @@ import ContactModel from "../Models/Contact.js"
 import FolderModel from "../Models/Folder.js";
 import ConfigurationModel from "../Models/Configuration.js";
 import ContactFolderModel from "../Models/ContactFolder.js";
+import ReferralMembershipModel from "../Models/ReferralMembership.js";
 import ImageModel from "../Models/Image.js";
 import moment from "moment";
 import mime from "mime"
@@ -45,11 +46,11 @@ class UserController {
     static Register1 = async (req, res) => {
         try {
             var transporter = nodemailer.createTransport({
-                host: 'smtp-relay.sendinblue.com',
-                port: 587,
+                host: 'mail.addmy.co',
+                port: 465,
                 auth: {
-                    user: "gaumji009@gmail.com",
-                    pass: "zHwtvEd0XVT4xhaO"
+                    user: "info@addmy.co",
+                    pass: "noreply@addmy.com"
                 }
             });
             let mailOptions = {
@@ -64,7 +65,6 @@ class UserController {
                 if (info) {
                     console.log("email send successfully:", info);
                 }
-                console.log('asd');
             });
             console.log("send");
         } catch (err) {
@@ -1480,6 +1480,7 @@ class UserController {
     static DonatedUser = async (req, res) => {
         try {
             let data = req.body;
+            console.log("DATA",data)
             let validator = new Validator(data, {
                 user_id: "required",
             });
@@ -2296,6 +2297,15 @@ class UserController {
         return res.status(200).json({
             success: true,
             data: image,
+        });
+    }
+
+    static ReferralMembership = async (req, res) => {
+        let referral = await ReferralMembershipModel.find({});
+        console.log("RESULT",referral)
+        return res.status(200).json({
+            success: true,
+            data: referral,
         });
     }
 }

@@ -3,6 +3,7 @@ import { view, baseUrl, assetsUrl } from "../Config.js";
 import { assets } from "../Common.js";
 import UserModel from "../Models/User.js"
 import MembershipModel from "../Models/Membership.js";
+import ReferralMembershipModel from "../Models/ReferralMembership.js";
 import BannerModel from "../Models/Banner.js"
 import SystemModel from "../Models/Systemimage.js"
 import FolderModel from "../Models/Folder.js";
@@ -293,6 +294,22 @@ class DashboardController {
     let logo = await LogoModel.findById(req.query.id);
     res.render('Configuration/EditLogo', { baseUrl, logo: logo, path: 'logo' });
   }
+
+  // ....................REFERRALMEBERSHIP[CONFIGURATION]......................
+static ReferralMembershipTenure = async (req, res) => {
+  let referralmembership = await ReferralMembershipModel.find({}).sort({ _id: -1 });
+  res.render('Referral/Referralmembership', { baseUrl, referralmembership: referralmembership, path: 'referralmembership', session: req.session });
+}
+
+static AddReferralMembershipTenure = async (req, res) => {
+  let referralmembership = await ReferralMembershipModel.find({}).sort({ _id: -1 });
+  res.render('Referral/Addreferralmembership', { baseUrl, referralmembership: referralmembership, path: 'referralmembership', });
+}
+
+static EditReferralMembershipTenure = async (req, res) => {
+  let referralmembership = await ReferralMembershipModel.findById(req.query.id);
+  res.render('Referral/Editreferralmembership', { baseUrl, referralmembership: referralmembership, path: 'referralmembership' });
+}
 }
 
 export default DashboardController;

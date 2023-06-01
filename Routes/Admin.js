@@ -133,7 +133,15 @@ admin.get("/editlogo",isAdmin,DashboardController.EditLogo);
 admin.post("/logo", AdminController.Logo);
 admin.post("/editlogo", AdminController.EditLogo);
 
+// ..........................REFERRALMEMBERSHIP[CONFIGURATION]...................
+admin.get("/referralmembership",isAdmin,DashboardController.ReferralMembershipTenure);
+admin.get("/addreferralmembership",isAdmin,DashboardController.AddReferralMembershipTenure);
+admin.get("/editreferralmembership",isAdmin,DashboardController.EditReferralMembershipTenure);
 
+// .....................MEMEBRSHIP[CONFIGURATION].........................
+admin.post("/referralmembership",AdminController.ReferralMembershipTenure);
+admin.post("/editreferralmembership",AdminController.EditReferralMembershipTenure);
+admin.get("/deletereferralmembership",AdminController.DeleteReferralMembershipTenure)
 
 
 

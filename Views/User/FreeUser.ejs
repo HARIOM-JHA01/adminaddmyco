@@ -44,6 +44,7 @@ import session from "express-session"
                 <th>Email</th>
                 <th>Country</th>
                 <th>JoinDate</th>
+                <th></th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -74,6 +75,13 @@ import session from "express-session"
                 <td><span class="name-field">
                     <%= moment(v.date).format('DD-MM-YYYY') %>
                   </span></td>
+                  <td>
+                    <% if(v.usertype != 1){ %> 
+                      <button type="button" id="refresh" class="btn  btn-refer">
+                        <img src="../../assets/images/referral icon.png" class="img-fluid approve_btn" data-id = "<%= v.tgid%>" alt="referral">
+                      </button>
+                      <% } %>
+                  </td>
                 <td>
                   <div class="dropdown d-inline-block">
 
@@ -331,6 +339,34 @@ $("document").ready(function () {
       location.href = jQuery(this).val();
     })
   })
+</script>
+
+<script>
+  $(document).on('click', '.approve_btn', function() {
+    var id = $(this).data("id");
+    var baseUrl = '<%= baseUrl %>'
+    swal({
+        title: "Are you sure?",
+        text: "You Want to this premium user?",
+        icon: "warning",
+        buttons: true,
+        dangerMode: true,
+      })
+      .then((willDelete) => {
+        if (willDelete) {
+          $.ajax({
+            type: "GET",
+            url: `${baseUrl}admin/approvepremium?id=${id}`,
+            dataType: "json",
+            statusCode: {
+              200: function(xhr) {
+               location.reload(true);
+              }
+            }
+          });
+        }
+      });
+  });
 </script>
 
 <%- include('../Layout/Footer') %>

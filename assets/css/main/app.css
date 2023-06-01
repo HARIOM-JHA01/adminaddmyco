@@ -20015,3 +20015,55 @@ a {
     right: 15px;
     top: 12px;
 }
+
+
+.btn-refer{
+    border-radius: 50px;
+    padding: 0  ;
+    overflow: hidden;
+    height: 40px;
+    width: 40px;
+    
+    }
+    .btn-refer img
+    {height: 100%;
+    width: 100%;
+    
+    }
+    
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+      }
+      
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: gray;
+        transition: .4s;
+      }
+      
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+      }
+      
+      input[type="checkbox"]:checked + .slider {
+        background-color: #2196F3;
+      }
+      
+      input[type="checkbox"]:checked + .slider:before {
+        transform: translateX(26px);
+      }

@@ -326,7 +326,45 @@ class ReferralController {
         });
     }
 
+    static CheckTelegramId = async (req, res) => {
+        try {
+            var data = req.body;
+            let validator = new Validator(data, {
+                search: "required",
+            });
+            if (!(await validator.check())) {
+                return res.status(422).json({
+                    success: false,
+                    error: validator.errors,
+                });
+            } else {
+                let result
+                if (req.body.search.indexOf("http://") === 0 || req.body.search.indexOf("https://") === 0) {
+                    const str = req.body.search.split('/')
+                    result = str[str.length - 1]
+                } else {
+                    result = req.body.search
+                }
 
+
+                let where = {};
+                where['tgid'] = result
+                console.log("where", where);
+                let check = await UserModel.find(where)
+                return res.status(200).json({
+                    success: true,
+                    data: check,
+                });
+            }
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({
+                success: false,
+                error: error,
+                message: "Something went wrong..."
+            });
+        }
+    }
 
 
 }

@@ -6,7 +6,7 @@ import ReferralController from "../Controllers/ReferralController.js";
 // import DashboardController from "../Controllers/DashboardController.js";
 import multer from "multer"
 
-user.post("/register", UserController.Register);
+user.post("/register", UserController.Register1);
 user.post("/username", UserController.Username);
 user.post("/login", UserController.Login);
 user.post("/forgotpassword", UserController.ForgotPassword);
@@ -125,5 +125,10 @@ user.get("/getrefimageupload", isUser, ReferralController.GetRefImageUpload);
 user.post("/refimageupload/:id", isUser, ReferralController.EditRefImage);
 user.delete("/deleteimage/:id/:name", isUser, ReferralController.DeleteRerPic);
 // user.get("/referralmembership", isUser, ReferralController.ReferralMembershipList);
+user.post("/searchtelegramid", isUser, ReferralController.CheckTelegramId);
+
+
+// ...............................REFERRAL-MEMBERSHIP.......................................
+user.get("/referralmembershiplist", isUser, UserController.ReferralMembership);
 
 export default user
