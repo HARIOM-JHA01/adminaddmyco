@@ -6,7 +6,7 @@ import ReferralController from "../Controllers/ReferralController.js";
 // import DashboardController from "../Controllers/DashboardController.js";
 import multer from "multer"
 
-user.post("/register", UserController.Register1);
+user.post("/register", UserController.Register);
 user.post("/username", UserController.Username);
 user.post("/login", UserController.Login);
 user.post("/forgotpassword", UserController.ForgotPassword);
