@@ -7,10 +7,7 @@ import localStorage from "localStorage";
 
 const isAdmin = async (req, res, next) => {
   const accessTokenSecret = process.env["JWT_SECRET_KEY"];
-  // const token = req.session.token;
   const token = localStorage.getItem('token');
-  // console.log("session", req.session);
-  console.log("  ------------ token ------------", localStorage.getItem('token'));
   if (token || token != undefined) {
     jwt.verify(token, accessTokenSecret, async (err, user) => {
       if (err) {

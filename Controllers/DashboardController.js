@@ -4,12 +4,15 @@ import { assets } from "../Common.js";
 import UserModel from "../Models/User.js"
 import MembershipModel from "../Models/Membership.js";
 import ReferralMembershipModel from "../Models/ReferralMembership.js";
+import ReferralMembershipStipePayment from "../Models/ReferralMembershipStipePayment.js";
+import AdminNotificationModel from "../Models/AdminNotification.js";
 import BannerModel from "../Models/Banner.js"
 import SystemModel from "../Models/Systemimage.js"
 import FolderModel from "../Models/Folder.js";
 import ToncoinModel from "../Models/Toncoinpaypal.js";
 import CategoryModel from "../Models/Category.js";
 import LogoModel from "../Models/Logo.js";
+import ReferralReportModel from "../Models/ReferralReport.js";
 import moment from "moment";
 
 class DashboardController {
@@ -248,7 +251,6 @@ class DashboardController {
       },
     ]).sort({ _id: -1 })
 
-    console.log("253", referral)
 
     let country = await UserModel.aggregate([
       {
@@ -263,7 +265,6 @@ class DashboardController {
 
   static UpdateReferral = async (req, res) => {
     let data = req.body;
-    console.log("data", data)
     if (data.type == 'refstatue') {
       let data1 = await UserModel.findByIdAndUpdate(req.params.id, { refstatue: Number(data.status) });
     } else {
@@ -281,7 +282,6 @@ class DashboardController {
   // ..........................LOGO.................................
   static Logo = async (req, res) => {
     let logo = await LogoModel.findOne().sort({ _id: -1 })
-    console.log("log", logo);
     res.render('Configuration/Logo', { baseUrl, data: {}, logo: logo, path: 'logo', session: req.session });
   }
 
@@ -296,20 +296,77 @@ class DashboardController {
   }
 
   // ....................REFERRALMEBERSHIP[CONFIGURATION]......................
-static ReferralMembershipTenure = async (req, res) => {
-  let referralmembership = await ReferralMembershipModel.find({}).sort({ _id: -1 });
-  res.render('Referral/Referralmembership', { baseUrl, referralmembership: referralmembership, path: 'referralmembership', session: req.session });
-}
+  static ReferralMembershipTenure = async (req, res) => {
+    let referralmembership = await ReferralMembershipModel.find({}).sort({ _id: -1 });
+    res.render('Referral/Referralmembership', { baseUrl, referralmembership: referralmembership, path: 'referralmembership', session: req.session });
+  }
 
-static AddReferralMembershipTenure = async (req, res) => {
-  let referralmembership = await ReferralMembershipModel.find({}).sort({ _id: -1 });
-  res.render('Referral/Addreferralmembership', { baseUrl, referralmembership: referralmembership, path: 'referralmembership', });
-}
+  static AddReferralMembershipTenure = async (req, res) => {
+    let referralmembership = await ReferralMembershipModel.find({}).sort({ _id: -1 });
+    res.render('Referral/Addreferralmembership', { baseUrl, referralmembership: referralmembership, path: 'referralmembership', });
+  }
 
-static EditReferralMembershipTenure = async (req, res) => {
-  let referralmembership = await ReferralMembershipModel.findById(req.query.id);
-  res.render('Referral/Editreferralmembership', { baseUrl, referralmembership: referralmembership, path: 'referralmembership' });
-}
+  static EditReferralMembershipTenure = async (req, res) => {
+    let referralmembership = await ReferralMembershipModel.findById(req.query.id);
+    res.render('Referral/Editreferralmembership', { baseUrl, referralmembership: referralmembership, path: 'referralmembership' });
+  }
+
+  // ..........................REFERRAL-DETAIL.................................
+  static ReferralDetail = async (req, res) => {
+    let referraldetail = await ReferralReportModel.find({ referral_user_id: req.params.id }).sort({ _id: -1 })
+
+
+    res.render(`Referral/Referraldetail`, { baseUrl, referraldetail: referraldetail, path: 'referraldetail', session: req.session });
+  }
+
+  static ReferralReport = async (req, res) => {
+    let referralreport = await ReferralReportModel.find({}).distinct("referral_user_id")
+
+    let referral = referralreport.map(async e => {
+      const list = await UserModel.findById(e)
+      const memberlist = await ReferralReportModel.find({
+        referral_user_id: e
+      })
+
+      return {
+        id: e,
+        tgid: list.tgid,
+        country: list.country,
+        refstatue: list.refstatue == 1 ? 'Active' : 'Deactive',
+        totalRef: memberlist.length
+      }
+    })
+    Promise.all(referral).then(resp => {
+
+      res.render('Referral/Referralreport', { baseUrl, referral: resp, path: 'referralreport', session: req.session });
+    })
+  }
+
+  // ..........................STRIPE.................................
+  static Stripe = async (req, res) => {
+    let stripe = await ReferralMembershipStipePayment.find({}).sort({ _id: -1 });
+    let member = await UserModel.findById(stripe[0].user);
+    let membership = await ReferralMembershipModel.findById(stripe[0].membership);
+    const data = stripe.map(e => {
+      return {
+        id: e._id,
+        referral_tgid: e.referral_tgid,
+        member_tgid: member.tgid,
+        tenure: membership.membershiperiod,
+        price: membership.price,
+        date: moment(e.date).format("DD-MM-yyyy"),
+      }
+    })
+    res.render('MemberPayment/Stripe', { baseUrl, data: {}, path: 'stripe', data: data, session: req.session });
+  }
+
+  // ..........................NOTIFICATION.................................
+  static AdminNotification = async (req, res) => {
+    let notification = await AdminNotificationModel.find({}).sort({ _id: -1 })
+    console.log("notification",notification)
+    res.render('Notification/Notification', { baseUrl, data: {}, notification: notification, path: 'notification', session: req.session });
+  }
+
 }
 
 export default DashboardController;

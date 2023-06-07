@@ -143,6 +143,14 @@ admin.post("/referralmembership",AdminController.ReferralMembershipTenure);
 admin.post("/editreferralmembership",AdminController.EditReferralMembershipTenure);
 admin.get("/deletereferralmembership",AdminController.DeleteReferralMembershipTenure)
 
+// :::::::::::::::::::REFERRAL-DETAIL:::::::::::::::::::::
+admin.get("/referralreport/:id",isAdmin,DashboardController.ReferralDetail);
+admin.get("/referralreport",isAdmin,DashboardController.ReferralReport);
 
+// :::::::::::::::::::STRIPE:::::::::::::::::::::
+admin.get("/stripedetail",isAdmin,DashboardController.Stripe);
+
+// :::::::::::::::::::NOTIFICATION:::::::::::::::::::::
+admin.get("/notification",isAdmin,DashboardController.AdminNotification);
 
 export default admin

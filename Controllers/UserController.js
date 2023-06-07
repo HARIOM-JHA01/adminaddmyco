@@ -3,7 +3,7 @@ import { Validator } from "node-input-validator";
 import "dotenv/config";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import { validatorError, createRandomLink, decrypt, assets } from "../Common.js";
+import { validatorError, createRandomLink, decrypt, assets, encrypt } from "../Common.js";
 import { baseUrl, view, assetsUrl, __dirname } from "../Config.js";
 import makeDir from "make-dir";
 import fs from "fs";
@@ -27,14 +27,20 @@ import FolderModel from "../Models/Folder.js";
 import ConfigurationModel from "../Models/Configuration.js";
 import ContactFolderModel from "../Models/ContactFolder.js";
 import ReferralMembershipModel from "../Models/ReferralMembership.js";
+import ReferralReportModel from "../Models/ReferralReport.js";
 import ImageModel from "../Models/Image.js";
 import moment from "moment";
 import mime from "mime"
 import mongoose from "mongoose";
 import LogoModel from "../Models/Logo.js";
 import crypto from "crypto"
+import Stripe from "stripe";
+import "dotenv/config";
+const stripe = new Stripe(process.env["STRIPE_SECRET_KEY"])
 // import UserTokenModel from "../Models/UserToken.js"
 import user from "../Routes/User.js"
+import ReferralMembershipStipePayment from "../Models/ReferralMembershipStipePayment.js";
+import AdminNotificationModel from "../Models/AdminNotification.js";
 
 const accessTokenSecret = process.env["JWT_SECRET_KEY"];
 const accessTokenLife = process.env["ACCESS_TOKEN_LIFE"];
@@ -46,13 +52,21 @@ class UserController {
     static Register1 = async (req, res) => {
         try {
             var transporter = nodemailer.createTransport({
-                host: 'mail.addmy.co',
-                port: 465,
+                host: 'tgt-tko-m815.pointdnshere.com',
+                port: 587,
                 auth: {
                     user: "info@addmy.co",
                     pass: "noreply@addmy.com"
                 }
             });
+            // var transporter = nodemailer.createTransport({
+            //     host: "sandbox.smtp.mailtrap.io",
+            //     port: 2525,
+            //     auth: {
+            //         user: "6e6cbf25219481",
+            //         pass: "b2d9c14a58f35d"
+            //     }
+            // });
             let mailOptions = {
                 from: "info@addmy.co",
                 to: 'ankit.borad93@gmail.com',
@@ -66,7 +80,7 @@ class UserController {
                     console.log("email send successfully:", info);
                 }
             });
-            console.log("send");
+            // console.log("send");
         } catch (err) {
             console.log(err);
         }
@@ -123,14 +137,13 @@ class UserController {
             const template = handlebars.compile(source);
             try {
                 var transporter = nodemailer.createTransport({
-                    host: 'smtp-relay.sendinblue.com',
+                    host: 'tgt-tko-m815.pointdnshere.com',
                     port: 587,
                     auth: {
-                        user: "gaumji009@gmail.com",
-                        pass: "zHwtvEd0XVT4xhaO"
+                        user: "info@addmy.co",
+                        pass: "noreply@addmy.com"
                     }
                 });
-
 
                 var randomstring = Math.floor(Math.random() * (100000 - 999999 + 1) + 999999);;
                 const replacements = {
@@ -275,13 +288,14 @@ class UserController {
         const source = fs.readFileSync(filePath, 'utf-8').toString();
         const template = handlebars.compile(source);
         var transporter = nodemailer.createTransport({
-            host: 'smtp-relay.sendinblue.com',
+            host: 'tgt-tko-m815.pointdnshere.com',
             port: 587,
             auth: {
-                user: "gaumji009@gmail.com",
-                pass: "zHwtvEd0XVT4xhaO"
+                user: "info@addmy.co",
+                pass: "noreply@addmy.com"
             }
         });
+
         var randomstring = Math.floor(Math.random() * (100000 - 999999 + 1) + 999999);
         const replacements = {
             username: users.tgid,
@@ -510,7 +524,6 @@ class UserController {
 
     static GetProfile = async (req, res) => {
         let logoDetails = await LogoModel.findOne()
-        console.log("logoDetails", logoDetails);
         let profile = await UserModel.aggregate([
             {
                 $match: {
@@ -526,15 +539,6 @@ class UserController {
                 }
             },
             { $unwind: { path: "$theme", preserveNullAndEmptyArrays: true } },
-            // {
-            //     "$lookup": {
-            //         "from": "logos",
-            //         "localField": "_id",
-            //         "foreignField": "user_id",
-            //         "as": "logo"
-            //     }
-            // },
-            // { $unwind: { path: "$theme", preserveNullAndEmptyArrays: true } },
             {
                 "$lookup": {
                     "from": "companies",
@@ -545,7 +549,6 @@ class UserController {
             },
             { $unwind: { path: "$companydata", preserveNullAndEmptyArrays: true } }
         ])
-        console.log("?", profile[0]['refstatue']);
         profile[0]['logoImage'] = logoDetails.Banner
         profile[0]['logoTelegramUrl'] = logoDetails.Link
         if (profile[0]['profile_image'] != '') {
@@ -568,7 +571,6 @@ class UserController {
         if (!profile[0]['logoTelegramUrl']) {
             profile[0]['logoTelegramUrl'] = ''
         }
-        console.log(" profile[0]", profile[0]);
         return res.status(200).json({
             success: true,
             data: profile[0],
@@ -1480,7 +1482,7 @@ class UserController {
     static DonatedUser = async (req, res) => {
         try {
             let data = req.body;
-            console.log("DATA",data)
+            console.log("DATA", data)
             let validator = new Validator(data, {
                 user_id: "required",
             });
@@ -2302,11 +2304,239 @@ class UserController {
 
     static ReferralMembership = async (req, res) => {
         let referral = await ReferralMembershipModel.find({});
-        console.log("RESULT",referral)
+        console.log("RESULT", referral)
         return res.status(200).json({
             success: true,
             data: referral,
         });
+    }
+
+    static ReferralReport = async (req, res) => {
+        console.log("req", req);
+        let validator = new Validator(data, {
+            freemember_tgid: "required",
+            membership_period: "required",
+            price: "required",
+            join_date: "required"
+        }, {
+            freemember_tgid: "FreeMemberTgId is required",
+            membership_period: "MembershipDetail is required",
+            price: "Price is required",
+            join_date: "joindate is required"
+        })
+        if (!(await validator.check())) {
+            return res.status(422).json({
+                success: false,
+                error: validator.errors,
+            });
+        } else {
+            const doc = new ReferralReportModel({
+                referral_user_id: req.user._id,
+                referral_user_tgid: req.user.telegramId,
+                freemember_tgid: req.body.freemember_tgid,
+                membership_period: req.body.membership_period,
+                price: req.body.price,
+                join_date: req.body.join_date,
+
+            })
+            let result = await ReferralReportModel.create(doc)
+            return res.status(200).json({
+                success: true,
+                data: result,
+                message: "Data Added Successfully.."
+            })
+        }
+    }
+    static ReferralReportList = async (req, res) => {
+        let referral = await ReferralReportModel.find({
+            referral_user_id: req.user._id
+        }).sort({ _id: -1 });
+        console.log("RESULT", referral)
+        return res.status(200).json({
+            success: true,
+            data: referral,
+        });
+    }
+    static success = async (req, res) => {
+        let dec = req.body
+        let validator = new Validator(dec, {
+            user: "required",
+            membership: "required",
+        });
+        await validator.check();
+        let error = validatorError(res, validator.errors);
+        if (error && JSON.stringify(error) != "{}") {
+            return res.status(422).json({
+                success: false,
+                error: validator.errors,
+            })
+        } else {
+            const userdetails = await UserModel.findById(dec.user)
+            let membershipData = await ReferralMembershipModel.findById(dec.membership)
+
+            var current = moment().format('YYYY-MM-DD');
+            let date = null;
+            if (userdetails.enddate == null || userdetails.enddate <= current) {
+                date = current
+            } else {
+                date = userdetails.enddate
+            }
+            let enddate = moment(date).add(membershipData.membershiperiod, 'y').format('YYYY-MM-DD');
+
+            await UserModel.findByIdAndUpdate(dec.user, {
+                usertype: 1,
+                startdate: current,
+                paymentstatus: 1,
+                enddate: enddate
+            });
+            await ReferralMembershipStipePayment.create({
+                membership: dec.membership,
+                user: dec.user,
+                referral_tgid: req.user.tgid,
+                referral_id: req.user._id,
+            })
+            const doc = new ReferralReportModel({
+                referral_user_id: req.user._id,
+                referral_user_tgid: req.user.telegramId,
+                freemember_tgid: userdetails.tgid,
+                membership_period: membershipData.membershiperiod,
+                price: membershipData.price,
+                join_date: moment().format('DD-MM-yyyy'),
+            })
+            await ReferralReportModel.create(doc)
+
+
+            const _notification = {
+                freemember_id: userdetails._id,
+                contact_id: userdetails._id,
+                user_id: req.user._id,
+                message: `your profile upgraded to premium membership , now you can create custom url for your profile`
+            }
+            await NotificationModel.create(_notification)
+            
+            const AdminNotification = {
+                user_id: req.user._id,
+                referral_id: userdetails._id,
+                message: `referral ${req.user.tgid} has added ${userdetails.tgid} to premium membership on date `
+            }
+            await AdminNotificationModel.create(AdminNotification)
+
+            return res.status(200).json({
+                success: true,
+                message: "payment success"
+            });
+        }
+    };
+    static StripeCheckOutSession = async (req, res) => {
+        try {
+            const data = req.body;
+            console.log("data", req.body)
+            let validator = new Validator(data, {
+                user: "required",
+                membership: "required",
+            },);
+            await validator.check();
+            let error = validatorError(res, validator.errors);
+            if (error && JSON.stringify(error) != "{}") {
+                return res.status(422).json({
+                    success: false,
+                    error: validator.errors,
+                })
+            } else {
+                let membershipData = await ReferralMembershipModel.findById(data.membership)
+                console.log("membershipData", membershipData);
+                if (!membershipData) {
+                    return res.status(500).json({
+                        status: false,
+                        message: "Membership not found"
+                    });
+                }
+                const session = await stripe.checkout.sessions.create({
+                    payment_method_types: ["card"],
+                    line_items: [
+                        {
+                            price_data: {
+                                currency: "HKD",
+                                product_data: {
+                                    name: membershipData.membershiperiod + " Year membership",
+                                },
+                                unit_amount: membershipData.price * 100,
+                            },
+                            quantity: 1,
+                        },
+                    ],
+                    mode: "payment",
+                    // success_url:  `http://${req.headers.host}/success/${link}`,
+                    success_url: `${req.headers.origin}/success/${req.user._id}/${data.user}/${data.membership}`,
+                    cancel_url: `${req.headers.origin}/failed/${req.user._id}/${data.user}/${data.membership}`
+                });
+                return res.status(200).json({
+                    status: true,
+                    data: { user: data.user, membership: membershipData._id, amount: membershipData.price },
+                    id: session.id,
+                    url: session.url,
+                    session
+                });
+            }
+        }
+        catch (error) {
+            return res.status(500).json({
+                status: true,
+                error: "somthing wents wrong"
+            });
+        }
+    }
+
+    static getUserName = async (req, res) => {
+        let doc = req.body
+
+        let validator = new Validator(doc, {
+            tgid: "required",
+            // amount: "required",
+        });
+        await validator.check();
+        let error = validatorError(res, validator.errors);
+        if (error && JSON.stringify(error) != "{}") {
+            return res.status(422).json({
+                success: false,
+                error: validator.errors,
+            })
+        } else {
+            const userdetails = await UserModel.find({
+                tgid: doc.tgid
+            })
+            console.log("req.user._id", userdetails);
+
+            return res.status(200).json({
+                success: true,
+                username: userdetails[0].username
+            });
+        }
+    }
+
+
+    static getUserDetails = async (req, res) => {
+        let doc = req.body
+
+        let validator = new Validator(doc, {
+            id: "required",
+            // amount: "required",
+        });
+        await validator.check();
+        let error = validatorError(res, validator.errors);
+        if (error && JSON.stringify(error) != "{}") {
+            return res.status(422).json({
+                success: false,
+                error: validator.errors,
+            })
+        } else {
+            const userdetails = await UserModel.findById(req.body.id)
+
+            return res.status(200).json({
+                success: true,
+                data: userdetails
+            });
+        }
     }
 }
 export default UserController;

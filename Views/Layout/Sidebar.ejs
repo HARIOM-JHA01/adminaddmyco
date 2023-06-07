@@ -53,9 +53,9 @@
             <li class="submenu-item <%= (path == 'paypal') ? 'active' : '' %> ">
               <a href="<%= baseUrl %>admin/paypal">Paypal</a>
             </li>
-            <!-- <li class="submenu-item <%= (path == 'toncoin') ? 'active' : '' %> ">
-              <a href="<%= baseUrl %>admin/toncoin">Toncoin</a>
-            </li> -->
+            <li class="submenu-item <%= (path == 'stripe') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/stripedetail">Stripe</a>
+            </li>
           </ul>
         </li>
         <li class="sidebar-item <%= ( path == 'banner') ? 'active' : ''  %>">
@@ -105,18 +105,28 @@
             <span>Referral</span>
           </a>
           <ul class="submenu <%= (path == 'referral') ? 'active' : '' %> ">
-            <!-- <li class="submenu-item <%= (path == 'referral') ? 'active' : '' %> ">
-              <a href="<%= baseUrl %>admin/referralrequest">Referral Request</a>
-          </li> -->
-            <li class="submenu-item <%= (path == 'referral') ? 'active' : '' %> ">
+            <li class="submenu-item <%= (path == 'referral') || (path == 'refmembershiptenure') || (path == 'referraldetail') || (path == 'referralreport')? 'active' : '' %> ">
               <a href="<%= baseUrl %>admin/referral">Referral User</a>
             </li>
             <li class="submenu-item <%= (path == 'refmembershiptenure') ? 'active' : '' %> ">
               <a href="<%= baseUrl %>admin/referralmembership">Referral Membership Tenure</a>
           </li>
+            </li>
+            <li class="submenu-item <%= (path == 'referralreport') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/referralreport">Referral Report</a>
+          </li>
           </ul>
         </li>
-
+        <li class="sidebar-item <%= ( path == 'notification') ? 'active' : ''  %>">
+          <a href="<%= baseUrl %>admin/notification" class='sidebar-link'>
+            <i class="bi bi-grid-fill"></i>
+            <span>Notification</span>
+          </a>
+        </li>
     </div>
   </div>
 </div>
+
+<script>
+  function async()
+</script>

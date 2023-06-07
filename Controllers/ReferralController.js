@@ -55,7 +55,6 @@ class ReferralController {
         let error = validatorError(res, validator.errors);
         const path = await makeDir("./assets/systemimage/");
         let image = req.files?.['image[]'];
-        console.log("image", req);
         const images = []
         if (image) {
             if (Array.isArray(image)) {
@@ -176,7 +175,6 @@ class ReferralController {
                 let extension = image.name.split('.').pop();
                 var imname = timestamp + "1." + extension;
                 images.push(imname)
-                console.log('images1', images);
                 let uploadPath = path + "/" + imname;
                 image.mv(uploadPath, function (err) {
                     if (err) return res.status(500).send(err);
@@ -210,6 +208,7 @@ class ReferralController {
 
 
     static GetRefImageUpload = async (req, res) => {
+        console.log("req.user._id", req.user._id);
         let imageupload = await SystemModel.find({ user_id: req.user._id });
         imageupload = await imageupload.map((e) => {
             let a = JSON.parse(JSON.stringify(e))
@@ -219,7 +218,6 @@ class ReferralController {
             });
             return a;
         });
-        console.log("imageupload", imageupload);
         let totalImage = imageupload.map(e => e.Thumbnail).flat(1).length
         return res.status(200).json({
             success: true,
@@ -249,7 +247,6 @@ class ReferralController {
             { upsert: true }
         );
         let Membershp = await MembershipModel.find({ membershiperiod: 1 });
-        console.log("MembershipModel", Membershp, Membershp[0]._id);
         let user = await UserModel.find({ tgid: req.query.id });
         const doc = new ToncoinModel({
             membershiperiod: 1,
@@ -275,7 +272,6 @@ class ReferralController {
             paymentstatus: 1,
             enddate: enddate
         });
-        console.log('data', data);
         return res.status(200).json({
             status: true,
             data: data
@@ -309,7 +305,6 @@ class ReferralController {
             let image = path + "/" + name;
             if (fs.existsSync(image)) fs.unlinkSync(image);
         }
-        console.log("gt1", gt1);
         if (gt1.length === 0) { 
              await SystemModel.findByIdAndDelete(id); 
         }else{ 
@@ -349,7 +344,6 @@ class ReferralController {
 
                 let where = {};
                 where['tgid'] = result
-                console.log("where", where);
                 let check = await UserModel.find(where)
                 return res.status(200).json({
                     success: true,
@@ -357,7 +351,6 @@ class ReferralController {
                 });
             }
         } catch (error) {
-            console.log(error);
             return res.status(500).json({
                 success: false,
                 error: error,

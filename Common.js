@@ -47,7 +47,7 @@ export const validatorError = (res, errors) => {
   export const setdate = (date) => {
     return moment(date).format('DD-MM-YYYY');
   }
-  function encrypt(text) {
+  export function encrypt(text) {
     const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
     const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
     return {
@@ -55,7 +55,6 @@ export const validatorError = (res, errors) => {
       content: encrypted.toString('hex')
     };
   }
-  
   export const decrypt = (hash) => {
     console.log("57" , hash)
     const decipher = crypto.createDecipheriv(algorithm, secretKey, Buffer.from(hash.iv, 'hex'));
@@ -86,3 +85,5 @@ export const validatorError = (res, errors) => {
     }).showToast();
     }
     
+
+ 

@@ -76,14 +76,14 @@ import session from "express-session"
                   </span></td>
                 <td><span class="name-field">
                     <% 
-                                                    let sumdata = 0;
-                                                    if(v.userDoc != '') {
-                                                    v.userDoc.forEach(function (err, devices) {
-                                                        if(err.paymentstatus == 1)
-                                                            sumdata = sumdata + parseInt(err.membershiperiod);
-                                                    });
-                                                  }
-                                                    %>
+                    let sumdata = 0;
+                    if(v.userDoc != '') {
+                    v.userDoc.forEach(function (err, devices) {
+                        if(err.paymentstatus == 1)
+                            sumdata = sumdata + parseInt(err.membershiperiod);
+                    });
+                  }                              
+                   %>
                     <%= sumdata %> Years
                   </span></td>
                 <td><span class="name-field">

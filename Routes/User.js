@@ -131,4 +131,18 @@ user.post("/searchtelegramid", isUser, ReferralController.CheckTelegramId);
 // ...............................REFERRAL-MEMBERSHIP.......................................
 user.get("/referralmembershiplist", isUser, UserController.ReferralMembership);
 
+// ...............................REFERRAL-MEMBERSHIP.......................................
+user.post("/referralreport", isUser, UserController.ReferralReport);
+user.get("/referralReportlist", isUser, UserController.ReferralReportList);
+
+
+// .............................. STRIPE,,,,..................
+user.post("/create-checkout-session", isUser, UserController.StripeCheckOutSession);
+user.post("/success", isUser, UserController.success);
+
+// ::::::::::::::::::::::::::GET-USERNAME::::::::::::::::::::::::
+user.post("/getusername", isUser, UserController.getUserName);
+user.post("/getuserdetails", isUser, UserController.getUserDetails);
+
+
 export default user

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const referralmembershipSchema = new mongoose.Schema({
-  membershiperiod: { type: Number,},
+  membershiperiod: { type: Number},
   price: {type:Number},
   date: { type: Date, default: Date.now }
 });

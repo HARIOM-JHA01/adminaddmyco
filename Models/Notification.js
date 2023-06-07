@@ -6,6 +6,7 @@ const NotificationSchema = new mongoose.Schema({
   message: { type: String },
   view: { type: Number, default: 0 },
   date: { type: Date, default: Date.now },
+  freemember_id: { type: mongoose.Schema.Types.ObjectId, default: null, ref: "User" }
 },
   { timestamps: true }
 )
