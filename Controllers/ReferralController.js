@@ -30,7 +30,7 @@ class ReferralController {
         });
     }
 
-   
+
 
     static Categorylist = async (req, res) => {
         let categories = await CategoryModel.find({});
@@ -153,7 +153,7 @@ class ReferralController {
         let id = req.params.id;
         let timestamp = Date.now();
         let data = req.body;
-        
+
         data.image = req.files?.['image[]'];
         let validator = new Validator(data, {
             image: "required",
@@ -166,24 +166,24 @@ class ReferralController {
         let image = req.files?.['image[]'];
         const images = [];
         if (image) {
-             await SystemModel.findByIdAndUpdate(id,{
-                Thumbnail:''
+            await SystemModel.findByIdAndUpdate(id, {
+                Thumbnail: ''
             });
             // console.log('image', images);
             // if (Array.isArray(image)) {
             // for (let i = 0; i < image.length; i++) {
-                let extension = image.name.split('.').pop();
-                var imname = timestamp + "1." + extension;
-                images.push(imname)
-                let uploadPath = path + "/" + imname;
-                image.mv(uploadPath, function (err) {
-                    if (err) return res.status(500).send(err);
-                });
+            let extension = image.name.split('.').pop();
+            var imname = timestamp + "1." + extension;
+            images.push(imname)
+            let uploadPath = path + "/" + imname;
+            image.mv(uploadPath, function (err) {
+                if (err) return res.status(500).send(err);
+            });
             // }
             // }
             let oldimage = path + "/" + req.body.name;
             if (fs.existsSync(oldimage)) fs.unlinkSync(oldimage);
-            
+
         }
         if (error && JSON.stringify(error) != "{}") {
             return res.status(422).json({
@@ -191,10 +191,10 @@ class ReferralController {
                 error: validator.errors,
             })
         } else {
-            let pic = images.filter(function(item) {
+            let pic = images.filter(function (item) {
                 return item !== req.body.name
             })
-            const doc = await SystemModel.findByIdAndUpdate(id,{
+            const doc = await SystemModel.findByIdAndUpdate(id, {
                 Thumbnail: pic.join()
             });
 
@@ -282,10 +282,14 @@ class ReferralController {
 
     // ......................DELETEUSERS[FREEUSER,PREMIUM,DONATED].....................
     static DeleteRefer = async (req, res) => {
-        let user = await UserModel.findByIdAndDelete(req.query.id);
+        await UserModel.findByIdAndUpdate(req.query.id, {
+            isReferral: 0,
+            refstatue: 0,
+            refimgstatue: 0
+        });
         return res.status(200).json({
             status: true,
-            message: "deleted successfully.",
+            message: "Remove successfully.",
             Url: `${baseUrl}admin/referral`,
         });
     }
@@ -305,19 +309,17 @@ class ReferralController {
             let image = path + "/" + name;
             if (fs.existsSync(image)) fs.unlinkSync(image);
         }
-        if (gt1.length === 0) { 
-             await SystemModel.findByIdAndDelete(id); 
-        }else{ 
+        if (gt1.length === 0) {
+            await SystemModel.findByIdAndDelete(id);
+        } else {
             await SystemModel.findByIdAndUpdate(id, {
-                Thumbnail :gt1.join(','),
+                Thumbnail: gt1.join(','),
             });
         }
-       
+
         return res.status(200).json({
             status: true,
             message: "deleted successfully.",
-            // data: pic,
-            //   Url: `${baseUrl}admin/system`,
         });
     }
 

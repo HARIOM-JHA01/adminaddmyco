@@ -18,6 +18,17 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.freedraw/2.0.1/leaflet-freedraw.web.js"></script>
 <script src="/assets/js/script.js"></script>
 <script>
+   var url = '<%= baseUrl %>'
+  $.ajax({
+            type: "GET",
+            dataType: "json",
+            url: url + 'admin/notificationcount',
+            statusCode: {
+              200: function(xhr) {
+                $('.notification_count').html('('+xhr.data+' New)')
+              }
+            }
+          });
   $("#success-msg").delay(2000).fadeOut(1000);
   // hide error msg
   $("#error-msg").delay(2000).fadeOut(1000);

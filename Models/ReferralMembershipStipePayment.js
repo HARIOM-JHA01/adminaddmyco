@@ -7,7 +7,7 @@ const ReferralMembershipStipePaymentSchema = new mongoose.Schema({
   referral_tgid: { type: String },
   referral_id: { type: String },
   date: { type: Date, default: Date.now }
-  // amount : {type : Number},
+  
 },
   { timestramp: true }
 );

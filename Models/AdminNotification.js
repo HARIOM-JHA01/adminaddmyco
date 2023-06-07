@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 const AdminNotificationSchema = new mongoose.Schema({
   user_id: { type: mongoose.Schema.Types.ObjectId, default: null, ref: "User" },
   referral_id: { type: mongoose.Schema.Types.ObjectId, default: null, ref: "User" },
-  message: { type: String },
+  user_tgid: { type: String, default: null, ref: "User" },
+  referral_tgid: { type: String, default: null, ref: "User" },
   status: {type:Number,default:0 },
   date: { type: Date, default: Date.now },
 },

@@ -152,5 +152,9 @@ admin.get("/stripedetail",isAdmin,DashboardController.Stripe);
 
 // :::::::::::::::::::NOTIFICATION:::::::::::::::::::::
 admin.get("/notification",isAdmin,DashboardController.AdminNotification);
+admin.get("/notificationcount",isAdmin,AdminController.Notificationcount);
+admin.get("/deletnotifaction",AdminController.DeletNotifaction);
+
+admin.get("/deletestripedetail",isAdmin,AdminController.DeleteStripeDetail);
 
 export default admin

@@ -18,12 +18,14 @@ import PaypalModel from "../Models/Paypal.js";
 import ToncoinModel from "../Models/Toncoinpaypal.js";
 import ConfigurationModel from "../Models/Configuration.js";
 import ReferralMembershipModel from "../Models/ReferralMembership.js";
+import AdminNotificationModel from "../Models/AdminNotification.js";
 import CategoryModel from "../Models/Category.js";
 import moment from "moment/moment.js";
 import { log } from "console";
 import AdminTokenModel from "../Models/AdminToken.js";
 import localStorage from 'localStorage'
 import LogoModel from "../Models/Logo.js";
+import ReferralMembershipStipePayment from "../Models/ReferralMembershipStipePayment.js";
 
 const accessTokenSecret = process.env["JWT_SECRET_KEY"];
 const accessTokenLife = process.env["ACCESS_TOKEN_LIFE"];
@@ -630,7 +632,6 @@ class AdminController {
             image[i].mv(uploadPath, function (err) {
               if (err) return res.status(500).send(err);
             });
-            console.log("test2", category)
           }
         } else {
           var d = new Date();
@@ -1239,98 +1240,124 @@ class AdminController {
     }
   }
 
-     // .....................REFERRAL-MEMEBRSHIP[CONFIGURATION]...............
-     static ReferralMembershipTenure = async (req, res) => {
-      let data = req.body;
-      let validator = new Validator(
-        data,
-        {
-          membershiperiod: "required",
-          price: "required",
-          // toncoin: "required",
-        },
-        {
-          membershiperiod: " This Field is necessary",
-          price: " This Field is necessary",
-          // toncoin: " This Field is necessary",
-        }
-      );
-      await validator.check();
-      // validation error
-      let error = validatorError(res, validator.errors);
-      if (error && JSON.stringify(error) != "{}") {
-        res.render("Referral/Addreferralmembership", {
-          baseUrl,
-          errors: error,
-          path: "referralmembership",
-        });
+  // .....................REFERRAL-MEMEBRSHIP[CONFIGURATION]...............
+  static ReferralMembershipTenure = async (req, res) => {
+    let data = req.body;
+    let validator = new Validator(
+      data,
+      {
+        membershiperiod: "required",
+        price: "required",
+        // toncoin: "required",
+      },
+      {
+        membershiperiod: " This Field is necessary",
+        price: " This Field is necessary",
+        // toncoin: " This Field is necessary",
       }
-      else {
-        const doc = new ReferralMembershipModel({
-          membershiperiod: req.body.membershiperiod,
-          price: req.body.price,
-          // toncoin: req.body.toncoin,
-        });
-        const result = await doc.save();
-        req.session.tostMsg = "Added Successfully..."
-        req.session.tostBackground = "#0b6a3c"
-        req.session.isTost = true
-        res.redirect(`${baseUrl}admin/referralmembership`);
-      }
-    };
-  
-    static EditReferralMembershipTenure = async (req, res) => {
-      let data = req.body;
-      let validator = new Validator(
-        data,
-        {
-          membershiperiod: "required",
-          price: "required",
-          // toncoin: "required",
-        },
-        {
-          membershiperiod: "This Field is necessary",
-          price: "This Field is necessary",
-          // toncoin: "This Field is necessary",
-        }
-      );
-      await validator.check();
-      // validation error
-      let error = validatorError(res, validator.errors);
-      if (error && JSON.stringify(error) != "{}") {
-        let referralmembership = await ReferralMembershipModel.findByIdAndUpdate(
-          data.id
-        );
-        res.render("Referral/Editreferralmembership", {
-          baseUrl,
-          errors: error,
-          referralmembership: referralmembership,
-          path: "referralmembership",
-        });
-      } else {
-        const doc = await ReferralMembershipModel.findByIdAndUpdate(data.id, {
-          membershiperiod: req.body.membershiperiod,
-          price: req.body.price,
-          // toncoin: req.body.toncoin,
-        });
-        req.session.isTost = true
-        req.session.tostMsg = "Data Updated Successfully..."
-        req.session.tostBackground = "#0b6a3c"
-        res.redirect(`${baseUrl}admin/referralmembership`);
-      }
-    };
-  
-    static DeleteReferralMembershipTenure = async (req, res) => {
-      let referralmembership = await ReferralMembershipModel.findByIdAndDelete(
-        req.query.id
-      );
-      return res.status(200).json({
-        status: true,
-        message: "deleted successfully.",
-        Url: `${baseUrl}admin/referralmembership`,
+    );
+    await validator.check();
+    // validation error
+    let error = validatorError(res, validator.errors);
+    if (error && JSON.stringify(error) != "{}") {
+      res.render("Referral/Addreferralmembership", {
+        baseUrl,
+        errors: error,
+        path: "referralmembership",
       });
-    };
-  
+    }
+    else {
+      const doc = new ReferralMembershipModel({
+        membershiperiod: req.body.membershiperiod,
+        price: req.body.price,
+        // toncoin: req.body.toncoin,
+      });
+      const result = await doc.save();
+      req.session.tostMsg = "Added Successfully..."
+      req.session.tostBackground = "#0b6a3c"
+      req.session.isTost = true
+      res.redirect(`${baseUrl}admin/referralmembership`);
+    }
+  };
+
+  static EditReferralMembershipTenure = async (req, res) => {
+    let data = req.body;
+    let validator = new Validator(
+      data,
+      {
+        membershiperiod: "required",
+        price: "required",
+        // toncoin: "required",
+      },
+      {
+        membershiperiod: "This Field is necessary",
+        price: "This Field is necessary",
+        // toncoin: "This Field is necessary",
+      }
+    );
+    await validator.check();
+    // validation error
+    let error = validatorError(res, validator.errors);
+    if (error && JSON.stringify(error) != "{}") {
+      let referralmembership = await ReferralMembershipModel.findByIdAndUpdate(
+        data.id
+      );
+      res.render("Referral/Editreferralmembership", {
+        baseUrl,
+        errors: error,
+        referralmembership: referralmembership,
+        path: "referralmembership",
+      });
+    } else {
+      const doc = await ReferralMembershipModel.findByIdAndUpdate(data.id, {
+        membershiperiod: req.body.membershiperiod,
+        price: req.body.price,
+        // toncoin: req.body.toncoin,
+      });
+      req.session.isTost = true
+      req.session.tostMsg = "Data Updated Successfully..."
+      req.session.tostBackground = "#0b6a3c"
+      res.redirect(`${baseUrl}admin/referralmembership`);
+    }
+  };
+
+  static DeleteReferralMembershipTenure = async (req, res) => {
+    let referralmembership = await ReferralMembershipModel.findByIdAndDelete(
+      req.query.id
+    );
+    return res.status(200).json({
+      status: true,
+      message: "deleted successfully.",
+      Url: `${baseUrl}admin/referralmembership`,
+    });
+  };
+
+  static Notificationcount = async (req, res) => {
+    let notification = await AdminNotificationModel.find({ "status": 0 }).count();
+    return res.status(200).json({
+      success: true,
+      data: notification,
+    });
+  }
+
+  static DeletNotifaction = async (req, res) => {
+    let user = await AdminNotificationModel.findByIdAndDelete(req.query.id);
+    return res.status(200).json({
+      status: true,
+      message: "Deleted successfully.",
+    });
+  }
+
+  static DeleteStripeDetail = async (req, res) => {
+    await ReferralMembershipStipePayment.findByIdAndDelete(req.query.id);
+
+    return res.status(200).json({
+      status: true,
+      message: "Deleted successfully.",
+    });
+  }
+
+
 }
 
 export default AdminController

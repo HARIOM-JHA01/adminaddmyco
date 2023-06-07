@@ -7,7 +7,7 @@ import session from "express-session"
     <div class="page-title mb-3">
       <div class="row">
         <div class="col-12 col-md-6 order-md-1 order-last">
-          <h3><a href="<%= baseUrl %>admin/dashboard" class="text-primary"><i class="fas fa-arrow-left me-2"></i></a>Referral Details</h3>
+          <h3><a href="<%= baseUrl %>admin/dashboard" class="text-primary"><i class="fas fa-arrow-left me-2"></i></a>Stripe Details</h3>
         </div>
         <div class="col-12 col-md-6 order-md-2 order-first">
           <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
@@ -29,7 +29,7 @@ import session from "express-session"
                   <th>Referral TG ID</th>
                   <th>Member TG ID</th>
                   <th>Tenure</th>
-                  <th>Price($HKD)</th>
+                  <th>Price(HK$)</th>
                   <th>Payment Date</th>
                   <th>Action</th>
                 </tr>
@@ -57,7 +57,7 @@ import session from "express-session"
                       <%= v.date%>
                     </span></td>
                     <td>
-                        <button type="button" data-id="<%= v._id %>" id="refresh"
+                        <button type="button" data-id="<%= v.id %>" id="refresh"
                             class="btn icon  icon-left btn-danger btn-sm delete-data"><i
                                 class="bi bi-trash"></i> </button>
                     </td>
@@ -123,7 +123,7 @@ import session from "express-session"
       '<%= session.isTost = "false"%>'
     }
   </script>
- <script>
+ <!-- <script>
     $(document).ready(function () {
         var table = $('#table1').DataTable();
     });
@@ -141,7 +141,7 @@ import session from "express-session"
                 if (willDelete) {
                     $.ajax({
                         type: "GET",
-                        url: `${baseUrl}admin/deletestripe?id=${id}`,
+                        url: `${baseUrl}admin/deletestripedetail/${id}`,
                         dataType: "json",
                         statusCode: {
                             200: function (xhr) {
@@ -167,7 +167,49 @@ import session from "express-session"
             });
     });
    
+</script> -->
+<script>
+  const baseUrl = '<%= baseUrl %>';
+  $(document).on('click', '.delete-data', function() {
+    var id = $(this).data("id");
+    console.log("id", id);
+
+    swal({
+        title: "Are you sure?",
+        text: "You want to delete this referuser?",
+        icon: "warning",
+        buttons: true,
+        dangerMode: true,
+      })
+      .then((willDelete) => {
+        if (willDelete) {
+          $.ajax({
+            type: "GET",
+            url: `${baseUrl}admin/deletestripedetail?id=${id}`,
+            dataType: "json",
+            statusCode: {
+              200: function(xhr) {
+                dataResult = xhr;
+                $(`tr[data-id="${id}"]`).remove();
+                console.log(dataResult.message)
+                Toastify({
+                  text: "Deleted successfully...",
+                  duration: 3000,
+                  newWindow: true,
+                  close: true,
+                  gravity: "top", // `top` or `bottom`
+                  position: "right", // `left`, `center` or `right`
+                  stopOnFocus: true, // Prevents dismissing of toast on hover
+                  style: {
+                    background: "#ff2c2c",
+                  },
+                }).showToast();
+              }
+            },
+          });
+        }
+      });
+  });
 </script>
-  
 
   <%- include('../Layout/Footer') %>

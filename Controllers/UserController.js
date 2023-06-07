@@ -1654,7 +1654,6 @@ class UserController {
             let validator = new Validator(data, {
             });
             var user = req.user;
-
             if (typeof req.body.fontcolor != 'undefined') {
                 await BackgroundModel.updateOne(
                     { user_id: req.user._id },
@@ -1936,8 +1935,18 @@ class UserController {
                     foreignField: '_id',
                     as: "category"
                 }
-            }
+            }, {
+                $lookup: {
+                    from: "users",
+                    localField: 'user_id',
+                    foreignField: '_id',
+                    as: "user"
+                }
+            },
+
         ]);
+        // const userDetails = await UserModel.findById()
+        console.log("image", image);
         image = await image.map((e) => {
             let a = JSON.parse(JSON.stringify(e))
             let im = a.Thumbnail.split(",");
@@ -1947,6 +1956,7 @@ class UserController {
             // a['categoryname'] = a.category.categoryname;
             return a;
         });
+        console.log("image", image);
         //   image[0]['Thumbnail'] = baseUrl + 'assets/systemimage' + image[0]['Thumbnail'];
         return res.status(200).json({
             success: true,
@@ -2413,11 +2423,12 @@ class UserController {
                 message: `your profile upgraded to premium membership , now you can create custom url for your profile`
             }
             await NotificationModel.create(_notification)
-            
+
             const AdminNotification = {
                 user_id: req.user._id,
                 referral_id: userdetails._id,
-                message: `referral ${req.user.tgid} has added ${userdetails.tgid} to premium membership on date `
+                user_tgid: req.user.tgid,
+                referral_tgid: userdetails.tgid
             }
             await AdminNotificationModel.create(AdminNotification)
 

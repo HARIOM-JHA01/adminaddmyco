@@ -17,7 +17,6 @@ import moment from "moment";
 
 class DashboardController {
   static home = async (req, res) => {
-    console.log("dash ", req.session)
     let user = await UserModel.find({}).countDocuments();
     res.render('Dashboard/Dashboard', { baseUrl, session: req.session, user: user, assetsUrl: assets(assetsUrl), path: 'dashboard' });
   }
@@ -109,7 +108,6 @@ class DashboardController {
         }
       }
     ]);
-    // console.log("vinit",donateduser)
     res.render('User/Donated', { baseUrl, donateduser: donateduser, country1: country1, path: 'donateduser', session: req.session, moment: moment });
   }
 
@@ -337,7 +335,6 @@ class DashboardController {
       }
     })
     Promise.all(referral).then(resp => {
-
       res.render('Referral/Referralreport', { baseUrl, referral: resp, path: 'referralreport', session: req.session });
     })
   }
@@ -345,26 +342,38 @@ class DashboardController {
   // ..........................STRIPE.................................
   static Stripe = async (req, res) => {
     let stripe = await ReferralMembershipStipePayment.find({}).sort({ _id: -1 });
-    let member = await UserModel.findById(stripe[0].user);
-    let membership = await ReferralMembershipModel.findById(stripe[0].membership);
-    const data = stripe.map(e => {
+    let list = stripe.map(async (e) => {
+      let member = await UserModel.findById(e.user);
+      let membership = await ReferralMembershipModel.findById(e.membership);
       return {
         id: e._id,
         referral_tgid: e.referral_tgid,
         member_tgid: member.tgid,
         tenure: membership.membershiperiod,
         price: membership.price,
-        date: moment(e.date).format("DD-MM-yyyy"),
+        date: moment(e.date).format("DD-MM-yyyy")
       }
     })
-    res.render('MemberPayment/Stripe', { baseUrl, data: {}, path: 'stripe', data: data, session: req.session });
+    Promise.all(list).then(result => {
+      const data = result.map(e => {
+        return {
+          id: e.id,
+          referral_tgid: e.referral_tgid,
+          member_tgid: e.member_tgid,
+          tenure: e.tenure,
+          price: e.price,
+          date: e.date,
+        }
+      })
+      res.render('Referral/Stripe', { baseUrl, data: {}, path: 'stripe', data: data, session: req.session });
+    })
   }
 
   // ..........................NOTIFICATION.................................
   static AdminNotification = async (req, res) => {
     let notification = await AdminNotificationModel.find({}).sort({ _id: -1 })
-    console.log("notification",notification)
-    res.render('Notification/Notification', { baseUrl, data: {}, notification: notification, path: 'notification', session: req.session });
+    await AdminNotificationModel.updateMany({ "status": 0 }, { $set: { "status": 1 } })
+    res.render('Referral/Notification', { baseUrl, data: {}, notification: notification, path: 'notification', session: req.session });
   }
 
 }
