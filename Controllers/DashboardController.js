@@ -82,8 +82,16 @@ class DashboardController {
           $and: [{ usertype: 1 }]
         }
       },
-    ]).sort({ _id: -1 })
+    ]).sort({ startdate: -1 })
 
+    const list = await UserModel.find({})
+    const _list = list.map(async e => {
+      const tenure = await ReferralReportModel.findOne({ freemember_tgid: { $eq: e.tgid } })
+      return {
+        ...e,
+        membershipPeriod: tenure?.membership_period
+      }
+    })
     let country = await UserModel.aggregate([
       {
         $group: {
@@ -91,7 +99,12 @@ class DashboardController {
         }
       }
     ]);
-    res.render('User/Premium', { baseUrl, premium: premium, path: 'premium', session: req.session, moment: moment, country: country });
+    Promise.all(_list).then(result => {
+      console.log("Result", result);
+
+      res.render('User/Premium', { baseUrl, premium: premium, path: 'premium', session: req.session, moment: moment, country: country, result: result });
+    })
+
   }
 
   static DonatedUser = async (req, res) => {
@@ -165,7 +178,7 @@ class DashboardController {
 
   // ...................FOLDERS[CONFIGURATION].........................
   static Folder = async (req, res) => {
-    let folder = await FolderModel.find({}).sort({ _id: -1 });
+    let folder = await FolderModel.find({ "user_id": null }).sort({ _id: -1 });
     res.render('Configuration/Folder', { baseUrl, folder: folder, path: "folder", session: req.session })
   }
 
@@ -249,7 +262,6 @@ class DashboardController {
       },
     ]).sort({ _id: -1 })
 
-
     let country = await UserModel.aggregate([
       {
         $group: {
@@ -319,7 +331,7 @@ class DashboardController {
 
   static ReferralReport = async (req, res) => {
     let referralreport = await ReferralReportModel.find({}).distinct("referral_user_id")
-
+    console.log("referralreport", referralreport);
     let referral = referralreport.map(async e => {
       const list = await UserModel.findById(e)
       const memberlist = await ReferralReportModel.find({
@@ -328,13 +340,15 @@ class DashboardController {
 
       return {
         id: e,
-        tgid: list.tgid,
-        country: list.country,
-        refstatue: list.refstatue == 1 ? 'Active' : 'Deactive',
+        tgid: list?.tgid,
+        country: list?.country,
+        refstatue: list?.refstatue == 1 ? 'Active' : 'Deactive',
         totalRef: memberlist.length
       }
     })
+
     Promise.all(referral).then(resp => {
+      console.log("referral", resp);
       res.render('Referral/Referralreport', { baseUrl, referral: resp, path: 'referralreport', session: req.session });
     })
   }

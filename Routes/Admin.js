@@ -157,4 +157,8 @@ admin.get("/deletnotifaction",AdminController.DeletNotifaction);
 
 admin.get("/deletestripedetail",isAdmin,AdminController.DeleteStripeDetail);
 
+// ::::::::::::::::::::::::::::::EXPORT:::::::::::::::::::::::::::::::
+admin.get("/exportdata",isAdmin,AdminController. ExportDataReferral);
+admin.get("/exportstrapedata",isAdmin,AdminController. ExportDataStrape);
+
 export default admin

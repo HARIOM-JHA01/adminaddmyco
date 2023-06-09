@@ -43,7 +43,7 @@ import session from "express-session"
                 <th>TG-id</th>
                 <th>Email</th>
                 <th>Country</th>
-                <th>Membership Tenure</th>
+                <!-- <th>Membership Tenure</th> -->
                 <th>Join-Date</th>
                 <th>Start-Date</th>
                 <th>End-Date</th>
@@ -74,7 +74,7 @@ import session from "express-session"
                 <td><span class="name-field">
                     <%= v.country%>
                   </span></td>
-                <td><span class="name-field">
+                <!-- <td><span class="name-field">
                     <% 
                     let sumdata = 0;
                     if(v.userDoc != '') {
@@ -85,7 +85,7 @@ import session from "express-session"
                   }                              
                    %>
                     <%= sumdata %> Years
-                  </span></td>
+                  </span></td> -->
                 <td><span class="name-field">
                     <%=moment(v.date).format('DD-MM-YYYY') %>
                   </span></td>
@@ -96,15 +96,17 @@ import session from "express-session"
                     <%= moment(v.enddate).format('DD-MM-YYYY')%>
                   </span></td>
                 <td><span class="name-field">
-                    <% if(v.userDoc != ''){ if(v.userDoc[0].paymenttype == 1){ %> toncoin
+                    <% if(!!v.referralType){ if(v.referralType == 1){ %> By&nbspReferral
                     <% } else { %>
                     By&nbspAdmin
-                    <% }} %>
+                    <% }} else { %>
+                      By&nbspAdmin
+                      <% }%>
                   </span></td>
                 <td>
                   <% if(v.isReferral != 1){ %> 
                     <button type="button" id="refresh" class="btn  btn-refer">
-                      <img src="../../assets/images/referral icon.png" class="img-fluid approve_btn" data-id = "<%= v.tgid%>" alt="referral">
+                      <img src="../../assets/images/ref icon.png" class="img-fluid approve_btn" data-id = "<%= v.tgid%>" alt="referral">
                     </button>
                     <% } %>
                  

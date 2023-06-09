@@ -1285,7 +1285,8 @@ class UserController {
                     "as": "userDoc"
                 }
             }
-        ]).sort({ _id: -1 });
+        ]).sort({ createdAt: -1 });
+        console.log("Notification", req.user._id);
         return res.status(200).json({
             success: true,
             data: Notification,
@@ -2383,21 +2384,15 @@ class UserController {
         } else {
             const userdetails = await UserModel.findById(dec.user)
             let membershipData = await ReferralMembershipModel.findById(dec.membership)
-
-            var current = moment().format('YYYY-MM-DD');
-            let date = null;
-            if (userdetails.enddate == null || userdetails.enddate <= current) {
-                date = current
-            } else {
-                date = userdetails.enddate
-            }
-            let enddate = moment(date).add(membershipData.membershiperiod, 'y').format('YYYY-MM-DD');
-
+            const _startDate = (userdetails.enddate === null || moment(userdetails.enddate, 'YYYY-MM-DD').isBefore(moment().format('YYYY-MM-DD'))) ? moment().format('YYYY-MM-DD') : userdetails?.enddate
+            const _endDate = moment(_startDate, "YYYY-MM-DD").add(membershipData.membershiperiod, 'years').format("YYYY-MM-DD")
+            debugger
             await UserModel.findByIdAndUpdate(dec.user, {
                 usertype: 1,
-                startdate: current,
+                startdate: userdetails?.startdate,
                 paymentstatus: 1,
-                enddate: enddate
+                enddate: _endDate,
+                referralType: 1
             });
             await ReferralMembershipStipePayment.create({
                 membership: dec.membership,
@@ -2516,11 +2511,11 @@ class UserController {
             const userdetails = await UserModel.find({
                 tgid: doc.tgid
             })
-            console.log("req.user._id", userdetails);
+            console.log("req.user._id", doc.tgid);
 
             return res.status(200).json({
                 success: true,
-                username: userdetails[0].username
+                username: userdetails?.[0]?.username
             });
         }
     }
@@ -2549,5 +2544,7 @@ class UserController {
             });
         }
     }
+
+
 }
 export default UserController;

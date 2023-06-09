@@ -9,12 +9,13 @@ import session from "express-session"
         <div class="col-12 col-md-6 order-md-1 order-last">
           <h3><a href="<%= baseUrl %>admin/dashboard" class="text-primary"><i class="fas fa-arrow-left me-2"></i></a>Stripe Details</h3>
         </div>
-        <div class="col-12 col-md-6 order-md-2 order-first">
-          <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
-            <ol class="breadcrumb">
+        <div class="col-12 col-md-6 order-md-2 order-first d-flex justify-content-end align-items-center">
+          <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end me-4 mb-0">
+            <ol class="breadcrumb" style="margin-bottom: 0px;">
               <li class="breadcrumb-item"><a href="<%= baseUrl %>admin/dashboard">Dashboard</a></li>`
             </ol>
           </nav>
+          <a href="<%= baseUrl %>admin/exportstrapedata"><button type="button" class="btn btn-primary btn-sm ">Export Data</button></a>
         </div>
       </div>
     </div>
@@ -35,7 +36,6 @@ import session from "express-session"
                 </tr>
               </thead>
               <tbody>
-                  <% console.log("test", data) %> 
                 <% var i=1; data.forEach(function(v) { %>
                 <tr data-id="<%= v.id%>">
                   <td><span class="name-field">
@@ -48,10 +48,12 @@ import session from "express-session"
                       <%= v.member_tgid %>
                     </span></td>
                   <td><span class="name-field">
-                      <%= v.tenure%>
+                        <% if(v.tenure != '' && v.tenure != 0) { %>
+                          <%= v.tenure%> Years
+                       <% } %>
                     </span></td>
                   <td><span class="name-field">
-                      <%= v.price%>
+                      <%= v.price%> HK$
                     </span></td>
                   <td><span class="name-field">
                       <%= v.date%>
@@ -123,51 +125,6 @@ import session from "express-session"
       '<%= session.isTost = "false"%>'
     }
   </script>
- <!-- <script>
-    $(document).ready(function () {
-        var table = $('#table1').DataTable();
-    });
-    $(document).on('click', '.delete-data', function () {
-        var id = $(this).data("id");
-        var baseUrl = '<%= baseUrl %>'
-        swal({
-            title: "Are you sure?",
-            text: "You want to delete this Stripe Detail ?",
-            icon: "warning",
-            buttons: true,
-            dangerMode: true,
-        })
-            .then((willDelete) => {
-                if (willDelete) {
-                    $.ajax({
-                        type: "GET",
-                        url: `${baseUrl}admin/deletestripedetail/${id}`,
-                        dataType: "json",
-                        statusCode: {
-                            200: function (xhr) {
-                                dataResult = xhr;
-                                $(`tr[data-id="${id}"]`).remove();
-                                console.log(dataResult.message)
-                                Toastify({
-                                    text: "Deleted successfully...",
-                                    duration: 3000,
-                                    newWindow: true,
-                                    close: true,
-                                    gravity: "top", // `top` or `bottom`
-                                    position: "right", // `left`, `center` or `right`
-                                    stopOnFocus: true, // Prevents dismissing of toast on hover
-                                    style: {
-                                        background: "#ff2c2c",
-                                    },
-                                }).showToast();
-                            }
-                        },
-                    });
-                }
-            });
-    });
-   
-</script> -->
 <script>
   const baseUrl = '<%= baseUrl %>';
   $(document).on('click', '.delete-data', function() {
@@ -176,7 +133,7 @@ import session from "express-session"
 
     swal({
         title: "Are you sure?",
-        text: "You want to delete this referuser?",
+        text: "You want to delete this stripepaymentl?",
         icon: "warning",
         buttons: true,
         dangerMode: true,

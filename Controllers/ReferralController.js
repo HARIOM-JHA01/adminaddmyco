@@ -13,6 +13,7 @@ import UserModel from "../Models/User.js";
 import jwt from "jsonwebtoken";
 
 import { validatorError } from "../Common.js";
+import NotificationModel from "../Models/Notification.js";
 const app = express()
 
 class ReferralController {
@@ -235,6 +236,13 @@ class ReferralController {
             { $set: { isReferral: 1 } },
             { upsert: true }
         );
+        const userDetails = await UserModel.find({ "tgid": req.query.id })
+        console.log("userDetails._id", userDetails[0].id);
+        const doc = {
+            contact_id: userDetails[0].id,
+            message: `congrats! You are a referral member now.`
+        }
+        await NotificationModel.create(doc)
         return res.status(200).json({
             status: true,
         });
@@ -270,7 +278,8 @@ class ReferralController {
             usertype: 1,
             startdate: date,
             paymentstatus: 1,
-            enddate: enddate
+            enddate: enddate,
+            referralType: 0
         });
         return res.status(200).json({
             status: true,

@@ -19,6 +19,7 @@ import ToncoinModel from "../Models/Toncoinpaypal.js";
 import ConfigurationModel from "../Models/Configuration.js";
 import ReferralMembershipModel from "../Models/ReferralMembership.js";
 import AdminNotificationModel from "../Models/AdminNotification.js";
+import excelJS from "exceljs";
 import CategoryModel from "../Models/Category.js";
 import moment from "moment/moment.js";
 import { log } from "console";
@@ -544,7 +545,8 @@ class AdminController {
       usertype: 1,
       startdate: current,
       paymentstatus: 1,
-      enddate: enddate
+      enddate: enddate,
+      referralType: 0
     });
     return res.status(200).json({
       status: true,
@@ -895,7 +897,15 @@ class AdminController {
   }
 
   static DeletePremiumUser = async (req, res) => {
-    let user = await UserModel.findByIdAndDelete(req.query.id);
+    let user = await UserModel.findByIdAndUpdate(req.query.id, {
+      "usertype": 0,
+      "paymentstatus": 0,
+      "enddate": null,
+      'startdate': null,
+      "isReferral": 0,
+      "refimgstatue": 0,
+      "refstatue": 0
+    });
     let premium = await ToncoinModel.deleteMany({ user_id: req.query.id })
     return res.status(200).json({
       status: true,
@@ -928,7 +938,15 @@ class AdminController {
   }
 
   static DeleteDonatedUser = async (req, res) => {
-    let user = await UserModel.findByIdAndDelete(req.query.id);
+    await UserModel.findByIdAndUpdate(req.query.id, {
+      "usertype": 0,
+      "paymentstatus": 0,
+      "enddate": null,
+      'startdate': null,
+      "isReferral": 0,
+      "refimgstatue": 0,
+      "refstatue": 0
+    });
     let premium = await ToncoinModel.deleteMany({ user_id: req.query.id })
     return res.status(200).json({
       status: true,
@@ -1350,15 +1368,141 @@ class AdminController {
 
   static DeleteStripeDetail = async (req, res) => {
     await ReferralMembershipStipePayment.findByIdAndDelete(req.query.id);
-
     return res.status(200).json({
       status: true,
       message: "Deleted successfully.",
     });
   }
 
+  //   static ExportData = async (req, res) => {
+  //     try{
+  //     const workbook = new excelJS.Workbook();
+  //     let exportdata = await UserModel.find({});
+  //     await workbook.xlsx.writeFile(`${exportdata}/exportdata.xlsx`)
+  //     .then(() => {
+  //       res.send({
+  //         status: "success",
+  //         message: "file successfully downloaded",
+  //         path: `${exportdata}/users.xlsx`,
+  //        });
+  //     });
+  //  } catch (err) {
+  //      res.send({
+  //      status: "error",
+  //      message: "Something went wrong",
+  //    });
+  //    }
+  //     // res.render("Referral/Referral", { baseUrl, exportdata: exportdata, path: 'exportdata', session: req.session })
+  //   }
+
+
+  static ExportDataReferral = async (req, res) => {
+
+    const workbook = new excelJS.Workbook();
+    const worksheet = workbook.addWorksheet("My ReferralUser")
+
+    worksheet.columns = [
+      { header: "S no.", key: "s_no" },
+      { header: "MemberId", key: "memberid" },
+      { header: "UserName", key: "username" },
+      { header: "TG-id", key: "tgid" },
+      { header: "Email", key: "email" },
+      { header: "Country", key: "country" },
+      { header: "Referral Status", key: "refstatue" },
+      { header: "Referral Imgage Status", key: "refimgstatue" },
+    ]
+    let counter = 1
+    const userData = await UserModel.find({ "isReferral": 1 });
+
+    userData.forEach((user) => {
+      user.s_no = counter;
+      worksheet.addRow(user);
+      counter++;
+    })
+
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlfoemats-officedocument.spreadsheatml.sheet"
+    )
+
+    res.setHeader("Content-Disposition", `attachment; filename=users.xlsx`)
+
+    return workbook.xlsx.write(res).then(() => {
+      res.status(200);
+    })
+
+  }
+
+
+  static ExportDataStrape = async (req, res) => {
+
+    const workbook = new excelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Stripe Detail")
+    let stripe = await ReferralMembershipStipePayment.find({}).sort({ _id: -1 });
+
+    worksheet.columns = [
+      { header: "S no.", key: "s_no" },
+      { header: "Referral TG-id", key: "referral_tgid" },
+      { header: "Member TG-id", key: "member_tgid" },
+      { header: "Tenure", key: "tenure" },
+      { header: "Price(HK$)", key: "price" },
+      { header: "Payment Date", key: "date" },
+    ]
+    let list = stripe.map(async (e) => {
+      let member = await UserModel.findById(e.user);
+      let membership = await ReferralMembershipModel.findById(e.membership);
+      return {
+        id: e._id,
+        referral_tgid: e.referral_tgid,
+        member_tgid: member.tgid,
+        tenure: membership.membershiperiod,
+        price: membership.price,
+        date: moment(e.date).format("DD-MM-yyyy")
+      }
+    })
+    Promise.all(list).then(result => {
+      const data = result.map(e => {
+        return {
+          id: e.id,
+          referral_tgid: e.referral_tgid,
+          member_tgid: e.member_tgid,
+          tenure: `${e.tenure} Year`,
+          price: `${e.price} HK$`,
+          date: e.date,
+        }
+      })
+
+
+      let counter = 1
+
+
+      data.forEach((user) => {
+        user.s_no = counter;
+        worksheet.addRow(user);
+        counter++;
+      })
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlfoemats-officedocument.spreadsheatml.sheet"
+      )
+
+      res.setHeader("Content-Disposition", `attachment; filename=users.xlsx`)
+
+      return workbook.xlsx.write(res).then(() => {
+        res.status(200);
+      })
+    })
+
+
+
+
+  }
 
 }
+
+
 
 export default AdminController
 

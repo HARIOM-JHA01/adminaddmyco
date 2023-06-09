@@ -9,12 +9,14 @@ import session from "express-session"
         <div class="col-12 col-md-6 order-md-1 order-last">
           <h3><a href="<%= baseUrl %>admin/dashboard" class="text-primary"><i class="fas fa-arrow-left me-2"></i></a>Referral User</h3>
         </div>
-        <div class="col-12 col-md-6 order-md-2 order-first">
-          <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
-            <ol class="breadcrumb">
+       
+        <div class="col-12 col-md-6 order-md-2 order-first d-flex justify-content-end align-items-center">
+          <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end me-4 mb-0">
+            <ol class="breadcrumb" style="margin-bottom: 0px;">
               <li class="breadcrumb-item"><a href="<%= baseUrl %>admin/dashboard">Dashboard</a></li>
             </ol>
           </nav>
+          <a href="<%= baseUrl %>admin/exportdata"><button type="button" class="btn btn-primary btn-sm ">Export Data</button></a>
         </div>
       </div>
     </div>
@@ -76,7 +78,6 @@ import session from "express-session"
                         checked
                       <% } %>>
                       <label class="form-check-label" for="flexSwitchCheckDefault"></label>
-                     
                     </div>
                     </span></td>
                   <td>
@@ -209,6 +210,17 @@ import session from "express-session"
     });
   });
   
+</script>
+
+<script>
+  // // Function to handle export button click
+  // function exportData() {
+  //   // Replace this with your export logic
+  //   console.log('Data exported!');
+  // }
+  
+  // // Attach click event listener to the export button
+  // document.getElementById("exportBtn").addEventListener("click", exportData);
 </script>
 
   <%- include('../Layout/Footer') %>

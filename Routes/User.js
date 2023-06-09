@@ -145,4 +145,6 @@ user.post("/getusername", isUser, UserController.getUserName);
 user.post("/getuserdetails", isUser, UserController.getUserDetails);
 
 
+
+
 export default user

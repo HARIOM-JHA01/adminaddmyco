@@ -330,9 +330,6 @@ table tbody tr td img {
     padding: 0;
 }
 
-<<<<<<< HEAD
-
-
 
 
 /* (A) LIGHTBOX BACKGROUND */
@@ -414,4 +411,7 @@ flex-direction: row;
 
 .sidebar-wrapper .menu .sidebar-item.active .arrow-color.has-sub .sidebar-link:after{
   content: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"><path style="fill:none;stroke:gray;stroke-width:1" d="m6 9 6 6 6-6"/></svg>');
+}
+.mb-0{
+  margin-bottom: 0px !important; 
 }
