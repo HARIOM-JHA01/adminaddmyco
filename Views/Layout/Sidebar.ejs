@@ -5,8 +5,8 @@
         <div class="logo">
           <tr>
 
-            <a href="<%= baseUrl %>admin/dashboard"><img src="../assets/images/logo/logo1.png" alt="Logo" srcset=""></a>
-            <a href="<%= baseUrl %>admin/dashboard"><img src="../assets/images/logo/addmyco.png" alt="Logo"
+            <a href="<%= baseUrl %>admin/dashboard"><img src="../../assets/images/logo/logo1.png" alt="Logo" srcset=""></a>
+            <a href="<%= baseUrl %>admin/dashboard"><img src="../../assets/images/logo/addmyco.png" alt="Logo"
                 srcset=""></a>
           </tr>
         </div>
@@ -63,13 +63,13 @@
           </a>
         </li>
         <li
-          class="sidebar-item has-sub <%= (path == 'membership') || (path == 'system') || (path == 'folder') ? 'active' : '' %> ">
+          class="sidebar-item has-sub <%= (path == 'membership') || (path == 'logo') ||(path == 'system') || (path == 'folder') ? 'active' : '' %> ">
           <a href="#" class='sidebar-link'>
             <i class="bi bi-stack"></i>
             <span> System Configuration</span>
           </a>
           <ul
-            class="submenu <%= (path == 'membership') || (path == 'system') || (path == 'folder') || (path == 'currency') || (path == 'categories') ? 'active' : '' %> ">
+            class="submenu <%= (path == 'membership') ||(path == 'logo') || (path == 'system') || (path == 'folder') || (path == 'currency') || (path == 'categories') ? 'active' : '' %> ">
             <li class="submenu-item <%= (path == 'membership') ? 'active' : '' %> ">
               <a href="<%= baseUrl %>admin/membership">Membership Tenure</a>
             </li>
@@ -94,17 +94,17 @@
             <li class="submenu-item <%= (path == 'configuration') ? 'active' : '' %> ">
               <a href="<%= baseUrl %>admin/configuration">Configuration </a>
             </li>
-
           </ul>
         </li>
-        <li class="sidebar-item has-sub <%= (path == 'paypal')  ? 'active' : '' %> ">
+        
+        <li class="sidebar-item has-sub <%= (path == 'referral') || (path == 'referralmembership')|| (path == 'referralreport') || (path == 'stripe') || (path == 'notification') ? 'active' : '' %> ">
           <a href="#" class='sidebar-link'>
             <i class="bi bi-stack"></i>
             <span>Referral</span>
           </a>
-          <ul class="submenu <%= (path == 'referral') ? 'active' : '' %> ">
-            <li class="submenu-item <%= (path == 'referral') || (path == 'refmembershiptenure') || (path == 'referraldetail') || (path == 'referralreport') || (path == 'stripedetail') || (path == 'notification')? 'active' : '' %> ">
-              <a href="<%= baseUrl %>admin/referral">Referral User</a>
+          <ul class="submenu <%= (path == 'referral') || (path == 'referralmembership') || (path == 'referralreport') || (path == 'stripe') || (path == 'notification')? 'active' : '' %> ">
+          <li class="submenu-item <%= (path == 'referral') ? 'active' : '' %> ">
+            <a href="<%= baseUrl %>admin/referral">Referral User</a>
             </li>
             <li class="submenu-item <%= (path == 'refmembershiptenure') ? 'active' : '' %> ">
               <a href="<%= baseUrl %>admin/referralmembership">Referral Membership</a>

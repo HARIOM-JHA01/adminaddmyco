@@ -18,6 +18,7 @@ import PaypalModel from "../Models/Paypal.js";
 import ToncoinModel from "../Models/Toncoinpaypal.js";
 import ConfigurationModel from "../Models/Configuration.js";
 import ReferralMembershipModel from "../Models/ReferralMembership.js";
+import ReferralReportModel from "../Models/ReferralReport.js";
 import AdminNotificationModel from "../Models/AdminNotification.js";
 import excelJS from "exceljs";
 import CategoryModel from "../Models/Category.js";
@@ -1374,27 +1375,6 @@ class AdminController {
     });
   }
 
-  //   static ExportData = async (req, res) => {
-  //     try{
-  //     const workbook = new excelJS.Workbook();
-  //     let exportdata = await UserModel.find({});
-  //     await workbook.xlsx.writeFile(`${exportdata}/exportdata.xlsx`)
-  //     .then(() => {
-  //       res.send({
-  //         status: "success",
-  //         message: "file successfully downloaded",
-  //         path: `${exportdata}/users.xlsx`,
-  //        });
-  //     });
-  //  } catch (err) {
-  //      res.send({
-  //      status: "error",
-  //      message: "Something went wrong",
-  //    });
-  //    }
-  //     // res.render("Referral/Referral", { baseUrl, exportdata: exportdata, path: 'exportdata', session: req.session })
-  //   }
-
 
   static ExportDataReferral = async (req, res) => {
 
@@ -1426,7 +1406,7 @@ class AdminController {
       "application/vnd.openxmlfoemats-officedocument.spreadsheatml.sheet"
     )
 
-    res.setHeader("Content-Disposition", `attachment; filename=users.xlsx`)
+    res.setHeader("Content-Disposition", `attachment; filename=ReferralListDetail.xlsx`)
 
     return workbook.xlsx.write(res).then(() => {
       res.status(200);
@@ -1488,7 +1468,7 @@ class AdminController {
         "application/vnd.openxmlfoemats-officedocument.spreadsheatml.sheet"
       )
 
-      res.setHeader("Content-Disposition", `attachment; filename=users.xlsx`)
+      res.setHeader("Content-Disposition", `attachment; filename=StrapeDetail.xlsx`)
 
       return workbook.xlsx.write(res).then(() => {
         res.status(200);
@@ -1497,6 +1477,95 @@ class AdminController {
 
 
 
+
+  }
+
+
+  static ExportDataRefReport = async (req, res) => {
+
+    const workbook = new excelJS.Workbook();
+    const worksheet = workbook.addWorksheet("My ReferralReport")
+
+    worksheet.columns = [
+      { header: "S no.", key: "s_no" },
+      { header: "Referal TG ID", key: "tgid" },
+      { header: "Country", key: "country" },
+      { header: "TG-Status", key: "refstatue" },
+      { header: "Total Added Members", key: "totalRef" },
+    ]
+
+    let referralreport = await ReferralReportModel.find({}).distinct("referral_user_id")
+    let counter = 1
+    let referral = referralreport.map(async e => {
+      const list = await UserModel.findById(e)
+      console.log("list", list);
+      const memberlist = await ReferralReportModel.find({
+        referral_user_id: e
+      })
+
+      return {
+        id: e,
+        tgid: list?.tgid,
+        country: list?.country,
+        refstatue: list?.refstatue == 1 ? 'Active' : 'Deactive',
+        totalRef: memberlist.length
+      }
+    })
+
+    Promise.all(referral).then(resp => {
+      console.log("referral", resp);
+      resp.forEach((user) => {
+        user.s_no = counter;
+        worksheet.addRow(user);
+        counter++;
+      })
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlfoemats-officedocument.spreadsheatml.sheet"
+      )
+
+      res.setHeader("Content-Disposition", `attachment; filename=ReferralReport.xlsx`)
+
+      return workbook.xlsx.write(res).then(() => {
+        res.status(200);
+      })
+    })
+  }
+
+
+  static ExportDataRefDetail = async (req, res) => {
+
+    const workbook = new excelJS.Workbook();
+    const worksheet = workbook.addWorksheet("My ReferralReport")
+
+    worksheet.columns = [
+      { header: "S no.", key: "s_no" },
+      { header: "Referral TG", key: "referral_user_tgid" },
+      { header: "Free Member TG", key: "freemember_tgid" },
+      { header: "Tenure Of Upgrade", key: "membership_period" },
+      { header: "Price (HK$)", key: "price" },
+      { header: "Date of join to premium", key: "join_date" },
+    ]
+    let counter = 1
+    const userData = await ReferralReportModel.find({});
+
+    userData.forEach((user) => {
+      user.s_no = counter;
+      worksheet.addRow(user);
+      counter++;
+    })
+
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlfoemats-officedocument.spreadsheatml.sheet"
+    )
+
+    res.setHeader("Content-Disposition", `attachment; filename=ReferralDetail.xlsx`)
+
+    return workbook.xlsx.write(res).then(() => {
+      res.status(200);
+    })
 
   }
 

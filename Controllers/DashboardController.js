@@ -331,7 +331,6 @@ class DashboardController {
 
   static ReferralReport = async (req, res) => {
     let referralreport = await ReferralReportModel.find({}).distinct("referral_user_id")
-    console.log("referralreport", referralreport);
     let referral = referralreport.map(async e => {
       const list = await UserModel.findById(e)
       const memberlist = await ReferralReportModel.find({
@@ -387,7 +386,7 @@ class DashboardController {
   static AdminNotification = async (req, res) => {
     let notification = await AdminNotificationModel.find({}).sort({ _id: -1 })
     await AdminNotificationModel.updateMany({ "status": 0 }, { $set: { "status": 1 } })
-    res.render('Referral/Notification', { baseUrl, data: {}, notification: notification, path: 'notification', session: req.session });
+    res.render('Referral/Notification', { baseUrl, data: {}, notification: notification, path: 'notification', session: req.session, moment: moment });
   }
 
 }

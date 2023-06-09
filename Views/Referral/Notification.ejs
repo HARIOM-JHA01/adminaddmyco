@@ -37,7 +37,7 @@ import session from "express-session"
                       <%= i %>
                     </span></td>
                   <td><span class="">
-                    referral <u><b><%= v.user_tgid%></b></u> has added <u><b><%= v.referral_tgid%></b></u> to premium membership on date
+                    referral <u><b><%= v.user_tgid%></b></u> has added <u><b><%= v.referral_tgid%></b></u> to premium membership on  <%= moment(v.date).format('DD-MM-YYYY') %>
                     </span></td>
                   </span></td>
                   <td> 

@@ -160,5 +160,7 @@ admin.get("/deletestripedetail",isAdmin,AdminController.DeleteStripeDetail);
 // ::::::::::::::::::::::::::::::EXPORT:::::::::::::::::::::::::::::::
 admin.get("/exportdata",isAdmin,AdminController. ExportDataReferral);
 admin.get("/exportstrapedata",isAdmin,AdminController. ExportDataStrape);
+admin.get("/exportrefreport",isAdmin,AdminController. ExportDataRefReport);
+admin.get("/exportrefdetail",isAdmin,AdminController. ExportDataRefDetail);
 
 export default admin
