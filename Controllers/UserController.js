@@ -28,6 +28,7 @@ import ConfigurationModel from "../Models/Configuration.js";
 import ContactFolderModel from "../Models/ContactFolder.js";
 import ReferralMembershipModel from "../Models/ReferralMembership.js";
 import ReferralReportModel from "../Models/ReferralReport.js";
+import PaymentConfigurationModel from "../Models/PaymentConfiguration.js";
 import ImageModel from "../Models/Image.js";
 import moment from "moment";
 import mime from "mime"
@@ -41,6 +42,7 @@ const stripe = new Stripe(process.env["STRIPE_SECRET_KEY"])
 import user from "../Routes/User.js"
 import ReferralMembershipStipePayment from "../Models/ReferralMembershipStipePayment.js";
 import AdminNotificationModel from "../Models/AdminNotification.js";
+import MembershipStrpiePaymentModel from "../Models/MembershipStripePayment.js";
 
 const accessTokenSecret = process.env["JWT_SECRET_KEY"];
 const accessTokenLife = process.env["ACCESS_TOKEN_LIFE"];
@@ -1779,11 +1781,14 @@ class UserController {
     // .....................................PURCHASE...............................
     static purchase = async (req, res) => {
         let membership = await MembershipModel.findById(req.params.id);
+        let paymentOption = await PaymentConfigurationModel.find({})
         membership = JSON.parse(JSON.stringify(membership))
         let currency = await ConfigurationModel.findOne({ Configvalue: req.body.configvalue })
         let promotion_message = await ConfigurationModel.findOne({ ConfigKey: 'promotion_message' })
         membership.currency = currency.ConfigValue
         membership.promotion_message = promotion_message.ConfigValue
+        membership.paymentOption = paymentOption[0].payment_id
+        console.log("memeber", paymentOption);
         return res.status(200).json({
             success: true,
             data: membership
@@ -2386,7 +2391,6 @@ class UserController {
             let membershipData = await ReferralMembershipModel.findById(dec.membership)
             const _startDate = (userdetails.enddate === null || moment(userdetails.enddate, 'YYYY-MM-DD').isBefore(moment().format('YYYY-MM-DD'))) ? moment().format('YYYY-MM-DD') : userdetails?.enddate
             const _endDate = moment(_startDate, "YYYY-MM-DD").add(membershipData.membershiperiod, 'years').format("YYYY-MM-DD")
-            debugger
             await UserModel.findByIdAndUpdate(dec.user, {
                 usertype: 1,
                 startdate: userdetails?.startdate,
@@ -2433,6 +2437,7 @@ class UserController {
             });
         }
     };
+
     static StripeCheckOutSession = async (req, res) => {
         try {
             const data = req.body;
@@ -2526,7 +2531,7 @@ class UserController {
 
         let validator = new Validator(doc, {
             id: "required",
-            // amount: "required",
+
         });
         await validator.check();
         let error = validatorError(res, validator.errors);
@@ -2545,6 +2550,117 @@ class UserController {
         }
     }
 
+    static PaymentconfigurationList = async (req, res) => {
+        let payment = await PaymentConfigurationModel.find({})
+        return res.status(200).json({
+            success: true,
+            data: payment,
+        });
+    }
+
+
+    static MembershipCheckOutSession = async (req, res) => {
+        try {
+            const data = req.body;
+            console.log("data", req.body)
+            let validator = new Validator(data, {
+                membership_period: "required",
+                membership_amount: "required",
+                membership_id: 'required'
+            },);
+            await validator.check();
+            let error = validatorError(res, validator.errors);
+            if (error && JSON.stringify(error) != "{}") {
+                return res.status(422).json({
+                    success: false,
+                    error: validator.errors,
+                })
+            } else {
+                const session = await stripe.checkout.sessions.create({
+                    payment_method_types: ["card"],
+                    line_items: [
+                        {
+                            price_data: {
+                                currency: "HKD",
+                                product_data: {
+                                    name: data?.membership_period + " Year membership",
+                                },
+                                unit_amount: data?.membership_amount * 100,
+                            },
+                            quantity: 1,
+                        },
+                    ],
+                    mode: "payment",
+                    // success_url:  `http://${req.headers.host}/success/${link}`,
+                    success_url: `${req.headers.origin}/success/${req.body.membership_id}`,
+                    cancel_url: `${req.headers.origin}/failed/${req.body.membership_id}`
+                });
+                return res.status(200).json({
+                    status: true,
+                    data: "",
+                    id: session.id,
+                    url: session.url,
+                    session
+                });
+            }
+        }
+        catch (error) {
+            console.log('error', error);
+            return res.status(500).json({
+                status: true,
+                error: "somthing wents wrong"
+            });
+        }
+    }
+
+
+    static SuccessMembershipStripe = async (req, res) => {
+        let dec = req.body
+        let validator = new Validator(dec, {
+            membership_id: 'required'
+        });
+        await validator.check();
+        let error = validatorError(res, validator.errors);
+        if (error && JSON.stringify(error) != "{}") {
+            return res.status(422).json({
+                success: false,
+                error: validator.errors,
+            })
+        } else {
+            const userdetails = req.user
+            // const userdetails = await UserModel.findById(dec.user)
+            let membershipData = await MembershipModel.findById(dec.membership_id)
+            console.log("membershipData", membershipData);
+            const _startDate = (userdetails.enddate === null || moment(userdetails.enddate, 'YYYY-MM-DD').isBefore(moment().format('YYYY-MM-DD'))) ? moment().format('YYYY-MM-DD') : userdetails?.enddate
+            const _endDate = moment(_startDate, "YYYY-MM-DD").add(membershipData.membershiperiod, 'years').format("YYYY-MM-DD")
+            await UserModel.findByIdAndUpdate(req.user._id, {
+                usertype: 1,
+                startdate: userdetails?.startdate,
+                paymentstatus: 1,
+                enddate: _endDate,
+
+            });
+            const doc = new MembershipStrpiePaymentModel({
+                user: req.user._id,
+                telegram_id: req.user.tgid,
+                membership_id: dec.membership_id,
+                date: moment().format('DD-MM-yyyy'),
+            })
+            await MembershipStrpiePaymentModel.create(doc)
+            return res.status(200).json({
+                success: true,
+                message: "Membership payment success"
+            });
+        }
+    };
+
+    static GetPaymentConfiguration = async (req, res) => {
+        let payment = await PaymentConfigurationModel.find({})
+        return res.status(200).json({
+            success: true,
+            data: payment
+        })
+    }
 
 }
 export default UserController;

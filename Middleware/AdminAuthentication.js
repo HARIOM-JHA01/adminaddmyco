@@ -3,6 +3,7 @@ import AdminModel from "../Models/Admin.js";
 import AdminTokenModel from "../Models/AdminToken.js";
 import { view, baseUrl, assetsUrl } from "../Config.js";
 import localStorage from "localStorage";
+import UserModel from "../Models/User.js";
 
 
 const isAdmin = async (req, res, next) => {
@@ -24,7 +25,7 @@ const isAdmin = async (req, res, next) => {
         if (!userData) {
           return res.redirect("signin");
         }
-        req.user = userData;
+        req.user =  await AdminModel.findById(user.id);
         req.isLogin = true;
       }
       next();

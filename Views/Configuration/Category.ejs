@@ -137,5 +137,17 @@ import session from "express-session"
       '<%= session.isTost = "false"%>'
     }
   </script>
+
+<script>
+  $(document).ready(function () {
+      var table = $('#table1').DataTable();
+  });
+  $(".btnID").on("click", function () {                
+      var images = $(this).find('.image').prop('src');
+
+      $('#viewQRCode #image').prop('src', images);
+      $('#viewQRCode').modal('show');
+  });
+</script>
  
   <%- include('../Layout/Footer') %>

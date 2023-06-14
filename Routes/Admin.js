@@ -3,6 +3,7 @@ const admin = express.Router();
 import DashboardController from "../Controllers/DashboardController.js";
 import ReferralController from "../Controllers/ReferralController.js";
 import AdminController from '../Controllers/AdminController.js'
+import MasterAdminController from "../Controllers/MasterAdminController.js";
 import { isAdmin } from "../Middleware/AdminAuthentication.js";
 
 
@@ -61,7 +62,6 @@ admin.post("/OtpVarify",AdminController.OtpVarify);
 admin.post("/ResetPassword",AdminController.ResetPassword);
 admin.post("/ChangePassword",isAdmin,AdminController.ChangePassword);
 admin.post("/MyAccount",AdminController.MyAccount);
-
 // ..........................BANNERS......................................
 admin.post("/banner",AdminController.Banner);
 admin.post("/editbanner",AdminController.EditBanner);
@@ -162,5 +162,26 @@ admin.get("/exportdata",isAdmin,AdminController. ExportDataReferral);
 admin.get("/exportstrapedata",isAdmin,AdminController. ExportDataStrape);
 admin.get("/exportrefreport",isAdmin,AdminController. ExportDataRefReport);
 admin.get("/exportrefdetail",isAdmin,AdminController. ExportDataRefDetail);
+
+
+
+admin.post("/createadmin", MasterAdminController.CreateAdmin);
+admin.get("/createadmin",DashboardController.CreateAdmin);
+
+
+admin.post("/addrol",MasterAdminController.AddRole);
+
+admin.get("/paymentconfiguration",DashboardController.PaymentConfiguration);
+admin.get("/addpaymentconfiguration",DashboardController.AddPaymentConfiguration);
+admin.get("/editpaymentconfiguration",DashboardController.EditPaymentConfiguration);
+
+
+admin.post("/addpaymentconfiguration", AdminController.PaymentConfiguration);
+admin.post("/editpaymentconfiguration", AdminController.EditPaymentconfiguration);
+
+admin.get("/membershipstripe", DashboardController.MembershipStripePayment);
+admin.get("/deletestripepayment", AdminController.DeleteStripePayment);
+admin.get("/exportstripedetail",AdminController. ExportStripeDetail);
+
 
 export default admin

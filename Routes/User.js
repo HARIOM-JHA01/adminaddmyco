@@ -145,6 +145,12 @@ user.post("/getusername", isUser, UserController.getUserName);
 user.post("/getuserdetails", isUser, UserController.getUserDetails);
 
 
+user.post("/stripe_payment", isUser, UserController.MembershipCheckOutSession);
+
+user.post("/success_stripe_payment", isUser, UserController.SuccessMembershipStripe);
+user.get("/getpaymentconfiguration", UserController.GetPaymentConfiguration);
+
+
 
 
 export default user

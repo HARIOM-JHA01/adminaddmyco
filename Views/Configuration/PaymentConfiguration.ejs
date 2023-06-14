@@ -9,14 +9,14 @@
                     <div class="row">
                         <div class="col-12 col-md-6 order-md-1 order-last">
                             <h3><a href="<%= baseUrl %>admin/dashboard" class="text-primary"><i
-                                        class="fas fa-arrow-left me-2"></i>Configuration</h3>
+                                        class="fas fa-arrow-left me-2"></i>PaymentConfiguration</h3>
                         </div>
                         <div class="col-12 col-md-6 order-md-2 order-first">
                             <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                                 <ol class="breadcrumb">
                                     <li class="breadcrumb-item"><a href="<%= baseUrl %>admin/dashboard">Dashboard</a>
                                     </li>
-                                    <li class="breadcrumb-item active" aria-current="page">Configuration</li>
+                                    <li class="breadcrumb-item active" aria-current="page">PaymentConfiguration</li>
                                 </ol>
                             </nav>
                         </div>
@@ -26,49 +26,42 @@
 
                 <section class="section">
                     <div class="card">
-                        <div class="card-header text-end">
-                            <a href="<%= baseUrl %>admin/addconfiguration"
+                        <% if(paymentconfiguration.length === 0){ %><div class="card-header text-end">
+                            <a href="<%= baseUrl %>admin/addpaymentconfiguration"
                                 class="btn icon icon-left btn-primary btn-sm "><svg xmlns="http://www.w3.org/2000/svg"
                                     width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                                     class="feather feather-plus">
                                     <line x1="12" y1="5" x2="12" y2="19"></line>
                                     <line x1="5" y1="12" x2="19" y2="12"></line>
-                                </svg> Add Configuration</a>
-                        </div>
+                                </svg> Add PaymentConfiguration</a>
+                        </div> <% } %>
 
                         <div class="dataTable-container">
                             <table class="table table-striped dataTable-table" id="table1">
                                 <thead>
                                     <tr>
                                         <th>No.</th>
-                                        <th> Key</th>
-                                        <th> Value</th>
-
+                                        <th>Value</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
 
-                                    <% var i=1; configuration.forEach(function(v) { %>
-                                        <tr data-id="<%= v._id%>">
+                                    <% var i=1; paymentconfiguration.forEach(function(v) { %>
+                                        <tr data-id="<%= v.id%>">
                                             <td>
                                                 <%= i %>
                                             </td>
+                                           
                                             <td>
-                                                <%= v.ConfigKey %>
-                                            </td>
-                                            <td>
-                                                <%= v.ConfigValue %>
+                                                <%= v.value %>
                                             </td>
 
                                             <td>
-                                                <a href="<%= baseUrl %>admin/editconfiguration?id=<%=  v._id %> "
+                                                <a href="<%= baseUrl %>admin/editpaymentconfiguration?id=<%=  v._id %> "
                                                     class="btn icon icon-left btn-primary btn-sm"><i
                                                         class="bi bi-pencil-square"></i> </a>
-                                                <button type="button" data-id="<%= v._id %>" id="refresh"
-                                                    class="btn icon  icon-left btn-danger btn-sm delete-data"><i
-                                                        class="bi bi-trash"></i> </button>
                                             </td>
 
                                         </tr>

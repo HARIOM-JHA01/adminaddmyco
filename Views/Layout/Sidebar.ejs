@@ -44,14 +44,17 @@
 
           </ul>
         </li>
-        <li class="sidebar-item has-sub <%= (path == 'paypal') || (path == 'toncoin')  ? 'active' : '' %> ">
+        <li class="sidebar-item has-sub <%= (path == 'paypal') || (path == 'membershipstripe')  ? 'active' : '' %> ">
           <a href="#" class='sidebar-link'>
             <i class="bi bi-stack"></i>
             <span>Membership Payment</span>
           </a>
-          <ul class="submenu <%= (path == 'paypal') || (path == 'toncoin')  ? 'active' : '' %> ">
+          <ul class="submenu <%= (path == 'paypal') || (path == 'membershipstripe')  ? 'active' : '' %> ">
             <li class="submenu-item <%= (path == 'paypal') ? 'active' : '' %> ">
               <a href="<%= baseUrl %>admin/paypal">Paypal</a>
+            </li>
+            <li class="submenu-item <%= (path == 'membershipstripe') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/membershipstripe">Stripe</a>
             </li>
            
           </ul>
@@ -63,13 +66,13 @@
           </a>
         </li>
         <li
-          class="sidebar-item has-sub <%= (path == 'membership') || (path == 'logo') ||(path == 'system') || (path == 'folder') ? 'active' : '' %> ">
+          class="sidebar-item has-sub <%= (path == 'membership') || (path == 'logo') ||(path == 'system') || (path == 'folder') || (path == 'configuration') || (path == 'categories') || (path == 'paymentconfiguration') ? 'active' : '' %> ">
           <a href="#" class='sidebar-link'>
             <i class="bi bi-stack"></i>
             <span> System Configuration</span>
           </a>
           <ul
-            class="submenu <%= (path == 'membership') ||(path == 'logo') || (path == 'system') || (path == 'folder') || (path == 'currency') || (path == 'categories') ? 'active' : '' %> ">
+            class="submenu <%= (path == 'membership') ||(path == 'logo') || (path == 'system') || (path == 'folder') || (path == 'configuration') || (path == 'categories') || (path == 'paymentconfiguration')? 'active' : '' %> ">
             <li class="submenu-item <%= (path == 'membership') ? 'active' : '' %> ">
               <a href="<%= baseUrl %>admin/membership">Membership Tenure</a>
             </li>
@@ -77,10 +80,10 @@
               <a href="<%= baseUrl %>admin/logo">Logo</a>
           </li>
             <li
-              class="submenu-item arrow-color has-sub <%= (path == 'system') || (path == 'categories')  ? 'active1' : '' %> ">
+              class="submenu-item arrow-color has-sub <%= (path == 'system') || (path == 'categories')  ? 'active' : '' %> ">
               <a href="#" class="sidebar-link ">Background Images</a>
               <ul class="submenu pl-0">
-                <li class="submenu-item  <%= (path == 'system') ? 'active' : '' %> ">
+                <li class="submenu-item  <%= (path == 'system') || (path == 'categories')? 'active' : '' %> ">
                   <a href="<%= baseUrl %>admin/system ">System Images</a>
                 </li>
                 <li class="submenu-item <%= (path == 'categories') ? 'active' : '' %> ">
@@ -93,6 +96,9 @@
             </li>
             <li class="submenu-item <%= (path == 'configuration') ? 'active' : '' %> ">
               <a href="<%= baseUrl %>admin/configuration">Configuration </a>
+            </li>
+            <li class="submenu-item <%= (path == 'paymentconfiguration') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/paymentconfiguration">Payment Configuration </a>
             </li>
           </ul>
         </li>
@@ -121,10 +127,13 @@
           </li>
           </ul>
         </li>
+        <li class="sidebar-item <%= ( path == 'createadmin') ? 'active' : ''  %> isAdmin create_admin">
+            <a href="<%= baseUrl %>admin/createadmin" class='sidebar-link'>
+              <i class="bi bi-grid-fill"></i>
+              <span>Create Admin</span>
+            </a>
+          </li>
     </div>
   </div>
 </div>
 
-<script>
-  function async()
-</script>

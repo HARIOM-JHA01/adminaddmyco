@@ -25,7 +25,15 @@
             url: url + 'admin/notificationcount',
             statusCode: {
               200: function(xhr) {
-                $('.notification_count').html('('+xhr.data+' New)')
+                console.log(xhr);
+                $('.notification_count').html('('+xhr.data+' New)');
+                
+                  // if(xhr.isMasterAdmin == '1'){
+                  //   $('.create_admin').removeClass('d-none');
+                  // }else{
+                  //   $('.create_admin').addClass('d-none');
+                  // }
+                
               }
             }
           });

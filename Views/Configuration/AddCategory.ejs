@@ -30,7 +30,7 @@
                             <div class="row">
                                 <div class="col-12">
                                        <div class="form-group">
-                                        <% if(typeof message == "string") { %>  <p  class="text-danger"><%= message %></p> <% } %>
+                                      
                                         <label for="assessment_title">Category</label>
                                         <input type="text" onchange="eventHandler(this)"id="categoryname" class="form-control" name="categoryname" placeholder="Category Name" value="">
                                         <% if(typeof errors == "object") { %><p style="color: red;" class="categoryname">

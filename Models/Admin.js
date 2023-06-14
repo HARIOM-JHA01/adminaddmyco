@@ -5,8 +5,8 @@ const adminSchema = new mongoose.Schema({
   email: { type: String, required: true, trim:true},
   password: {type:String, required: true, trim:true},
   profile_image : { type: String},
-  // token: { type: String },
   otp:{type:Number},
+  // isMasterAdmin:{type:Number,default:1},
   date: { type: Date, default: Date.now }
 });
 

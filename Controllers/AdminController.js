@@ -20,6 +20,7 @@ import ConfigurationModel from "../Models/Configuration.js";
 import ReferralMembershipModel from "../Models/ReferralMembership.js";
 import ReferralReportModel from "../Models/ReferralReport.js";
 import AdminNotificationModel from "../Models/AdminNotification.js";
+import PaymentConfigurationModel from "../Models/PaymentConfiguration.js";
 import excelJS from "exceljs";
 import CategoryModel from "../Models/Category.js";
 import moment from "moment/moment.js";
@@ -28,6 +29,7 @@ import AdminTokenModel from "../Models/AdminToken.js";
 import localStorage from 'localStorage'
 import LogoModel from "../Models/Logo.js";
 import ReferralMembershipStipePayment from "../Models/ReferralMembershipStipePayment.js";
+import MembershipStrpiePaymentModel from "../Models/MembershipStripePayment.js";
 
 const accessTokenSecret = process.env["JWT_SECRET_KEY"];
 const accessTokenLife = process.env["ACCESS_TOKEN_LIFE"];
@@ -38,6 +40,7 @@ class AdminController {
   static Adminregister = async (req, res) => {
     try {
       let data = req.body;
+
       let validator = new Validator(data, {
         email: "required|email",
         name: "required|alpha",
@@ -83,7 +86,6 @@ class AdminController {
     await validator.check();
     let error = validatorError(res, validator.errors);
     if (error && JSON.stringify(error) != "{}") {
-      console.log(1);
       res.render("Admin/Login", { baseUrl, errors: error, path: "" });
     } else {
       let accessTokenSecret = process.env["JWT_SECRET_KEY"];
@@ -109,7 +111,6 @@ class AdminController {
         });
         let user1 = await AdminModel.findById(user._id)
         localStorage.setItem('token', token)
-        console.log("localStorage",)
         req.session.token = token
         req.session.tostMsg = "You Are Logged in Successfully..."
         req.session.tostBackground = "#0b6a3c"
@@ -189,7 +190,6 @@ class AdminController {
       }
     } catch (error) {
       res.send("An error occured");
-      console.log("error", error);
     }
   };
 
@@ -240,7 +240,6 @@ class AdminController {
       }, {
         password: hashedPassword
       })
-      console.log("hashedPassword", hashedPassword)
       const userData = await AdminModel.findOne({ _id: user._id })
       let jwt_secret = process.env.JWT_SECRET || 'mysecret'
       let token = jwt.sign({ data: userData }, jwt_secret, { expiresIn: '12h' })
@@ -648,7 +647,6 @@ class AdminController {
           images.push(imname)
         }
       }
-      // console.log("vinit",images);
       if (category != null) {
         if (category.Thumbnail != '') images.push(category.Thumbnail);
         details['Thumbnail'] = images.join();
@@ -966,16 +964,16 @@ class AdminController {
   // ....................CONFIGURATION(KEY-VALUE)...................
   static Configuration = async (req, res) => {
     let configuration = await ConfigurationModel.find({});
-    res.render('Configuration/Configuration', { baseUrl, configuration: configuration, path: 'configuration', session: req.session });
+    res.render('Configuration/Configuration', { baseUrl, configuration: configuration, path: 'configuration', session: req.session, loginUser: req.user });
   }
 
   static add_configuration = async (req, res) => {
-    res.render('Configuration/Addconfiguration', { baseUrl, data: {}, path: 'configuration' });
+    res.render('Configuration/Addconfiguration', { baseUrl, data: {}, path: 'configuration', loginUser: req.user });
   }
 
   static edit_configuration = async (req, res) => {
     let configuration = await ConfigurationModel.findById(req.query.id)
-    res.render('Configuration/Editconfiguration', { baseUrl, configuration: configuration, path: 'configuration' });
+    res.render('Configuration/Editconfiguration', { baseUrl, configuration: configuration, path: 'configuration', loginUser: req.user });
   }
 
   static configuration = async (req, res) => {
@@ -1160,7 +1158,6 @@ class AdminController {
   // .........LOGO.............
   static Logo = async (req, res) => {
     var data = req.body;
-    console.log("DATA", data)
     data.thumbnail = req.files?.thumbnail;
     let validator = new Validator(data, {
       link: "required|url",
@@ -1352,7 +1349,11 @@ class AdminController {
   };
 
   static Notificationcount = async (req, res) => {
+
+    let user = await UserModel.findById(req.user._id);
+
     let notification = await AdminNotificationModel.find({ "status": 0 }).count();
+
     return res.status(200).json({
       success: true,
       data: notification,
@@ -1475,9 +1476,6 @@ class AdminController {
       })
     })
 
-
-
-
   }
 
 
@@ -1498,7 +1496,6 @@ class AdminController {
     let counter = 1
     let referral = referralreport.map(async e => {
       const list = await UserModel.findById(e)
-      console.log("list", list);
       const memberlist = await ReferralReportModel.find({
         referral_user_id: e
       })
@@ -1513,7 +1510,6 @@ class AdminController {
     })
 
     Promise.all(referral).then(resp => {
-      console.log("referral", resp);
       resp.forEach((user) => {
         user.s_no = counter;
         worksheet.addRow(user);
@@ -1532,6 +1528,70 @@ class AdminController {
     })
   }
 
+
+  static ExportStripeDetail = async (req, res) => {
+
+    const workbook = new excelJS.Workbook();
+    const worksheet = workbook.addWorksheet("My StripeReport")
+    let list = await MembershipStrpiePaymentModel.find({});
+
+    worksheet.columns = [
+      { header: "S no.", key: "s_no" },
+      { header: "Member Id", key: "member_id" },
+      { header: "UserName", key: "username" },
+      { header: "Telegram Id", key: "telegram_id" },
+      { header: "Ternuer (in Years)", key: "tenure" },
+      { header: "Amount (HK$)", key: "amount" },
+      { header: "Date ", key: "date" },
+    ]
+    let member = list.map(async (e) => {
+      let userdetail = await UserModel.findById(e.user);
+      let membership = await MembershipModel.findById(e.membership_id);
+      return {
+        _id: e._id,
+        user: e.user,
+        telegram_id: e.telegram_id,
+        membership_id: e.membership_id,
+        member_id: userdetail.memberid,
+        username: userdetail.username,
+        tenure: membership.membershiperiod,
+        amount: membership.paypal,
+        date: e.date
+      }
+    })
+
+    Promise.all(member).then(result => {
+      const data = result.map(e => {
+        return {
+          id: e._id,
+          telegram_id: e.telegram_id,
+          member_id: e.member_id,
+          username: e.username,
+          tenure: `${e.tenure} Year`,
+          amount: `${e.amount} HK$`,
+          date: e.date
+        }
+      })
+      let counter = 1
+
+      data.forEach((user) => {
+        user.s_no = counter;
+        worksheet.addRow(user);
+        counter++;
+      })
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlfoemats-officedocument.spreadsheatml.sheet"
+      )
+
+      res.setHeader("Content-Disposition", `attachment; filename=StripeDetails.xlsx`)
+
+      return workbook.xlsx.write(res).then(() => {
+        res.status(200);
+      })
+    })
+  }
 
   static ExportDataRefDetail = async (req, res) => {
 
@@ -1569,9 +1629,89 @@ class AdminController {
 
   }
 
+
+  static PaymentConfiguration = async (req, res) => {
+    let data = req.body;
+  
+    let validator = new Validator(
+      data,
+      {
+        value: "required",
+      },
+      {
+        value: "Value is necessary",
+      }
+    );
+    if (!(await validator.check())) {
+      let errors = validatorError(res, validator.errors)
+      return res.render("Configuration/AddPaymentConfiguration", { baseUrl, errors, path: "paymentconfiguration" });
+    }
+
+    else {
+      const doc = new PaymentConfigurationModel({
+        value: req.body.value === '1' ? 'Paypal' : req.body.value === '2' ? 'Stripe' : req.body.value === '3' ? 'Both' : '',
+        payment_id: req.body.value,
+      });
+
+      const result = await doc.save();
+
+      req.session.tostMsg = "Data Added Successfully..."
+      req.session.tostBackground = "#0b6a3c"
+      req.session.isTost = true
+      res.redirect(`${baseUrl}admin/paymentconfiguration`);
+    }
+  };
+
+  static EditPaymentconfiguration = async (req, res) => {
+    let data = req.body;
+    let validator = new Validator(
+      data,
+      {
+        value: "required",
+      },
+      {
+        value: " Value is necessary",
+      }
+    );
+    await validator.check();
+    // validation error
+    let error = validatorError(res, validator.errors);
+    if (error && JSON.stringify(error) != "{}") {
+      let paymentconfiguration = await PaymentConfigurationModel.findOneAndUpdate(
+        {
+          value: req.body.value === '1' ? 'Paypal' : req.body.value === '2' ? 'Stripe' : req.body.value === '3' ? 'Both' : '',
+          payment_id: req.body.value,
+        }
+      );
+      res.render("Configuration/EditPaymentconfiguration", {
+        baseUrl,
+        errors: error,
+        paymentconfiguration: paymentconfiguration,
+        path: "paymentconfiguration",
+      });
+    } else {
+      await PaymentConfigurationModel.findOneAndUpdate(
+        {
+          value: req.body.value === '1' ? 'Paypal' : req.body.value === '2' ? 'Stripe' : req.body.value === '3' ? 'Both' : '',
+          payment_id: req.body.value,
+        }
+      );
+      req.session.isTost = true
+      req.session.tostMsg = " Data Updated Successfully..."
+      req.session.tostBackground = "#0b6a3c"
+      res.redirect(`${baseUrl}admin/paymentconfiguration`);
+    }
+  };
+
+
+  static DeleteStripePayment = async (req, res) => {
+    let user = await MembershipStrpiePaymentModel.findByIdAndDelete(req.query.id);
+    return res.status(200).json({
+      status: true,
+      message: "Deleted successfully.",
+    });
+  }
 }
-
-
 
 export default AdminController
 
