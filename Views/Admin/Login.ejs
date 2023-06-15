@@ -34,7 +34,7 @@
               <form action="<%= baseUrl %>admin/login" method="post">
                 <div class="form-group position-relative has-icon-left mb-4">
                   <input type="text" onkeyup="eventHandler(this)" class="form-control form-control-xl" id="email"
-                    name="email" value="hello123@gmail.com" placeholder="Email" autocomplete="off">
+                    name="email" value="" placeholder="Email" autocomplete="off">
                   <% if(typeof errors=="object" ) { %>
                     <p style="color: red;" class="email">
                       <%= errors.email %>
@@ -46,7 +46,7 @@
                 </div>
                 <div class="form-group position-relative has-icon-left mb-4">
                   <input type="password" class="form-control form-control-xl" id="password" onkeyup="eventHandler(this)"
-                    name="password" value="hello123" placeholder="Password" autocomplete="off">
+                    name="password" value="" placeholder="Password" autocomplete="off">
                   <div class="form-control-icon">
                     <i class="bi bi-shield-lock"></i>
                   </div>

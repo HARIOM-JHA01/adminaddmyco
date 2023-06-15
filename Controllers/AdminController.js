@@ -546,7 +546,8 @@ class AdminController {
       startdate: current,
       paymentstatus: 1,
       enddate: enddate,
-      referralType: 0
+      referralType: 0,
+      paymentBy: 0
     });
     return res.status(200).json({
       status: true,
@@ -1067,7 +1068,7 @@ class AdminController {
   //...................CATEGORY..................
   static Categories = async (req, res) => {
     let categories = await CategoryModel.find({});
-    res.render("Configuration/Category", { baseUrl, categories: categories, path: 'categories', session: req.session })
+    res.render("Configuration/Category", { baseUrl, categories: categories, path: 'categories', session: req.session , loginUser: req.user})
   }
 
   static Addcategories = async (req, res) => {
@@ -1711,6 +1712,18 @@ class AdminController {
       message: "Deleted successfully.",
     });
   }
+
+  static DeleteAdminUser = async (req, res) => {
+      let adminuser = await AdminModel.findByIdAndDelete(req.query.id);
+      return res.status(200).json({
+        status: true,
+        message: "Deleted successfully.",
+      });
+  }
+
+
+
+  
 }
 
 export default AdminController

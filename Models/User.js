@@ -58,8 +58,11 @@ const userSchema = new mongoose.Schema({
   logoImage: { type: String },
   logoTelegramUrl: { type: String },
   referralType: { type: Number, default: 0 },
+  paymentBy: { type: Number, default: 0 }
 
-});
+},
+  { timestamps: true }
+);
 
 //  Compiling Schema
 userSchema.set('toObject', { getters: true })

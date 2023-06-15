@@ -1,0 +1,188 @@
+<%- include('../Layout/Header') %>
+import session from "express-session"
+<%- include('../Layout/Sidebar') %>
+
+<div id="main">
+  <div class="page-heading">
+    <div class="page-title mb-3">
+      <div class="row">
+        <div class="col-12 col-md-6 order-md-1 order-last">
+          <h3><a href="<%= baseUrl %>admin/dashboard" class="text-primary"><i class="fas fa-arrow-left me-2"></i></a>Admin User</h3>
+        </div>
+       
+        <div class="col-12 col-md-6 order-md-2 order-first ">
+          <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end ">
+            <ol class="breadcrumb" >
+              <li class="breadcrumb-item"><a href="<%= baseUrl %>admin/dashboard">Dashboard</a></li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+    <section class="section">
+      <div class="card">
+        <div class="card-body">
+          <div class="dataTable-container">
+            <table class="table table-striped dataTable-table" id="table1">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>UserName</th>
+                  <th>Email</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                  <% var i=1; adminuserlist.forEach(function(v) { %>
+                    <% if (v.isMasterAdmin == 0) { %>
+                <tr data-id="<%= v._id%>">
+                  <td><span class="name-field">
+                      <%= i %>
+                    </span></td>
+                  <td><span class="name-field">
+                      <%= v.name%>
+                    </span></td>
+                  <td><span class="name-field">
+                      <%= v.email%>
+                    </span></td>
+                  <td>
+                    <a href="<%= baseUrl %>admin/editadminuser?id=<%=  v._id %> " class="btn icon icon-left btn-primary btn-sm"><i class="bi bi-pencil-square"></i> </a>
+                    <button type="button" data-id="<%= v._id %>" id="refresh" class="btn icon icon-left btn-danger btn-sm delete-data"><i class="bi bi-trash"></i> </button>
+                  </td>
+                </tr>
+                <% i++ %>
+                <% } %>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+    <footer>
+      <div class="footer clearfix mb-0 text-muted">
+        <div class="float-start">
+          <p>2023 &copy; All rights are reserved</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade bd-example-modal-lg" id="viewQRCode" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title w-100" id="exampleModalLabel">
+            Banner Preview
+          </h5>
+          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <!--Modal body with image-->
+        <div class="modal-body">
+          <img src="" class="img-fluid" id="image">
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    let isTost = '<%= session.isTost %>'
+    let msg = '<%= session.tostMsg %>'
+    let tostBackground = '<%= session.tostBackground %>'
+    if (isTost == "true") {
+      Toastify({
+        text: msg,
+        duration: 3000,
+        newWindow: true,
+        close: true,
+        gravity: "top", // `top` or `bottom`
+        position: "right", // `left`, `center` or `right`
+        stopOnFocus: true, // Prevents dismissing of toast on hover
+        style: {
+          background: tostBackground,
+        },
+      }).showToast();
+      '<%= session.isTost = "false"%>'
+    }
+  </script>
+  
+  <script>
+    const baseUrl = '<%= baseUrl %>';
+  $(document).on('click', '.delete-data', function () {
+                var id = $(this).data("id");
+                
+                swal({
+                    title: "Are you sure?",
+                    text: "You want to delete this referuser?",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                })
+                    .then((willDelete) => {
+                        if (willDelete) {
+                            $.ajax({
+                                type: "GET",
+                                url: `${baseUrl}admin/deleteadminuser?id=${id}`,
+                                dataType: "json",
+                                statusCode: {
+                                    200: function (xhr) {
+                                        dataResult = xhr;
+                                        $(`tr[data-id="${id}"]`).remove();
+                                        console.log(dataResult.message)
+                                        Toastify({
+                                            text: "Deleted successfully...",
+                                            duration: 3000,
+                                            newWindow: true,
+                                            close: true,
+                                            gravity: "top", // `top` or `bottom`
+                                            position: "right", // `left`, `center` or `right`
+                                            stopOnFocus: true, // Prevents dismissing of toast on hover
+                                            style: {
+                                                background: "#ff2c2c",
+                                            },
+                                        }).showToast();
+                                    }
+                                },
+                            });
+                        }
+                    });
+            });
+   
+  </script>
+<script>
+  $('.referral-toggle-switch').change(function(){
+    var status = $(this).prop('checked');
+    var id = $(this).attr('data-id');
+    var type = $(this).attr('data-type');
+   // console.log(mode);
+   $.ajax({
+      type: "put",
+      url: `${baseUrl}admin/update-referral/${id}`,
+      data: {status:(status) ? 1 : 0,type:type},
+      dataType: "",
+      success: function (response) {
+        console.log(response)
+        if(response.success){
+           //
+        }
+      }
+    });
+  });
+  
+</script>
+
+<script>
+  $(document).ready(function () {
+      var table = $('#table1').DataTable();
+  });
+  $(".btnID").on("click", function () {                
+      var images = $(this).find('.image').prop('src');
+
+      $('#viewQRCode #image').prop('src', images);
+      $('#viewQRCode').modal('show');
+  });
+</script>
+
+  <%- include('../Layout/Footer') %>    

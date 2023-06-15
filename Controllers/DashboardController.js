@@ -44,7 +44,7 @@ class DashboardController {
   static ChangePassword = async (req, res) => {
     res.render('Admin/ChangePassword', { baseUrl, data: {}, path: 'ChangePassword' });
   }
-  
+
   static MyAccount = async (req, res) => {
     let myaccount = await UserModel.find({})
     res.render('Admin/MyAccount', { baseUrl, data: {}, path: 'myaccount', myaccount: myaccount, session: req.session });
@@ -64,6 +64,9 @@ class DashboardController {
           _id: { country: "$country" }
         }
       },
+      {
+        $sort: { "date": -1, }
+      },
     ]);
 
     res.render('User/FreeUser', { baseUrl, freeuser: freeuser, country1: country1, path: 'freeuser', session: req.session, moment: moment, loginUser: req.user });
@@ -80,11 +83,14 @@ class DashboardController {
         }
       },
       {
+        $sort: { "startdate": -1, }
+      },
+      {
         $match: {
           $and: [{ usertype: 1 }]
         }
       },
-    ]).sort({ startdate: -1 })
+    ])
 
     const list = await UserModel.find({})
     const _list = list.map(async e => {
@@ -102,7 +108,7 @@ class DashboardController {
       }
     ]);
     Promise.all(_list).then(result => {
-      res.render('User/Premium', { baseUrl, premium: premium, path: 'premium', session: req.session, moment: moment, country: country, result: result, loginUser: req.user });
+      res.render('User/Premium', { baseUrl, premium: premium, path: 'premium', session: req.session, moment: moment, country: country, result: result });
     })
 
   }
@@ -119,7 +125,10 @@ class DashboardController {
         $group: {
           _id: { country: "$country" }
         }
-      }
+      },
+      {
+        $sort: { "startdate": -1, }
+      },
     ]);
     res.render('User/Donated', { baseUrl, donateduser: donateduser, country1: country1, path: 'donateduser', session: req.session, moment: moment, loginUser: req.user });
   }
@@ -431,13 +440,24 @@ class DashboardController {
         tenure: membership.membershiperiod,
         amount: membership.paypal,
         date: e.date
-       
+
       }
     })
     Promise.all(list).then(result => {
       res.render('MemberPayment/MembershipStripePayment', { baseUrl, data: {}, membershipstripe: result, path: 'membershipstripe', session: req.session });
     })
 
+  }
+
+  static AdminUser = async (req, res) => {
+    let adminuserlist = await AdminModel.find({});
+    console.log("VVVVVVVVVVVVVVVVV", adminuserlist)
+    res.render('MasterAdmin/Adminuser', { baseUrl, adminuserlist: adminuserlist, path: 'adminuserlist', session: req.session, });
+  }
+
+  static EditAdminUser = async (req, res) => {
+    let adminuserlist = await AdminModel.findById(req.query.id);
+    res.render('MasterAdmin/Editadminuser', { baseUrl, adminuserlist: adminuserlist, path: 'adminuserlist', session: req.session });
   }
 
 }

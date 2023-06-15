@@ -95,61 +95,7 @@ class ReferralController {
         }
     }
 
-    // static RefImageUpload1 = async (req, res) => {
-    //     var data = req.body;
-    //     const timestamp = Date.now();
-
-    //     data.image = req.files?.['image[]'];
-    //     let validator = new Validator(data, {
-    //         image: "required",
-    //         category: "required"
-    //     }, {
-    //         image: "Images is necessary",
-    //         category: "Category is necessary"
-    //     });
-    //     await validator.check();
-    //     let error = validatorError(res, validator.errors);
-    //     let path = await makeDir("./assets/systemimage/");
-    //     let image = req.files?.['image[]'];
-    //     // console.log("image",req);
-    //     const images = []
-    //     if (image) {
-    //         if (Array.isArray(image)) {
-    //             for (let i = 0; i < image.length; i++) {
-    //                 let extension = image[i].name.split('.').pop();
-    //                 var imname = timestamp + i + "." + extension;
-    //                 images.push(imname)
-    //                 let uploadPath = path + "/" + imname;
-    //                 image[i].mv(uploadPath, function (err) {
-    //                     if (err) return res.status(500).send(err);
-    //                 });
-    //             }
-    //         }
-    //     }
-    //     if (error && JSON.stringify(error) != "{}") {
-    //         return res.status(422).json({
-    //             success: false,
-    //             error: validator.errors,
-    //         })
-    //     } else {
-    //         const doc = new SystemModel({
-    //             Thumbnail: images.join(),
-    //             categoryname: req.body.category,
-    //             telegramId: req.user.telegramId,
-    //             user_id: req.user._id,
-    //             type: 1,
-    //         });
-    //         const result = await doc.save();
-    //         return res.status(200).json({
-    //             success: true,
-    //             data: result,
-    //             message: "Image Uploaded Successfully...",
-    //         });
-    //     }
-    // }
-
-
-
+  
     static EditRefImage = async (req, res) => {
         let id = req.params.id;
         let timestamp = Date.now();
@@ -170,9 +116,6 @@ class ReferralController {
             await SystemModel.findByIdAndUpdate(id, {
                 Thumbnail: ''
             });
-            // console.log('image', images);
-            // if (Array.isArray(image)) {
-            // for (let i = 0; i < image.length; i++) {
             let extension = image.name.split('.').pop();
             var imname = timestamp + "1." + extension;
             images.push(imname)
@@ -209,7 +152,6 @@ class ReferralController {
 
 
     static GetRefImageUpload = async (req, res) => {
-        console.log("req.user._id", req.user._id);
         let imageupload = await SystemModel.find({ user_id: req.user._id });
         imageupload = await imageupload.map((e) => {
             let a = JSON.parse(JSON.stringify(e))
@@ -237,7 +179,6 @@ class ReferralController {
             { upsert: true }
         );
         const userDetails = await UserModel.find({ "tgid": req.query.id })
-        console.log("userDetails._id", userDetails[0].id);
         const doc = {
             contact_id: userDetails[0].id,
             message: `congrats! You are a referral member now.`
@@ -279,7 +220,8 @@ class ReferralController {
             startdate: date,
             paymentstatus: 1,
             enddate: enddate,
-            referralType: 0
+            referralType: 0,
+            paymentBy :0
         });
         return res.status(200).json({
             status: true,

@@ -2320,7 +2320,6 @@ class UserController {
 
     static ReferralMembership = async (req, res) => {
         let referral = await ReferralMembershipModel.find({});
-        console.log("RESULT", referral)
         return res.status(200).json({
             success: true,
             data: referral,
@@ -2328,7 +2327,6 @@ class UserController {
     }
 
     static ReferralReport = async (req, res) => {
-        console.log("req", req);
         let validator = new Validator(data, {
             freemember_tgid: "required",
             membership_period: "required",
@@ -2367,7 +2365,6 @@ class UserController {
         let referral = await ReferralReportModel.find({
             referral_user_id: req.user._id
         }).sort({ _id: -1 });
-        console.log("RESULT", referral)
         return res.status(200).json({
             success: true,
             data: referral,
@@ -2396,7 +2393,8 @@ class UserController {
                 startdate: userdetails?.startdate,
                 paymentstatus: 1,
                 enddate: _endDate,
-                referralType: 1
+                referralType: 1,
+                paymentBy: 1
             });
             await ReferralMembershipStipePayment.create({
                 membership: dec.membership,
@@ -2441,7 +2439,6 @@ class UserController {
     static StripeCheckOutSession = async (req, res) => {
         try {
             const data = req.body;
-            console.log("data", req.body)
             let validator = new Validator(data, {
                 user: "required",
                 membership: "required",
@@ -2455,7 +2452,6 @@ class UserController {
                 })
             } else {
                 let membershipData = await ReferralMembershipModel.findById(data.membership)
-                console.log("membershipData", membershipData);
                 if (!membershipData) {
                     return res.status(500).json({
                         status: false,
@@ -2516,8 +2512,6 @@ class UserController {
             const userdetails = await UserModel.find({
                 tgid: doc.tgid
             })
-            console.log("req.user._id", doc.tgid);
-
             return res.status(200).json({
                 success: true,
                 username: userdetails?.[0]?.username
@@ -2562,7 +2556,6 @@ class UserController {
     static MembershipCheckOutSession = async (req, res) => {
         try {
             const data = req.body;
-            console.log("data", req.body)
             let validator = new Validator(data, {
                 membership_period: "required",
                 membership_amount: "required",
@@ -2605,7 +2598,6 @@ class UserController {
             }
         }
         catch (error) {
-            console.log('error', error);
             return res.status(500).json({
                 status: true,
                 error: "somthing wents wrong"
@@ -2630,7 +2622,6 @@ class UserController {
             const userdetails = req.user
             // const userdetails = await UserModel.findById(dec.user)
             let membershipData = await MembershipModel.findById(dec.membership_id)
-            console.log("membershipData", membershipData);
             const _startDate = (userdetails.enddate === null || moment(userdetails.enddate, 'YYYY-MM-DD').isBefore(moment().format('YYYY-MM-DD'))) ? moment().format('YYYY-MM-DD') : userdetails?.enddate
             const _endDate = moment(_startDate, "YYYY-MM-DD").add(membershipData.membershiperiod, 'years').format("YYYY-MM-DD")
             await UserModel.findByIdAndUpdate(req.user._id, {
@@ -2638,6 +2629,7 @@ class UserController {
                 startdate: userdetails?.startdate,
                 paymentstatus: 1,
                 enddate: _endDate,
+                paymentBy: 2
 
             });
             const doc = new MembershipStrpiePaymentModel({

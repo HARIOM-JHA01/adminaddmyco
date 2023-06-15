@@ -45,7 +45,7 @@ import session from "express-session"
                 <th>Country</th>
                 <!-- <th>Membership Tenure</th> -->
                 <th>Join-Date</th>
-                <th>Start-Date</th>
+                <!-- <th>Start-Date</th> -->
                 <th>End-Date</th>
                 <th>Paid</th>
                 <th></th>
@@ -55,6 +55,7 @@ import session from "express-session"
             <tbody>
               <% var i=1; premium.forEach(function(v) { %>
               <% if( v.usertype == 1) { %>
+                <% console.log('3333', v) %>
               <tr data-id="<%= v._id%>">
                 <td><span class="name-field">
                     <%= i %>
@@ -89,19 +90,20 @@ import session from "express-session"
                 <td><span class="name-field">
                     <%=moment(v.date).format('DD-MM-YYYY') %>
                   </span></td>
-                <td><span class="name-field">
+                <!-- <td><span class="name-field">
                     <%= moment(v.startdate).format('DD-MM-YYYY')%>
-                  </span></td>
+                  </span></td> -->
                 <td><span class="name-field">
                     <%= moment(v.enddate).format('DD-MM-YYYY')%>
                   </span></td>
                 <td><span class="name-field">
-                    <% if(!!v.referralType){ if(v.referralType == 1){ %> By&nbspReferral
-                    <% } else { %>
-                    By&nbspAdmin
-                    <% }} else { %>
-                      By&nbspAdmin
-                      <% }%>
+                  <% if(v.paymentBy == 1){ %>
+                    By Referral
+              <% } else if(v.paymentBy == 2) { %>
+                      By Stripe 
+              <% } else { %>
+                    By Admin
+                 <% } %>
                   </span></td>
                 <td>
                   <% if(v.isReferral != 1){ %> 

@@ -169,7 +169,7 @@ admin.post("/createadmin", MasterAdminController.CreateAdmin);
 admin.get("/createadmin",DashboardController.CreateAdmin);
 
 
-admin.post("/addrol",MasterAdminController.AddRole);
+// admin.post("/addrol",MasterAdminController.AddRole);
 
 admin.get("/paymentconfiguration",DashboardController.PaymentConfiguration);
 admin.get("/addpaymentconfiguration",DashboardController.AddPaymentConfiguration);
@@ -182,6 +182,11 @@ admin.post("/editpaymentconfiguration", AdminController.EditPaymentconfiguration
 admin.get("/membershipstripe", DashboardController.MembershipStripePayment);
 admin.get("/deletestripepayment", AdminController.DeleteStripePayment);
 admin.get("/exportstripedetail",AdminController. ExportStripeDetail);
+
+admin.get("/adminuserlist",DashboardController. AdminUser);
+admin.get("/editadminuser",DashboardController. EditAdminUser);
+admin.post("/editadminusers",MasterAdminController. EditAdminUser);
+admin.get("/deleteadminuser",AdminController. DeleteAdminUser);
 
 
 export default admin
