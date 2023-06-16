@@ -289,7 +289,6 @@ class DashboardController {
     } else {
       let data1 = await UserModel.findByIdAndUpdate(req.params.id, { refimgstatue: Number(data.status) });
     }
-
     return res.status(200).json({
       success: true,
       data: data,
@@ -343,7 +342,6 @@ class DashboardController {
       const memberlist = await ReferralReportModel.find({
         referral_user_id: e
       })
-
       return {
         id: e,
         tgid: list?.tgid,
@@ -422,7 +420,7 @@ class DashboardController {
 
   static EditPaymentConfiguration = async (req, res) => {
     let paymentconfiguration = await PaymentConfigurationModel.find({});
-    res.render('Configuration/EditPaymentConfiguration', { baseUrl, paymentconfiguration: paymentconfiguration, path: 'paymentconfiguration', session: req.session });
+    res.render('Configuration/EditPaymentconfiguration', { baseUrl, paymentconfiguration: paymentconfiguration, path: 'paymentconfiguration', session: req.session });
   }
 
   static MembershipStripePayment = async (req, res) => {
