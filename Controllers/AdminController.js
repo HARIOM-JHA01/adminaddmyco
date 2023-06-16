@@ -111,6 +111,7 @@ class AdminController {
         });
         let user1 = await AdminModel.findById(user._id)
         localStorage.setItem('token', token)
+        req.session.user_id = user1._id
         req.session.token = token
         req.session.tostMsg = "You Are Logged in Successfully..."
         req.session.tostBackground = "#0b6a3c"
@@ -118,6 +119,13 @@ class AdminController {
         return res.redirect("dashboard");
       }
     }
+  }
+  static GetProfile = async (req, res) => {
+    const userDetails = await AdminModel.findById(req.session.user_id)
+    return res.status(200).json({
+      success: true,
+      data: userDetails,
+    });
   }
 
   // ...........ADMIN-FORGOTPASSWORD............
@@ -1068,7 +1076,7 @@ class AdminController {
   //...................CATEGORY..................
   static Categories = async (req, res) => {
     let categories = await CategoryModel.find({});
-    res.render("Configuration/Category", { baseUrl, categories: categories, path: 'categories', session: req.session , loginUser: req.user})
+    res.render("Configuration/Category", { baseUrl, categories: categories, path: 'categories', session: req.session, loginUser: req.user })
   }
 
   static Addcategories = async (req, res) => {
@@ -1633,7 +1641,7 @@ class AdminController {
 
   static PaymentConfiguration = async (req, res) => {
     let data = req.body;
-  
+
     let validator = new Validator(
       data,
       {
@@ -1714,16 +1722,16 @@ class AdminController {
   }
 
   static DeleteAdminUser = async (req, res) => {
-      let adminuser = await AdminModel.findByIdAndDelete(req.query.id);
-      return res.status(200).json({
-        status: true,
-        message: "Deleted successfully.",
-      });
+    let adminuser = await AdminModel.findByIdAndDelete(req.query.id);
+    return res.status(200).json({
+      status: true,
+      message: "Deleted successfully.",
+    });
   }
 
 
 
-  
+
 }
 
 export default AdminController

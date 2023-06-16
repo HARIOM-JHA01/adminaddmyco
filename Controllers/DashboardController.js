@@ -451,7 +451,6 @@ class DashboardController {
 
   static AdminUser = async (req, res) => {
     let adminuserlist = await AdminModel.find({});
-    console.log("VVVVVVVVVVVVVVVVV", adminuserlist)
     res.render('MasterAdmin/Adminuser', { baseUrl, adminuserlist: adminuserlist, path: 'adminuserlist', session: req.session, });
   }
 

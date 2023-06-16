@@ -25,7 +25,6 @@
             url: url + 'admin/notificationcount',
             statusCode: {
               200: function(xhr) {
-                console.log(xhr);
                 $('.notification_count').html('('+xhr.data+' New)');
                 
                   // if(xhr.isMasterAdmin == '1'){

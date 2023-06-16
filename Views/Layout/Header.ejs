@@ -67,6 +67,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js" integrity="sha512-CryKbMe7sjSCDPl18jtJI5DR5jtkUWxPXWaLCst6QjH8wxDexfRJic2WRmRXmstr2Y8SxDDWuBO6CQC6IE4KTA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script type="text/javascript" src="https://jeremyfagis.github.io/dropify/dist/js/dropify.min.js"></script>
 </head>
+<% var name = '' %>
 <body>
   <div id="app">
     <div id="main" class="layout-horizontal">
@@ -82,7 +83,7 @@
                     <img src="<%= baseUrl %>assets/images/faces/164.png" alt="Avatar">
                   </div>
                   <div class="text">
-                    <h6 class="user-dropdown-name"><%= somevar %></h6>
+                    <h6 class="user-dropdown-name" id="userName"><%= name %></h6>
                   </div>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end shadow-lg" aria-labelledby="topbarUserDropdown">
@@ -111,3 +112,26 @@
       </header>
     </div>
   </div>
+
+  
+
+
+<script>
+  var url = '<%= baseUrl %>'
+  var admin_name = '<%= name %>'
+ $.ajax({
+           type: "GET",
+           dataType: "json",
+           url: url + 'admin/getProfile',
+           statusCode: {
+             200: function(xhr) {
+              if(xhr.data.isMasterAdmin != '1' || !xhr.data.isMasterAdmin) {
+                $('#isAdmin').addClass('d-none');
+              }
+              $('#userName').html(xhr.data.name);
+              admin_name = xhr.data.name
+             }
+           }
+         });
+ 
+</script>

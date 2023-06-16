@@ -56,6 +56,7 @@ admin.get("/toncoin",isAdmin,DashboardController.Toncoin);
 // ..........................ADMIN-CONTROLLER.............................
 admin.post("/Register",AdminController.Adminregister);
 admin.post("/login",AdminController.Adminlogin);
+admin.get("/getProfile",AdminController.GetProfile);
 admin.get("/Logout",AdminController.Adminlogout);
 admin.post("/ForgotPassword",AdminController.ForgotPassword);
 admin.post("/OtpVarify",AdminController.OtpVarify);

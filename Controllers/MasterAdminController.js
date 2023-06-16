@@ -53,23 +53,23 @@ class MasterAdminController {
             const source = fs.readFileSync(filePath, 'utf-8').toString();
             const template = handlebars.compile(source);
 
-            // var transporter = nodemailer.createTransport({
-            //     host: 'tgt-tko-m815.pointdnshere.com',
-            //     port: 587,
-            //     auth: {
-            //         user: "info@addmy.co",
-            //         pass: "noreply@addmy.com"
-            //     }
-            // });
-
             var transporter = nodemailer.createTransport({
-                host: 'sandbox.smtp.mailtrap.io',
-                port: 2525,
+                host: 'tgt-tko-m815.pointdnshere.com',
+                port: 587,
                 auth: {
-                    user: "6e6cbf25219481",
-                    pass: "b2d9c14a58f35d"
+                    user: "info@addmy.co",
+                    pass: "noreply@addmy.com"
                 }
             });
+
+            // var transporter = nodemailer.createTransport({
+            //     host: 'sandbox.smtp.mailtrap.io',
+            //     port: 2525,
+            //     auth: {
+            //         user: "6e6cbf25219481",
+            //         pass: "b2d9c14a58f35d"
+            //     }
+            // });
 
             const replacements = {
                 email: req.body.email,
