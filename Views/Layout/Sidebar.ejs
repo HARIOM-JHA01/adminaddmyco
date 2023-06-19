@@ -49,9 +49,9 @@
             <span>Membership Payment</span>
           </a>
           <ul class="submenu <%= (path == 'paypal') || (path == 'membershipstripe')  ? 'active' : '' %> ">
-            <li class="submenu-item <%= (path == 'paypal') ? 'active' : '' %> ">
+            <!-- <li class="submenu-item <%= (path == 'paypal') ? 'active' : '' %> ">
               <a href="<%= baseUrl %>admin/paypal">Paypal</a>
-            </li>
+            </li> -->
             <li class="submenu-item <%= (path == 'membershipstripe') ? 'active' : '' %> ">
               <a href="<%= baseUrl %>admin/membershipstripe">Stripe</a>
             </li>
@@ -127,7 +127,7 @@
           </ul>
         </li>
           <li
-          class="sidebar-item has-sub <%= (path == 'createadmin') || (path == 'adminuser') ? 'active' : '' %>">
+          class="sidebar-item has-sub <%= (path == 'createadmin') || (path == 'adminuserlist') ? 'active' : '' %>">
           <a href="#" class='sidebar-link'>
             <i class="bi bi-stack"></i>
             <span>Admin</span>
