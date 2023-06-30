@@ -1642,7 +1642,7 @@ class UserController {
                 return res.status(200).json({
                     success: true,
                     data: {
-                        fontcolor: '#00A3CC',
+                        fontcolor: "#FFFFFF",
                     },
                 });
             }

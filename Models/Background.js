@@ -5,7 +5,7 @@ const backgroundSchema = new mongoose.Schema({
     user_id: { type: mongoose.Schema.Types.ObjectId, default: null, ref: "User" },
     iconcolor:{type: String, default: null},
     fontcolor:{type: String, default: null},
-    backgroundcolor:{type: String, default: '#00A3CC'},
+    backgroundcolor:{type: String, default: "#FFFFFF"},
     Thumbnail :{ type: String },
     date: { type: Date, default: Date.now }
 });
