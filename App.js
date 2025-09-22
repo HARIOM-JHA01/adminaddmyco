@@ -8,8 +8,7 @@ import session from "express-session";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
-import https from "https";
-import fs from "fs";
+import http from "http";
 import { swaggerUi, swaggerDocument } from "./swagger.js";
 
 mongoose.set("strictQuery", false);
@@ -63,14 +62,9 @@ app.get("/", function (req, res) {
   }
 });
 
-const options = {
-  key: fs.readFileSync("key.pem"),
-  cert: fs.readFileSync("cert.pem"),
-};
-
-https.createServer(options, app).listen(port, () => {
-  console.log(`HTTPS server listening at https://localhost:${port}`);
+http.createServer(app).listen(port, () => {
+  console.log(`HTTP server listening at http://localhost:${port}`);
   console.log(
-    `API documentation available at https://localhost:${port}/api-docs`
+    `API documentation available at http://localhost:${port}/api-docs`
   );
 });
