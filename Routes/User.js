@@ -1,37 +1,42 @@
 import express from "express";
 const user = express.Router();
-import UserController from "../Controllers/UserController.js"
+import UserController from "../Controllers/UserController.js";
 import { isUser } from "../Middleware/UserAuthentication.js";
 import ReferralController from "../Controllers/ReferralController.js";
 // import DashboardController from "../Controllers/DashboardController.js";
-import multer from "multer"
+import multer from "multer";
 
 user.post("/register", UserController.Register);
 user.post("/username", UserController.Username);
 user.post("/login", UserController.Login);
-user.post("/forgotpassword", UserController.ForgotPassword);
+user.post("/telegram-login", UserController.TelegramLogin);
+// user.post("/forgotpassword", UserController.ForgotPassword);
 user.post("/language", isUser, UserController.Language);
 
 // ................................CONTACT....................................
-user.post("/addtocontact", isUser, UserController.AddToContact)
-user.get("/getcontact", isUser, UserController.GetContact)
+user.post("/addtocontact", isUser, UserController.AddToContact);
+user.get("/getcontact", isUser, UserController.GetContact);
 user.post("/invitationcontact", isUser, UserController.InvitationContact);
-user.get("/contactlist/:id", isUser , UserController.ContactList);
-user.delete("/removefromcontact/:id", isUser , UserController.RemoveFromContact);
-user.post("/searchcontact", isUser , UserController.SearchContact);
+user.get("/contactlist/:id", isUser, UserController.ContactList);
+user.delete("/removefromcontact/:id", isUser, UserController.RemoveFromContact);
+user.post("/searchcontact", isUser, UserController.SearchContact);
 
 // ..........................CONTACT-FOLDER...................................
-user.post("/addcontactfolder", isUser, UserController.AddContactFolder)
-user.get("/getcontactfolder", isUser, UserController.GetContactFolder)
-user.delete("/deletecontactfolder/:id", isUser, UserController.DeleteContactFolder)
+user.post("/addcontactfolder", isUser, UserController.AddContactFolder);
+user.get("/getcontactfolder", isUser, UserController.GetContactFolder);
+user.delete(
+  "/deletecontactfolder/:id",
+  isUser,
+  UserController.DeleteContactFolder
+);
 
 // ..........................USERS[FREE,PRIMIUMUSER,DONATED]...................
-user.post("/freeuser", UserController.FreeUser)
-user.post("/premiumuser", isUser, UserController.PremiumUser)
-user.post("/donateduser", isUser, UserController.DonatedUser)
+user.post("/freeuser", UserController.FreeUser);
+user.post("/premiumuser", isUser, UserController.PremiumUser);
+user.post("/donateduser", isUser, UserController.DonatedUser);
 
 // ..........................PURCHASE MEMBERSHIP...............................
-user.get("/purchasemembership", UserController.PurchaseMembership)
+user.get("/purchasemembership", UserController.PurchaseMembership);
 
 // ................................FOR-GET.....................................
 user.get("/registeruser", UserController.register);
@@ -55,19 +60,19 @@ user.get("/folder", UserController.Folders);
 user.get("/banner", UserController.Banners);
 
 //...............................USERS PROFILE.................................
-user.post("/addprofile", isUser, UserController.AddProfile)
-user.post("/updateprofile/:id", isUser, UserController.UpdateProfile)
-user.get("/getprofile", isUser, UserController.GetProfile)
-user.get("/getprofile/:id", UserController.Getprofile)
-user.post("/getprofiles", UserController.Getprofiles)
-user.delete("/deleteprofile/:id", isUser, UserController.DeleteProfile)
+user.post("/addprofile", isUser, UserController.AddProfile);
+user.post("/updateprofile/:id", isUser, UserController.UpdateProfile);
+user.get("/getprofile", isUser, UserController.GetProfile);
+user.get("/getprofile/:id", UserController.Getprofile);
+user.post("/getprofiles", UserController.Getprofiles);
+user.delete("/deleteprofile/:id", isUser, UserController.DeleteProfile);
 user.get("/landingpage", isUser, UserController.Landingpage);
 user.post("/getlandingpage", UserController.GetLandingpage);
 
 // .................................COMPANY....................................
 user.post("/companyprofile", isUser, UserController.Companyprofile);
 user.post("/updatecompany", isUser, UserController.Updatecompanyprofile);
-user.post("/video", isUser, UserController.video)
+user.post("/video", isUser, UserController.video);
 user.get("/getcompanyprofile", isUser, UserController.companyprofile);
 user.post("/getcompany", UserController.GetCompany);
 user.delete("/deletecompany/:id", isUser, UserController.Deletecompanyprofile);
@@ -77,7 +82,7 @@ user.delete("/deleteallcompany", UserController.DeleteAllcompany);
 // ....................................CHAMBER.................................
 user.post("/chamber", isUser, UserController.Chamber);
 user.post("/updatechamber", isUser, UserController.UpdateChamber);
-user.post("/chambervideo", isUser, UserController.Chambervideo)
+user.post("/chambervideo", isUser, UserController.Chambervideo);
 user.get("/getchamber", isUser, UserController.chamber);
 user.post("/getchambers", UserController.GetChamber);
 user.delete("/deletechamber/:id", isUser, UserController.DeleteChamber);
@@ -85,22 +90,22 @@ user.delete("/deletemyallchamber", isUser, UserController.DeleteMyallchamber);
 user.delete("/deleteallchamber", UserController.DeleteAllchamber);
 
 //...................................NOTIFICATION..............................
-user.get("/getnotification", isUser, UserController.GetNotification)
-user.get("/viewnotification/:id", isUser, UserController.ViewNotification)
-user.get("/multiplenotification", isUser, UserController.MultipleNotification)
-user.delete("/deletenotification/:id", UserController.DeleteNotification)
+user.get("/getnotification", isUser, UserController.GetNotification);
+user.get("/viewnotification/:id", isUser, UserController.ViewNotification);
+user.get("/multiplenotification", isUser, UserController.MultipleNotification);
+user.delete("/deletenotification/:id", UserController.DeleteNotification);
 
 // ..............................TONCOIN & PAYPAL..............................
-user.post("/toncoinpaypal", isUser, UserController.ToncoinPaypal)
-user.post("/plancheck", UserController.PlanCheck)
+user.post("/toncoinpaypal", isUser, UserController.ToncoinPaypal);
+user.post("/plancheck", UserController.PlanCheck);
 
 // ..............................COUNTRY.......................................
 user.post("/country", UserController.Country);
 
 // ......................USERS[FREE,PRIMIUMUSER,DONATED].......................
-user.post("/freeuser", UserController.FreeUser)
-user.post("/premiumuser", UserController.PremiumUser)
-user.post("/donateduser", UserController.DonatedUser)
+user.post("/freeuser", UserController.FreeUser);
+user.post("/premiumuser", UserController.PremiumUser);
+user.post("/donateduser", UserController.DonatedUser);
 
 // ...............................MEMBERSHIP...................................
 user.get("/membershiptenure", UserController.membershiptenure);
@@ -127,7 +132,6 @@ user.delete("/deleteimage/:id/:name", isUser, ReferralController.DeleteRerPic);
 // user.get("/referralmembership", isUser, ReferralController.ReferralMembershipList);
 user.post("/searchtelegramid", isUser, ReferralController.CheckTelegramId);
 
-
 // ...............................REFERRAL-MEMBERSHIP.......................................
 user.get("/referralmembershiplist", isUser, UserController.ReferralMembership);
 
@@ -135,22 +139,25 @@ user.get("/referralmembershiplist", isUser, UserController.ReferralMembership);
 user.post("/referralreport", isUser, UserController.ReferralReport);
 user.get("/referralReportlist", isUser, UserController.ReferralReportList);
 
-
 // .............................. STRIPE,,,,..................
-user.post("/create-checkout-session", isUser, UserController.StripeCheckOutSession);
+user.post(
+  "/create-checkout-session",
+  isUser,
+  UserController.StripeCheckOutSession
+);
 user.post("/success", isUser, UserController.success);
 
 // ::::::::::::::::::::::::::GET-USERNAME::::::::::::::::::::::::
 user.post("/getusername", isUser, UserController.getUserName);
 user.post("/getuserdetails", isUser, UserController.getUserDetails);
 
-
 user.post("/stripe_payment", isUser, UserController.MembershipCheckOutSession);
 
-user.post("/success_stripe_payment", isUser, UserController.SuccessMembershipStripe);
+user.post(
+  "/success_stripe_payment",
+  isUser,
+  UserController.SuccessMembershipStripe
+);
 user.get("/getpaymentconfiguration", UserController.GetPaymentConfiguration);
 
-
-
-
-export default user
+export default user;
