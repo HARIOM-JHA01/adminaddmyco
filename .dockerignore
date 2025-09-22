@@ -1,0 +1,37 @@
+# Node modules
+
+node_modules
+
+# Logs
+
+logs
+_.log
+npm-debug.log_
+
+# Dependency directories
+
+bower_components
+
+# Build output
+
+dist
+build
+
+# OS generated files
+
+.DS_Store
+Thumbs.db
+
+# Docker files
+
+Dockerfile*
+docker-compose*
+
+# Misc
+
+_.swp
+_.swo
+.idea
+.vscode
+\*.tgz
+coverage
