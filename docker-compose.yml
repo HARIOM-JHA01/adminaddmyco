@@ -1,0 +1,31 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongodb
+    environment:
+      - DB=mongodb://AdminAddmyco:myNamecard6013g@mongodb:27017/addmyco?authSource=admin
+    networks:
+      - app-network
+    restart: always
+  mongodb:
+    image: mongo
+    ports:
+      - "27018:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=AdminAddmyco
+      - MONGO_INITDB_ROOT_PASSWORD=myNamecard6013g
+      - MONGO_INITDB_DATABASE=addmyco
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - app-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  app-network:
+    driver: bridge
