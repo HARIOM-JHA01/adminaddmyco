@@ -40,8 +40,9 @@
                                         <th>No.</th>
                                         <!-- <th>Membership Name</th> -->
                                         <th>Membership Period (in years)</th>
-                                        <th>Price for Paypal (HK$)</th>
-                                        <!-- <th>Price for Toncoin</th> -->
+                                        <!-- <th>Price for Paypal (HK$)</th> -->
+                                        <th>Price for USDT</th>
+                                        <th>Price for Telegram Coin</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -55,12 +56,15 @@
                                             <td>
                                                 <%= v.membershiperiod %> Years
                                             </td>
-                                            <td>
-                                                <%= v.paypal %> HK$
-                                            </td>
                                             <!-- <td>
-                                                <%= v.toncoin %>
+                                                <%= v.paypal %> HK$
                                             </td> -->
+                                            <td>
+                                                <%= v.usdt %> USDT
+                                            </td>
+                                            <td>
+                                                <%= v.telegramcoin %> Coin
+                                            </td>
                                             <td>
                                                 <a href="<%= baseUrl %>admin/editmembership?id=<%=  v._id %> "
                                                     class="btn icon icon-left btn-primary btn-sm"><i
@@ -69,10 +73,9 @@
                                                     class="btn icon  icon-left btn-danger btn-sm delete-data"><i
                                                         class="bi bi-trash"></i> </button>
                                             </td>
-
                                         </tr>
                                         <% i++ %>
-                                            <% }) %>
+                                    <% }) %>
                                 </tbody>
                             </table>
                         </div>

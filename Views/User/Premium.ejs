@@ -41,7 +41,6 @@ import session from "express-session"
                 <th>Member Id</th>
                 <th>UserName</th>
                 <th>TG-id</th>
-                <th>Email</th>
                 <th>Country</th>
                 <!-- <th>Membership Tenure</th> -->
                 <th>Join-Date</th>
@@ -70,9 +69,6 @@ import session from "express-session"
                     <a href="https://t.me/<%= v.tgid%>"> https://t.me/<%= v.tgid%></a>
                   </span></td>
                 <td><span class="name-field">
-                    <%= v.email%>
-                  </span></td>
-                <td><span class="name-field">
                     <%= v.country%>
                   </span></td>
                 <!-- <td><span class="name-field">
@@ -98,11 +94,13 @@ import session from "express-session"
                   </span></td>
                 <td><span class="name-field">
                   <% if(v.paymentBy == 1){ %>
-                    By Referral
+                    By USDT
               <% } else if(v.paymentBy == 2) { %>
-                      By Stripe 
+                      By TgCoin
+                      <% } else if(v.paymentBy == 3) { %>
+                      By Admin
               <% } else { %>
-                    By Admin
+                    By Reward
                  <% } %>
                   </span></td>
                 <td>

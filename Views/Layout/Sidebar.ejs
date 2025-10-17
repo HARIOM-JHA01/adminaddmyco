@@ -48,14 +48,16 @@
             <i class="bi bi-stack"></i>
             <span>Membership Payment</span>
           </a>
-          <ul class="submenu <%= (path == 'paypal') || (path == 'membershipstripe')  ? 'active' : '' %> ">
-            <!-- <li class="submenu-item <%= (path == 'paypal') ? 'active' : '' %> ">
-              <a href="<%= baseUrl %>admin/paypal">Paypal</a>
-            </li> -->
-            <li class="submenu-item <%= (path == 'membershipstripe') ? 'active' : '' %> ">
+          <ul class="submenu <%= (path == 'membershipstripe') || (path == 'usdtmembership') || (path == 'telegramcoinmembership') ? 'active' : '' %> ">
+            <!-- <li class="submenu-item <%= (path == 'membershipstripe') ? 'active' : '' %> ">
               <a href="<%= baseUrl %>admin/membershipstripe">Stripe</a>
+            </li> -->
+            <li class="submenu-item <%= (path == 'usdtmembership') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/usdtmembership">USDT</a>
             </li>
-           
+            <li class="submenu-item <%= (path == 'telegramcoinmembership') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/telegramcoinmembership">Telegram Coin</a>
+            </li>
           </ul>
         </li>
         <li class="sidebar-item <%= ( path == 'banner') ? 'active' : ''  %>">

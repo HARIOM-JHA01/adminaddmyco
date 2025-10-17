@@ -36,6 +36,15 @@ app.use(
 app.use("/assets", express.static("assets"));
 app.use(cors());
 
+//custom logger
+app.use((req, res, next) => {
+  const now = new Date();
+  console.log(
+    `[${now.toISOString()}] ${req.method} request to ${req.url} from ${req.ip}`
+  );
+  next();
+});
+
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
@@ -61,6 +70,11 @@ app.get("/", function (req, res) {
     res.redirect("/admin");
   }
 });
+
+// global error handler
+// app.use(function (err, req, res) {
+//   res.status(500).send({ message: err.message });
+// });
 
 http.createServer(app).listen(port, () => {
   console.log(`HTTP server listening at http://localhost:${port}`);

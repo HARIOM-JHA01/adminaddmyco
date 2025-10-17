@@ -57,16 +57,25 @@
                                                                                             <%= message %>
                                                                                         </p>
                                                                                         <% } %>
-                                                                                            <label for="assessment_title">Price For
-                                                                                                Paypal(HK$)</label>
+                                                                                            <!-- Paypal field removed -->
+                                                                                            <label for="assessment_title">Price For USDT</label>
                                                                                             <input type="number" onchange="eventHandler(this)"
-                                                                                                id="paypal" class="form-control" name="paypal"
-                                                                                                placeholder="Paypal" value="<%=  membership.paypal %>">
+                                                                                                id="usdt" class="form-control" name="usdt"
+                                                                                                placeholder="USDT" value="<%=  membership.usdt %>">
                                                                                             <% if(typeof errors=="object" ) { %>
-                                                                                                <p style="color: red;" class="paypal">
-                                                                                                    <%= errors.paypal %>
+                                                                                                <p style="color: red;" class="usdt">
+                                                                                                    <%= errors.usdt %>
                                                                                                 </p>
-                                                                                                <% } %>
+                                                                                            <% } %>
+                                                                                            <label for="assessment_title">Price For Telegram Coin</label>
+                                                                                            <input type="number" onchange="eventHandler(this)"
+                                                                                                id="telegramcoin" class="form-control" name="telegramcoin"
+                                                                                                placeholder="Telegram Coin" value="<%=  membership.telegramcoin %>">
+                                                                                            <% if(typeof errors=="object" ) { %>
+                                                                                                <p style="color: red;" class="telegramcoin">
+                                                                                                    <%= errors.telegramcoin %>
+                                                                                                </p>
+                                                                                            <% } %>
                                                                                 </div>
                                                                             </div>
                                                                             <div class="col-12">

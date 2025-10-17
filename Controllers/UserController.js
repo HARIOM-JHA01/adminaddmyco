@@ -55,6 +55,10 @@ const accessTokenLife = process.env["ACCESS_TOKEN_LIFE"];
 const app = express();
 
 class UserController {
+  // Utility to generate an 8-character username
+  static generateUsername() {
+    return crypto.randomBytes(4).toString("hex");
+  }
   // ...............USER-REGISTER...............
   static Register1 = async (req, res) => {
     try {
@@ -199,8 +203,7 @@ class UserController {
   // ...................USERNAME....................
   static Username = async (req, res) => {
     try {
-      let data = req.body;
-      var username = crypto.randomBytes(4).toString("hex");
+      let username = UserController.generateUsername();
       return res.status(200).json({
         success: true,
         username: username,
@@ -268,6 +271,7 @@ class UserController {
     let validator = new Validator(data, {
       telegram_username: "required",
       country: "required",
+      countryCode: "required",
     });
     if (!(await validator.check())) {
       return res.status(422).json({
@@ -275,27 +279,53 @@ class UserController {
         error: validator.errors,
       });
     }
-    let user = await UserModel.findOne({ username: data.telegram_username });
+    let user = await UserModel.findOne({ tgid: data.telegram_username });
     if (!user) {
-      // New user, create account and assign premium membership for 1 year
-      const doc = new UserModel({
-        username: data.telegram_username,
+      // Check configuration for Telegram signup user type
+      let telegramPremiumSetting = await ConfigurationModel.findOne({
+        ConfigKey: "telegram_signup_premium",
+      });
+      let isPremium =
+        telegramPremiumSetting && telegramPremiumSetting.ConfigValue === "1";
+      var generatedUsername = UserController.generateUsername();
+      // Generate memberid (same logic as Register)
+      var countrycount = await UserModel.find({
         country: data.country,
-        membertype: "premium",
-        membershiperiod: "12", // 1 year in months
+      }).count();
+      var srt2 = countrycount + 1;
+      var srt = srt2.toString();
+      var srt1 = "000000000000";
+      var countryCode = data.countryCode;
+      var id = countryCode + "-" + srt1.slice(0, -srt.length) + srt;
+      const doc = new UserModel({
+        username: generatedUsername,
+        tgid: data.telegram_username,
+        country: data.country,
+        countryCode: countryCode,
+        membertype: isPremium ? "premium" : "free",
+        membershiperiod: isPremium ? "12" : undefined, // 1 year in months for premium
         joindate: new Date().toISOString(),
+        enddate: isPremium
+          ? new Date(new Date().setFullYear(new Date().getFullYear() + 1))
+              .toISOString()
+              .split("T")[0]
+          : undefined,
+        usertype: isPremium ? 1 : 0,
+        memberid: id,
       });
       const result = await doc.save();
-      // Create membership record
-      const membership = new MembershipModel({
-        membershiperiod: 12, // 1 year
-        date: new Date(),
-      });
-      await membership.save();
+      // Create membership record only for premium
+      // if (isPremium) {
+      //   const membership = new MembershipModel({
+      //     membershiperiod: 12, // 1 year
+      //     date: new Date(),
+      //   });
+      //   await membership.save();
+      // }
       // Generate token
       let payload = {
         id: result._id,
-        username: data.telegram_username,
+        username: generatedUsername,
       };
       let accessToken = await jwt.sign(payload, accessTokenSecret, {
         algorithm: "HS256",
@@ -311,8 +341,9 @@ class UserController {
       return res.status(200).json({
         success: true,
         data: user1,
-        message:
-          "Welcome! You have been granted premium membership for 1 year.",
+        message: isPremium
+          ? "Welcome! You have been rewarded free premium membership for 1 year."
+          : "Welcome! You have been registered as a free user.",
       });
     } else {
       // Existing user, just login
@@ -430,7 +461,6 @@ class UserController {
       owner_name_english: "required",
       owner_name_chinese: "required",
       telegramId: "required",
-      email: "required|email",
       contact: "required",
       address1: "required",
       address2: "required",
@@ -525,12 +555,11 @@ class UserController {
       owner_name_english: "required",
       owner_name_chinese: "required",
       telegramId: "required",
-      email: "required",
-      contact: "required",
       address1: "required",
       address2: "required",
       address3: "required",
     });
+    console.log("update api called");
     if (!(await validator.check())) {
       return res.status(422).json({
         success: false,
@@ -544,22 +573,22 @@ class UserController {
         owner_name_english: req.body.owner_name_english,
         owner_name_chinese: req.body.owner_name_chinese,
         telegramId: req.body.telegramId,
-        email: req.body.email,
-        contact: req.body.contact,
-        address1: req.body.address1,
-        address2: req.body.address2,
-        address3: req.body.address3,
-        WhatsApp: req.body.WhatsApp,
-        WeChat: req.body.WeChat,
-        Line: req.body.Line,
-        Instagram: req.body.Instagram,
-        Facebook: req.body.Facebook,
-        Twitter: req.body.Twitter,
-        Youtube: req.body.Youtube,
-        Linkedin: req.body.Linkedin,
-        SnapChat: req.body.SnapChat,
-        Skype: req.body.Skype,
-        TikTok: req.body.TikTok,
+        email: req.body.email || "",
+        contact: req.body.contact || "",
+        address1: req.body.address1 || "",
+        address2: req.body.address2 || "",
+        address3: req.body.address3 || "",
+        WhatsApp: req.body.WhatsApp || "",
+        WeChat: req.body.WeChat || "",
+        Line: req.body.Line || "",
+        Instagram: req.body.Instagram || "",
+        Facebook: req.body.Facebook || "",
+        Twitter: req.body.Twitter || "",
+        Youtube: req.body.Youtube || "",
+        Linkedin: req.body.Linkedin || "",
+        SnapChat: req.body.SnapChat || "",
+        Skype: req.body.Skype || "",
+        TikTok: req.body.TikTok || "",
         tags: req.body.tags,
         user_id: req.user._id,
         // image: imagename
@@ -652,8 +681,13 @@ class UserController {
       },
       { $unwind: { path: "$companydata", preserveNullAndEmptyArrays: true } },
     ]);
-    profile[0]["logoImage"] = logoDetails.Banner;
-    profile[0]["logoTelegramUrl"] = logoDetails.Link;
+    if (logoDetails) {
+      profile[0]["logoImage"] = logoDetails.Banner;
+      profile[0]["logoTelegramUrl"] = logoDetails.Link;
+    } else {
+      profile[0]["logoImage"] = "";
+      profile[0]["logoTelegramUrl"] = "";
+    }
     if (profile[0]["profile_image"] != "") {
       profile[0]["profile_image"] =
         baseUrl + "assets/" + profile[0]["profile_image"];
@@ -1077,7 +1111,9 @@ class UserController {
   };
 
   static companyprofile = async (req, res) => {
+    console.log("req.user._id", req.user._id);
     let company = await CompanyModel.find({ user_id: req.user._id });
+    console.log("company", company);
     return res.status(200).json({
       success: true,
       data: company,

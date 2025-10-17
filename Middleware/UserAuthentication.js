@@ -17,22 +17,19 @@ const isUser = async (req, res, next) => {
       if (!tokenData) {
         return res.sendStatus(401);
       }
-      
+
       if (user) {
-        let userData = await UserModel.findById(user.id)
+        let userData = await UserModel.findById(user.id);
         if (!userData) {
           return res.sendStatus(401);
         }
-        req.user = userData
-        req.isLogin = true
+        req.user = userData;
+        req.isLogin = true;
       }
-      next()
-
+      next();
     });
-
   } else {
     res.sendStatus(401);
   }
-}
-export { isUser }
-
+};
+export { isUser };

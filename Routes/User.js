@@ -5,6 +5,7 @@ import { isUser } from "../Middleware/UserAuthentication.js";
 import ReferralController from "../Controllers/ReferralController.js";
 // import DashboardController from "../Controllers/DashboardController.js";
 import multer from "multer";
+import PaymentController from "../Controllers/paymentController.js";
 
 user.post("/register", UserController.Register);
 user.post("/username", UserController.Username);
@@ -159,5 +160,17 @@ user.post(
   UserController.SuccessMembershipStripe
 );
 user.get("/getpaymentconfiguration", UserController.GetPaymentConfiguration);
+
+// ...............................telegram stars.......................................
+user.post("/telegram/payment", isUser, PaymentController.TelegramPayment);
+user.post(
+  "/telegram/payment/complete",
+  isUser,
+  PaymentController.CompleteTelegramCoinPayment
+);
+user.post("/usdt/payment", isUser, PaymentController.USDTPayment);
+
+// Membership history for authenticated user
+user.get("/membership/history", isUser, PaymentController.MembershipHistory);
 
 export default user;
