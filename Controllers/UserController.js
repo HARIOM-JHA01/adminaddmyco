@@ -567,7 +567,11 @@ class UserController {
       });
     } else {
       const path = await makeDir("./assets/profileimage/");
-      let pic = await UserModel.findById(req.params.id);
+      // resolve target id: if params.id is a valid ObjectId use it, otherwise fall back to authenticated user
+      const targetId = mongoose.Types.ObjectId.isValid(req.params.id)
+        ? req.params.id
+        : req.user._id;
+      let pic = await UserModel.findById(targetId);
       const doc = {
         username: req.body.username,
         owner_name_english: req.body.owner_name_english,
@@ -629,7 +633,7 @@ class UserController {
         doc["video"] = "profileimage/" + imname;
         doc["profile_image"] = "";
       }
-      const result = await UserModel.findByIdAndUpdate(req.params.id, doc);
+      const result = await UserModel.findByIdAndUpdate(targetId, doc);
       console.log("123", result);
       const user1 = await UserModel.findById(result._id);
       let usercontact1 = await ContactModel.find({
