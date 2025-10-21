@@ -898,7 +898,7 @@ class AdminController {
       refimgstatue: 0,
       refstatue: 0,
     });
-    let premium = await ToncoinModel.deleteMany({ user_id: req.query.id });
+    // let premium = await ToncoinModel.deleteMany({ user_id: req.query.id });
     return res.status(200).json({
       status: true,
       message: "deleted successfully.",
