@@ -10,6 +10,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import http from "http";
 import { swaggerUi, swaggerDocument } from "./swagger.js";
+import { start as startTelegramBot } from "./Utils/telegramBot.js";
 
 mongoose.set("strictQuery", false);
 const app = express();
@@ -35,6 +36,9 @@ app.use(
 );
 app.use("/assets", express.static("assets"));
 app.use(cors());
+
+// Start Telegram bot
+startTelegramBot();
 
 //custom logger
 app.use((req, res, next) => {

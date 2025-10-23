@@ -1025,45 +1025,63 @@ class UserController {
   static Updatecompanyprofile = async (req, res) => {
     var data = req.body;
     let datas = [];
-    var newdata = data.data;
-    newdata.forEach(function (err, devices) {
-      err.user_id = req.body.user_id;
-      if (err.image != undefined) {
-        if (err.image !== "") {
-          let result = err.image.search("base64");
-          if (result != -1) {
-            var matches = err.image.match(/^data:([A-Za-z-+/]+);base64,(.+)$/),
-              response = {};
-            delete err["image"];
+    var newdata = data.data || [];
+
+    // Process each company item sequentially to properly await DB ops and file writes.
+    for (const item of newdata) {
+      // ensure user_id is set
+      item.user_id = req.body.user_id;
+
+      // handle base64 image if present
+      if (item.image != undefined && item.image !== "") {
+        const result = String(item.image).search("base64");
+        if (result != -1) {
+          const matches = item.image.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
+          if (matches && matches.length === 3) {
+            const response = {};
+            // remove the large base64 payload from object before saving
+            delete item["image"];
             response.type = matches[1];
-            response.data = new Buffer(matches[2], "base64");
-            let decodedImg = response;
-            let imageBuffer = decodedImg.data;
-            let type = decodedImg.type;
-            let extension = mime.getExtension(type);
-            let r = (Math.random() + 1).toString(36).substring(7);
-            let fileName = r + "." + extension;
+            response.data = Buffer.from(matches[2], "base64");
+            const decodedImg = response;
+            const imageBuffer = decodedImg.data;
+            const type = decodedImg.type;
+            const extension = mime.getExtension(type) || "png";
+            const r = (Math.random() + 1).toString(36).substring(7);
+            const fileName = r + "." + extension;
             try {
               fs.writeFileSync(
                 "./assets/companyprofile/" + fileName,
                 imageBuffer,
                 "utf8"
               );
-              err["image"] = "companyprofile/" + fileName;
-            } catch (e) {}
+              item["image"] = "companyprofile/" + fileName;
+            } catch (e) {
+              console.error("Failed to write company image for update:", e);
+            }
           }
         }
       }
 
-      if (err._id) {
-        let id = err._id;
-        CompanyModel.findByIdAndUpdate(id, err)
-          .then((doc) => {})
-          .then((data) => {});
+      // Only update existing companies; do NOT create new company records from this endpoint
+      if (item._id) {
+        const id = item._id;
+        try {
+          await CompanyModel.findByIdAndUpdate(id, item, {
+            new: true,
+            upsert: false,
+          });
+        } catch (e) {
+          console.error(`Failed to update company ${id}:`, e);
+        }
       } else {
-        CompanyModel.create(err);
+        // Skip creating new records here — creating from reorder/update requests caused duplicates.
+        console.warn(
+          "Skipping creation for company update request because _id is missing:",
+          item
+        );
       }
-    });
+    }
 
     let usercontact1 = await ContactModel.find({
       status: 1,
@@ -1148,7 +1166,20 @@ class UserController {
   };
 
   static Deletecompanyprofile = async (req, res) => {
-    let company1 = await CompanyModel.findById(req.params.id);
+    const id = req.params.id;
+    if (!id) {
+      return res.status(422).json({
+        success: false,
+        message: "Company ID is required...",
+      });
+    }
+    let company1 = await CompanyModel.findById(id);
+    if (!company1) {
+      return res.status(404).json({
+        success: false,
+        message: "Company not found...",
+      });
+    }
     const path = await makeDir("./assets/companyprofile/");
     if (company1.video) {
       const url = company1.video;
@@ -1156,7 +1187,7 @@ class UserController {
       let image = path + "/" + filename;
       if (fs.existsSync(image)) fs.unlinkSync(image);
     }
-    let company = await CompanyModel.findByIdAndDelete(req.params.id);
+    let company = await CompanyModel.findByIdAndDelete(id);
     return res.status(200).json({
       success: true,
       message: "Data Deleted Successfully...",
