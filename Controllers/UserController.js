@@ -1841,9 +1841,6 @@ class UserController {
       } else {
         return res.status(200).json({
           success: true,
-          data: {
-            fontcolor: "#FFFFFF",
-          },
         });
       }
     } catch (error) {}
