@@ -173,7 +173,10 @@ user.post("/usdt/payment", isUser, PaymentController.USDTPayment);
 // Membership history for authenticated user
 user.get("/membership/history", isUser, PaymentController.MembershipHistory);
 
-// ...............................UNSECURED API - Get User Data.......................................
+// ...............................UNSECURED APIs - Get User Data.......................................
 user.post("/getuserdata", UserController.GetUserData);
+user.post("/getuserprofile", UserController.GetUserProfile);
+user.post("/getusercompanies", UserController.GetUserCompanies);
+user.post("/getuserchambers", UserController.GetUserChambers);
 
 export default user;
