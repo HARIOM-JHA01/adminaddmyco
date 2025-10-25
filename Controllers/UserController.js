@@ -3056,8 +3056,17 @@ class UserController {
         { $unwind: { path: "$theme", preserveNullAndEmptyArrays: true } },
       ]);
 
-      // Return raw data without URL manipulation
+      // Process profile images/videos
       let profileData = profile[0] || {};
+      if (profileData.profile_image && profileData.profile_image !== "") {
+        profileData.profile_image =
+          baseUrl + "assets/" + profileData.profile_image;
+        profileData.video = "";
+      }
+      if (profileData.video && profileData.video !== "") {
+        profileData.video = baseUrl + "assets/" + profileData.video;
+        profileData.profile_image = "";
+      }
 
       return res.status(200).json({
         success: true,
