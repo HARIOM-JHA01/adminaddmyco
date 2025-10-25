@@ -3056,17 +3056,8 @@ class UserController {
         { $unwind: { path: "$theme", preserveNullAndEmptyArrays: true } },
       ]);
 
-      // Process profile images/videos
+      // Return raw data without URL manipulation
       let profileData = profile[0] || {};
-      if (profileData.profile_image && profileData.profile_image !== "") {
-        profileData.profile_image =
-          baseUrl + "assets/" + profileData.profile_image;
-        profileData.video = "";
-      }
-      if (profileData.video && profileData.video !== "") {
-        profileData.video = baseUrl + "assets/" + profileData.video;
-        profileData.profile_image = "";
-      }
 
       return res.status(200).json({
         success: true,
@@ -3110,17 +3101,7 @@ class UserController {
         company_order: 1,
       });
 
-      // Process company images/videos
-      companies = companies.map((company) => {
-        company = company.toObject();
-        if (company.image && company.image !== "") {
-          company.image = baseUrl + "assets/" + company.image;
-        }
-        if (company.video && company.video !== "") {
-          company.video = baseUrl + "assets/" + company.video;
-        }
-        return company;
-      });
+      // Return raw data without URL manipulation
 
       return res.status(200).json({
         success: true,
@@ -3162,17 +3143,7 @@ class UserController {
       // Get all chambers for this user
       let chambers = await ChamberModel.find({ user_id: user._id });
 
-      // Process chamber images/videos
-      chambers = chambers.map((chamber) => {
-        chamber = chamber.toObject();
-        if (chamber.image && chamber.image !== "") {
-          chamber.image = baseUrl + "assets/" + chamber.image;
-        }
-        if (chamber.video && chamber.video !== "") {
-          chamber.video = baseUrl + "assets/" + chamber.video;
-        }
-        return chamber;
-      });
+      // Return raw data without URL manipulation
 
       return res.status(200).json({
         success: true,
