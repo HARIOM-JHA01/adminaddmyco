@@ -2214,8 +2214,8 @@ class UserController {
             flag: 1,
           };
           let result1 = await ContactModel.create(doc);
-          return res.status(422).json({
-            success: false,
+          return res.status(200).json({
+            success: true,
             message: "This Contact Is Already Present...",
             data: result1,
           });
@@ -2227,8 +2227,8 @@ class UserController {
           flag: 1,
         };
         let result = await ContactModel.create(doc);
-        return res.status(422).json({
-          success: false,
+        return res.status(200).json({
+          success: true,
           message: "This Contact Is Already Present...",
           data: result,
         });
