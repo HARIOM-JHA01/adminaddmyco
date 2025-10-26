@@ -2551,27 +2551,77 @@ class UserController {
 
   // ::::::::::::::::::::::::::::::::: SEARCH CONTACT::::::::::::::::::::::::::::::::::::
   static SearchContact = async (req, res) => {
-    let user = await UserModel.findOne({
-      $or: [{ username: req.body.search }, { tgid: req.body.search }],
-    });
-    if (user) {
-      let contact = await ContactModel.findOne({ contact_id: user._id });
-      if (contact) {
-        return res.status(200).json({
-          success: true,
-          data: contact,
+    try {
+      const q = (req.body.search || "").trim();
+      if (!q) {
+        return res
+          .status(422)
+          .json({ success: false, message: "Search term required" });
+      }
+
+      // Build case-insensitive regex for partial matches
+      const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+
+      // Find users matching username/tgid exactly or name fields partially
+      const usersByFields = await UserModel.find({
+        $or: [
+          { username: q },
+          { tgid: q },
+          { owner_name_english: { $regex: regex } },
+          { owner_name_chinese: { $regex: regex } },
+          { firstname: { $regex: regex } },
+          { lastname: { $regex: regex } },
+        ],
+      });
+
+      // Find companies matching company name fields and collect their user_ids
+      const companies = await CompanyModel.find({
+        $or: [
+          { company_name_english: { $regex: regex } },
+          { company_name_chinese: { $regex: regex } },
+        ],
+      });
+      const companyUserIds = companies.map((c) => c.user_id).filter(Boolean);
+
+      const usersFromCompanies = companyUserIds.length
+        ? await UserModel.find({ _id: { $in: companyUserIds } })
+        : [];
+
+      // Combine users and deduplicate by _id
+      const usersMap = new Map();
+      usersByFields.concat(usersFromCompanies).forEach((u) => {
+        usersMap.set(String(u._id), u);
+      });
+
+      const results = [];
+      for (const user of usersMap.values()) {
+        // Check if current authenticated user already has this user as contact
+        const isContact = await ContactModel.exists({
+          user_id: req.user._id,
+          contact_id: user._id,
         });
-      } else {
-        return res.status(422).json({
-          success: false,
-          message: "Record not found...",
+        // Get first company for preview
+        const company = await CompanyModel.findOne({ user_id: user._id }).sort({
+          company_order: 1,
+        });
+
+        results.push({
+          user: user,
+          company: company || null,
+          isContact: Boolean(isContact),
         });
       }
-    } else {
-      return res.status(422).json({
-        success: false,
-        message: "User not found...",
-      });
+
+      if (results.length === 0) {
+        return res
+          .status(422)
+          .json({ success: false, message: "No records found" });
+      }
+
+      return res.status(200).json({ success: true, data: results });
+    } catch (err) {
+      console.error("SearchContact error:", err);
+      return res.status(500).json({ success: false, message: "Server error" });
     }
   };
 
