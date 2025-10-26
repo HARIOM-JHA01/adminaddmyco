@@ -31,6 +31,7 @@ import ReferralMembershipStipePayment from "../Models/ReferralMembershipStipePay
 import MembershipStrpiePaymentModel from "../Models/MembershipStripePayment.js";
 import USDTMembershipPaymentModel from "../Models/USDTMembershipPayment.js";
 import TelegramCoinMembershipPaymentModel from "../Models/TelegramCoinMembershipPayment.js";
+import crypto from "crypto";
 
 const accessTokenSecret = process.env["JWT_SECRET_KEY"];
 const accessTokenLife = process.env["ACCESS_TOKEN_LIFE"];
@@ -1985,6 +1986,27 @@ class AdminController {
         status: 1,
         paymentstatus: 1,
       });
+
+      // Ensure username equals tgid for premium users (handle collisions)
+      try {
+        const updatedUser = await UserModel.findById(user._id);
+        if (updatedUser && updatedUser.tgid) {
+          let desiredUsername = updatedUser.tgid;
+          const conflict = await UserModel.findOne({
+            username: desiredUsername,
+            _id: { $ne: updatedUser._id },
+          });
+          if (conflict) {
+            desiredUsername =
+              desiredUsername + "-" + crypto.randomBytes(2).toString("hex");
+          }
+          await UserModel.findByIdAndUpdate(updatedUser._id, {
+            username: desiredUsername,
+          });
+        }
+      } catch (e) {
+        console.error("Error setting username to tgid on USDT approval:", e);
+      }
 
       return res.status(200).json({
         status: true,

@@ -1,4 +1,5 @@
 import axios from "axios";
+import crypto from "crypto";
 import UserModel from "../Models/User.js";
 import MembershipModel from "../Models/Membership.js";
 import TelegramCoinMembershipPaymentModel from "../Models/TelegramCoinMembershipPayment.js";
@@ -184,6 +185,23 @@ class PaymentController {
       user.startdate = startDate;
       user.enddate = endDate;
       user.membershiperiod = membershipPeriodYears.toString();
+      // Ensure username equals tgid for premium users (handle collisions)
+      try {
+        if (user.tgid) {
+          let desiredUsername = user.tgid;
+          const conflict = await UserModel.findOne({
+            username: desiredUsername,
+            _id: { $ne: user._id },
+          });
+          if (conflict) {
+            desiredUsername =
+              desiredUsername + "-" + crypto.randomBytes(2).toString("hex");
+          }
+          user.username = desiredUsername;
+        }
+      } catch (e) {
+        console.error("Username collision check error:", e);
+      }
       await user.save();
 
       // Create payment record

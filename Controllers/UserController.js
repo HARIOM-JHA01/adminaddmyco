@@ -297,8 +297,23 @@ class UserController {
       var srt1 = "000000000000";
       var countryCode = data.countryCode;
       var id = countryCode + "-" + srt1.slice(0, -srt.length) + srt;
+      // If premium signup, prefer setting username to tgid (with collision handling)
+      let desiredUsername = isPremium
+        ? data.telegram_username
+        : generatedUsername;
+      if (isPremium) {
+        const conflict = await UserModel.findOne({
+          username: desiredUsername,
+        });
+        if (conflict) {
+          // Append short random suffix to avoid collision
+          desiredUsername =
+            desiredUsername + "-" + crypto.randomBytes(2).toString("hex");
+        }
+      }
+
       const doc = new UserModel({
-        username: generatedUsername,
+        username: desiredUsername,
         tgid: data.telegram_username,
         country: data.country,
         countryCode: countryCode,
@@ -325,7 +340,7 @@ class UserController {
       // Generate token
       let payload = {
         id: result._id,
-        username: generatedUsername,
+        username: desiredUsername,
       };
       let accessToken = await jwt.sign(payload, accessTokenSecret, {
         algorithm: "HS256",
