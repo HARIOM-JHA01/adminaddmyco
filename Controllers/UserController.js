@@ -685,6 +685,7 @@ class UserController {
       },
       { $unwind: { path: "$companydata", preserveNullAndEmptyArrays: true } },
     ]);
+
     if (logoDetails) {
       profile[0]["logoImage"] = logoDetails.Banner;
       profile[0]["logoTelegramUrl"] = logoDetails.Link;
@@ -926,6 +927,46 @@ class UserController {
     }
   };
 
+  // Public API: get background + theme + font for a given username
+  static GetUserBackground = async (req, res) => {
+    try {
+      const { username } = req.body;
+      if (!username) {
+        return res
+          .status(422)
+          .json({ success: false, message: "username is required" });
+      }
+      const user = await UserModel.findOne({ username: username });
+      if (!user) {
+        return res
+          .status(422)
+          .json({ success: false, message: "User not found" });
+      }
+      const theme = await BackgroundModel.findOne({ user_id: user._id });
+      const result = {
+        background_image: "",
+        theme_color: "",
+        font_color: "",
+      };
+      if (theme) {
+        if (theme.Thumbnail && theme.Thumbnail != "") {
+          // if stored as full URL use it, otherwise prefix with assets path
+          result.background_image =
+            theme.Thumbnail.startsWith("http") ||
+            theme.Thumbnail.startsWith("/")
+              ? theme.Thumbnail
+              : baseUrl + "assets/" + theme.Thumbnail;
+        }
+        result.theme_color = theme.backgroundcolor || "";
+        result.font_color = theme.fontcolor || "";
+      }
+      return res.status(200).json({ success: true, data: result });
+    } catch (err) {
+      console.error("GetUserBackground error:", err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+  };
+
   static Companyprofile = async (req, res) => {
     var data = req.body;
 
@@ -944,6 +985,22 @@ class UserController {
     } else {
       const path = await makeDir("./assets/companyprofile/");
       let pic = await UserModel.findById(req.user._id);
+      // determine company_order: use provided value or auto-increment from max existing for this user
+      let companyOrder;
+      if (
+        req.body.company_order !== undefined &&
+        req.body.company_order !== ""
+      ) {
+        companyOrder = Number(req.body.company_order);
+      } else {
+        const last = await CompanyModel.findOne({ user_id: req.user._id })
+          .sort({ company_order: -1 })
+          .select("company_order")
+          .lean();
+        companyOrder =
+          last && last.company_order ? Number(last.company_order) + 1 : 1;
+      }
+
       const doc = {
         company_name_english: req.body.company_name_english,
         company_name_chinese: req.body.company_name_chinese,
@@ -966,7 +1023,7 @@ class UserController {
         fax: req.body.fax,
         website: req.body.website,
         fanpage: req.body.fanpage,
-        company_order: req.body.company_order,
+        company_order: companyOrder,
         user_id: req.user._id,
         // video: imagename
       };
@@ -1309,7 +1366,7 @@ class UserController {
     var data = req.body;
     let datas = [];
     var newdata = data.data;
-    newdata.forEach(function (err, devices) {
+    for (const err of newdata) {
       err.user_id = req.body.user_id;
       if (err.image != undefined) {
         if (err.image !== "") {
@@ -1343,9 +1400,21 @@ class UserController {
           .then((doc) => {})
           .then((data) => {});
       } else {
-        ChamberModel.create(err);
+        // assign chamber_order if not provided
+        if (!err.chamber_order && err.chamber_order !== 0) {
+          const lastCh = await ChamberModel.findOne({ user_id: req.user._id })
+            .sort({ chamber_order: -1 })
+            .select("chamber_order")
+            .lean();
+          err.chamber_order =
+            lastCh && lastCh.chamber_order
+              ? Number(lastCh.chamber_order) + 1
+              : 1;
+        }
+        await ChamberModel.create(err);
       }
-    });
+    }
+
     let usercontact1 = await ContactModel.find({
       status: 1,
       contact_id: req.user._id,

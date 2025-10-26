@@ -178,5 +178,6 @@ user.post("/getuserdata", UserController.GetUserData);
 user.post("/getuserprofile", UserController.GetUserProfile);
 user.post("/getusercompanies", UserController.GetUserCompanies);
 user.post("/getuserchambers", UserController.GetUserChambers);
+user.post("/getbackgroundbyusername", UserController.GetUserBackground);
 
 export default user;
