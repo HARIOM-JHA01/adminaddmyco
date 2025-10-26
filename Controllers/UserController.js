@@ -2601,11 +2601,16 @@ class UserController {
   };
 
   static GetContactFolder = async (req, res) => {
-    let contact = await ContactFolderModel.find({ user_id: req.user._id });
-    return res.status(200).json({
-      success: true,
-      data: contact,
-    });
+    // Return system folders (user_id: null) and user-specific folders
+    try {
+      let folders = await FolderModel.find({
+        $or: [{ user_id: null }, { user_id: req.user._id }],
+      }).sort({ _id: -1 });
+      return res.status(200).json({ success: true, data: folders });
+    } catch (err) {
+      console.error("GetContactFolder error:", err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
   };
 
   static DeleteContactFolder = async (req, res) => {
