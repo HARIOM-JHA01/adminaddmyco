@@ -2308,6 +2308,16 @@ class UserController {
         contact_id: req.user._id,
       };
       let result = await ContactModel.create(doc);
+      // Create a notification for the recipient so they can accept/reject
+      try {
+        await NotificationModel.create({
+          user_id: req.body.contact_id,
+          contact_id: req.user._id,
+          message: `${req.user.owner_name_english} has sent you a contact request`,
+        });
+      } catch (e) {
+        console.error("Failed creating contact notification", e);
+      }
       let data = await ContactModel.findById(result._id);
       data = JSON.parse(JSON.stringify(data));
       let user = await UserModel.findById(data.contact_id);
@@ -2345,27 +2355,108 @@ class UserController {
         { _id: req.body.id },
         {
           status: req.body.status,
-        }
+        },
+        { new: true }
       );
       let approve = "";
+      // fetch the updated contact document
+      const contactDoc = await ContactModel.findById(req.body.id);
+      if (!contactDoc) {
+        return res
+          .status(422)
+          .json({ success: false, message: "Contact record not found" });
+      }
       if (req.body.status == 1) {
+        // APPROVE: create reciprocal contact (if missing), add to recipient's selected folder and sender's 'All' folder, and remove notification
         approve = "Approved";
-        var user = await ContactModel.findById(req.body.id);
+        // create reciprocal contact if not exists
         let add = await ContactModel.findOne({
-          contact_id: user.user_id,
-          user_id: user.contact_id,
+          contact_id: contactDoc.user_id,
+          user_id: contactDoc.contact_id,
         });
-        if (add) {
-        } else {
-          const doc1 = {
-            user_id: user.contact_id,
-            contact_id: user.user_id,
+        if (!add) {
+          await ContactModel.create({
+            user_id: contactDoc.contact_id,
+            contact_id: contactDoc.user_id,
             flag: 1,
-          };
-          await ContactModel.create(doc1);
+          });
+        }
+
+        // Add to recipient's selected folder (folder_id passed in request)
+        if (req.body.folder_id) {
+          try {
+            await ContactFolderModel.create({
+              user_id: contactDoc.user_id,
+              contact_id: contactDoc.contact_id,
+              folder_id: req.body.folder_id,
+            });
+          } catch (e) {
+            console.error("Failed to add contact to recipient folder", e);
+          }
+        }
+
+        // Ensure sender has an 'All' folder; create if missing, then add recipient to it
+        try {
+          let senderAll = await FolderModel.findOne({
+            user_id: contactDoc.contact_id,
+            Folder: "All",
+          });
+          if (!senderAll) {
+            senderAll = await FolderModel.create({
+              user_id: contactDoc.contact_id,
+              Folder: "All",
+            });
+          }
+          await ContactFolderModel.create({
+            user_id: contactDoc.contact_id,
+            contact_id: contactDoc.user_id,
+            folder_id: senderAll._id,
+          });
+        } catch (e) {
+          console.error("Failed to add contact to sender All folder", e);
+        }
+
+        // Remove any pending notifications for this request
+        try {
+          await NotificationModel.deleteMany({
+            user_id: contactDoc.user_id,
+            contact_id: contactDoc.contact_id,
+          });
+        } catch (e) {
+          console.error("Failed deleting notification after approval", e);
         }
       } else {
+        // REJECT: delete contact records and any contact-folder entries and notifications
         approve = "Rejected";
+        try {
+          await ContactModel.deleteMany({
+            $or: [
+              { _id: contactDoc._id },
+              {
+                user_id: contactDoc.contact_id,
+                contact_id: contactDoc.user_id,
+              },
+            ],
+          });
+          await ContactFolderModel.deleteMany({
+            $or: [
+              {
+                user_id: contactDoc.user_id,
+                contact_id: contactDoc.contact_id,
+              },
+              {
+                user_id: contactDoc.contact_id,
+                contact_id: contactDoc.user_id,
+              },
+            ],
+          });
+          await NotificationModel.deleteMany({
+            user_id: contactDoc.user_id,
+            contact_id: contactDoc.contact_id,
+          });
+        } catch (e) {
+          console.error("Failed cleanup on rejection", e);
+        }
       }
       return res.status(200).json({
         success: true,
