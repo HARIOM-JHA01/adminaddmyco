@@ -221,6 +221,7 @@ class ReferralController {
     let date = moment().format("YYYY-MM-DD");
     let enddate = moment(date).add(1, "y").format("YYYY-MM-DD");
     // Ensure username equals tgid for premium users (handle collisions)
+    let data; // declare in outer scope so it's available after try/catch
     try {
       let desiredUsername = req.query.id;
       const conflict = await UserModel.findOne({
@@ -231,26 +232,34 @@ class ReferralController {
         desiredUsername =
           desiredUsername + "-" + crypto.randomBytes(2).toString("hex");
       }
-      let data = await UserModel.findByIdAndUpdate(user[0]._id, {
-        usertype: 1,
-        startdate: date,
-        paymentstatus: 1,
-        enddate: enddate,
-        referralType: 0,
-        paymentBy: 0,
-        username: desiredUsername,
-      });
+      data = await UserModel.findByIdAndUpdate(
+        user[0]._id,
+        {
+          usertype: 1,
+          startdate: date,
+          paymentstatus: 1,
+          enddate: enddate,
+          referralType: 0,
+          paymentBy: 0,
+          username: desiredUsername,
+        },
+        { new: true }
+      );
     } catch (e) {
       console.error("Error setting username in ApprovePrimium:", e);
       // Fallback: still update membership fields without changing username
-      await UserModel.findByIdAndUpdate(user[0]._id, {
-        usertype: 1,
-        startdate: date,
-        paymentstatus: 1,
-        enddate: enddate,
-        referralType: 0,
-        paymentBy: 0,
-      });
+      data = await UserModel.findByIdAndUpdate(
+        user[0]._id,
+        {
+          usertype: 1,
+          startdate: date,
+          paymentstatus: 1,
+          enddate: enddate,
+          referralType: 0,
+          paymentBy: 0,
+        },
+        { new: true }
+      );
     }
     return res.status(200).json({
       status: true,
