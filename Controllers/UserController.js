@@ -990,7 +990,6 @@ class UserController {
       company_name_english: "required",
       company_name_chinese: "required",
       companydesignation: "required",
-      telegramId: "required",
     });
     if (!(await validator.check())) {
       return res.status(422).json({
