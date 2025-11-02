@@ -70,7 +70,7 @@ export function start() {
     const chatId = msg.chat.id;
     bot.sendMessage(
       chatId,
-      "Welcome to AddMyCo! Use our mini app to view and share profiles."
+      "Welcome to AddMyCo! Use our mini app to create your Dynamic NameCard and share Profiles to your Friends."
     );
   });
 
