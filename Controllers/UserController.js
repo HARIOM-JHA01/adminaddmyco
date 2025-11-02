@@ -2277,15 +2277,13 @@ class UserController {
     if (!mongoose.Types.ObjectId.isValid(targetId)) {
       return res
         .status(422)
-        .json({ success: false, message: "Invalid contact_id" });
+        .json({ success: true, message: "Invalid contact_id" });
     }
     if (meId.toString() === targetId.toString()) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "You cannot add yourself as contact",
-        });
+      return res.status(400).json({
+        success: true,
+        message: "You cannot add yourself as contact",
+      });
     }
 
     const me = await UserModel.findById(meId);
@@ -2293,7 +2291,7 @@ class UserController {
     if (!target)
       return res
         .status(404)
-        .json({ success: false, message: "Target user not found" });
+        .json({ success: true, message: "Target user not found" });
 
     try {
       // Check if there is already a contact record where target is recipient and I am the requester
@@ -2303,20 +2301,16 @@ class UserController {
       });
       if (pendingForTarget) {
         if (pendingForTarget.status === 0) {
-          return res
-            .status(200)
-            .json({
-              success: false,
-              message: "You already sent a contact request to this user",
-            });
+          return res.status(200).json({
+            success: true,
+            message: "You already sent a contact request to this user",
+          });
         }
         if (pendingForTarget.status === 1) {
-          return res
-            .status(200)
-            .json({
-              success: false,
-              message: "This user is already in your contacts",
-            });
+          return res.status(200).json({
+            success: true,
+            message: "This user is already in your contacts",
+          });
         }
         // status === 2 (previously rejected/removed) -> re-send request: set to pending and (re)create notification
         await ContactModel.findByIdAndUpdate(pendingForTarget._id, {
@@ -2427,12 +2421,10 @@ class UserController {
             .json({ success: true, message: "Contact request accepted" });
         }
         if (pendingFromTarget.status === 1) {
-          return res
-            .status(200)
-            .json({
-              success: false,
-              message: "This user is already in your contacts",
-            });
+          return res.status(200).json({
+            success: true,
+            message: "This user is already in your contacts",
+          });
         }
         // status === 2 -> they had been rejected earlier; proceed to create a fresh request below
       }
