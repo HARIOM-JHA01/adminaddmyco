@@ -1,6 +1,5 @@
 import express from "express";
 import CategoryModel from "../Models/Category.js";
-import ToncoinModel from "../Models/Toncoinpaypal.js";
 import MembershipModel from "../Models/Membership.js";
 import { Validator } from "node-input-validator";
 import SystemModel from "../Models/Systemimage.js";
@@ -195,63 +194,40 @@ class ReferralController {
   };
 
   static ApprovePrimium = async (req, res) => {
-    await UserModel.updateOne(
-      { tgid: req.query.id },
-      { $set: { usertype: 1 } },
-      { upsert: true }
-    );
-    let Membershp = await MembershipModel.find({ membershiperiod: 1 });
-    let user = await UserModel.find({ tgid: req.query.id });
-    const doc = new ToncoinModel({
-      membershiperiod: 1,
-      firstname: user[0].username,
-      address: req.body.address,
-      toncoin: Membershp[0].toncoin,
-      paypal: Membershp[0].paypal,
-      amount: Membershp[0].toncoin,
-      paypalid: req.body.paypalid,
-      user_id: user[0]._id,
-      transactionid: "admin",
-      paymenttype: 2,
-      transactiondate: new Date().toISOString(),
-      paymentstatus: 1,
-      status: 1,
-    });
-    const result = await doc.save();
-    let date = moment().format("YYYY-MM-DD");
-    let enddate = moment(date).add(1, "y").format("YYYY-MM-DD");
-    // Ensure username equals tgid for premium users (handle collisions)
-    let data; // declare in outer scope so it's available after try/catch
     try {
-      let desiredUsername = req.query.id;
+      // Find the user by telegram id (tgid)
+      const tgid = req.query.id;
+      const user = await UserModel.findOne({ tgid: tgid });
+      if (!user) {
+        return res.status(404).json({
+          status: false,
+          message: "User not found",
+        });
+      }
+
+      // Determine membership dates (1 year) and start
+      let date = moment().format("YYYY-MM-DD");
+      let enddate = moment(date).add(1, "y").format("YYYY-MM-DD");
+
+      // Ensure username equals tgid for premium users (handle collisions)
+      let desiredUsername = tgid;
       const conflict = await UserModel.findOne({
         username: desiredUsername,
-        _id: { $ne: user[0]._id },
+        _id: { $ne: user._id },
       });
       if (conflict) {
         desiredUsername =
           desiredUsername + "-" + crypto.randomBytes(2).toString("hex");
       }
-      data = await UserModel.findByIdAndUpdate(
-        user[0]._id,
+
+      // Update user to premium similar to TelegramLogin behavior
+      const updated = await UserModel.findByIdAndUpdate(
+        user._id,
         {
-          usertype: 1,
-          startdate: date,
-          paymentstatus: 1,
-          enddate: enddate,
-          referralType: 0,
-          paymentBy: 0,
           username: desiredUsername,
-        },
-        { new: true }
-      );
-    } catch (e) {
-      console.error("Error setting username in ApprovePrimium:", e);
-      // Fallback: still update membership fields without changing username
-      data = await UserModel.findByIdAndUpdate(
-        user[0]._id,
-        {
           usertype: 1,
+          membertype: "premium",
+          membershiperiod: "12",
           startdate: date,
           paymentstatus: 1,
           enddate: enddate,
@@ -260,11 +236,12 @@ class ReferralController {
         },
         { new: true }
       );
+
+      return res.status(200).json({ status: true, data: updated });
+    } catch (err) {
+      console.error("ApprovePrimium error:", err);
+      return res.status(500).json({ status: false, message: "Server error" });
     }
-    return res.status(200).json({
-      status: true,
-      data: data,
-    });
   };
 
   // ......................DELETEUSERS[FREEUSER,PREMIUM,DONATED].....................
