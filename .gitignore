@@ -16,3 +16,4 @@ yarn-error.log
 composer.lock
 *.zip
 /assets
+.DS_Store
