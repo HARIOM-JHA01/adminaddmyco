@@ -2272,6 +2272,25 @@ class UserController {
       user_id: req.body.contact_id,
     });
 
+    // If the recipient has already sent a pending request to the current user,
+    // inform current user that the contact is already in their pending list
+    // (so they don't create a reverse pending request).
+    try {
+      let reversePending = await ContactModel.findOne({
+        user_id: req.user._id,
+        contact_id: req.body.contact_id,
+      });
+      if (reversePending && reversePending.status === 0) {
+        return res.status(200).json({
+          success: false,
+          message:
+            "You already have this contact in your pending list (Notification)",
+        });
+      }
+    } catch (e) {
+      console.error("Error checking reverse pending contact:", e);
+    }
+
     if (add) {
       let add1 = await ContactModel.findOne({
         user_id: req.body.contact_id,
