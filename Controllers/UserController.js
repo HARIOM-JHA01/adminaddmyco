@@ -2282,7 +2282,7 @@ class UserController {
       });
       if (reversePending && reversePending.status === 0) {
         return res.status(200).json({
-          success: false,
+          success: true,
           message:
             "You already have this contact in your pending list (Notification)",
         });
