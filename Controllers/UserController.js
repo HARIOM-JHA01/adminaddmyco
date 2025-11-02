@@ -2265,102 +2265,207 @@ class UserController {
 
   // ....................................CONTACT..................................
   static AddToContact = async (req, res) => {
-    var data = req.body;
-    let user = await UserModel.findById(req.user._id);
-    let add = await ContactModel.findOne({
-      contact_id: req.user._id,
-      user_id: req.body.contact_id,
-    });
+    const targetId = req.body.contact_id;
+    const meId = req.user._id;
 
-    // If the recipient has already sent a pending request to the current user,
-    // inform current user that the contact is already in their pending list
-    // (so they don't create a reverse pending request).
-    try {
-      let reversePending = await ContactModel.findOne({
-        user_id: req.user._id,
-        contact_id: req.body.contact_id,
-      });
-      if (reversePending && reversePending.status === 0) {
-        return res.status(200).json({
-          success: true,
-          message:
-            "You already have this contact in your pending list (Notification)",
+    // Basic validation
+    if (!targetId) {
+      return res
+        .status(422)
+        .json({ success: false, message: "contact_id is required" });
+    }
+    if (!mongoose.Types.ObjectId.isValid(targetId)) {
+      return res
+        .status(422)
+        .json({ success: false, message: "Invalid contact_id" });
+    }
+    if (meId.toString() === targetId.toString()) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "You cannot add yourself as contact",
         });
-      }
-    } catch (e) {
-      console.error("Error checking reverse pending contact:", e);
     }
 
-    if (add) {
-      let add1 = await ContactModel.findOne({
-        user_id: req.body.contact_id,
-        contact_id: req.user._id,
+    const me = await UserModel.findById(meId);
+    const target = await UserModel.findById(targetId);
+    if (!target)
+      return res
+        .status(404)
+        .json({ success: false, message: "Target user not found" });
+
+    try {
+      // Check if there is already a contact record where target is recipient and I am the requester
+      const pendingForTarget = await ContactModel.findOne({
+        user_id: targetId,
+        contact_id: meId,
       });
-      console.log("add1", add1);
-      if (add1) {
-        if (add1.status == 2) {
-          await ContactModel.findByIdAndUpdate(
-            { _id: add1._id },
-            {
-              status: 0,
-            }
-          );
-          return res.status(200).json({
-            success: true,
-            message: "Contact Added Successfully...",
-          });
-        } else {
-          const doc = {
-            contact_id: req.body.contact_id,
-            user_id: req.user._id,
-            flag: 1,
-          };
-          let result1 = await ContactModel.create(doc);
-          return res.status(200).json({
-            success: true,
-            message: "This Contact Is Already Present...",
-            data: result1,
+      if (pendingForTarget) {
+        if (pendingForTarget.status === 0) {
+          return res
+            .status(200)
+            .json({
+              success: false,
+              message: "You already sent a contact request to this user",
+            });
+        }
+        if (pendingForTarget.status === 1) {
+          return res
+            .status(200)
+            .json({
+              success: false,
+              message: "This user is already in your contacts",
+            });
+        }
+        // status === 2 (previously rejected/removed) -> re-send request: set to pending and (re)create notification
+        await ContactModel.findByIdAndUpdate(pendingForTarget._id, {
+          status: 0,
+        });
+        // ensure notification exists
+        const existingNotif = await NotificationModel.findOne({
+          user_id: targetId,
+          contact_id: meId,
+        });
+        if (!existingNotif) {
+          await NotificationModel.create({
+            user_id: targetId,
+            contact_id: meId,
+            message: `${me.owner_name_english} has sent you a contact request`,
           });
         }
-      } else {
-        const doc = {
-          contact_id: req.body.contact_id,
-          user_id: req.user._id,
-          flag: 1,
-        };
-        let result = await ContactModel.create(doc);
-        return res.status(200).json({
-          success: true,
-          message: "This Contact Is Already Present...",
-          data: result,
-        });
+        return res
+          .status(200)
+          .json({ success: true, message: "Contact request re-sent" });
       }
-    } else {
-      const doc = {
-        user_id: req.body.contact_id,
-        contact_id: req.user._id,
-      };
-      let result = await ContactModel.create(doc);
-      // Create a notification for the recipient so they can accept/reject
+
+      // Check if target had already sent me a request earlier (i.e., reverse pending)
+      const pendingFromTarget = await ContactModel.findOne({
+        user_id: meId,
+        contact_id: targetId,
+      });
+      if (pendingFromTarget) {
+        if (pendingFromTarget.status === 0) {
+          // target had requested me earlier; accepting their request now
+          // mark their request as approved
+          await ContactModel.findByIdAndUpdate(pendingFromTarget._id, {
+            status: 1,
+          });
+
+          // create reciprocal approved contact if missing
+          const reciprocal = await ContactModel.findOne({
+            user_id: targetId,
+            contact_id: meId,
+          });
+          if (!reciprocal) {
+            await ContactModel.create({
+              user_id: targetId,
+              contact_id: meId,
+              status: 1,
+              flag: 1,
+            });
+          } else {
+            await ContactModel.findByIdAndUpdate(reciprocal._id, { status: 1 });
+          }
+
+          // Add to folders: keep same logic as InvitationContact approve
+          try {
+            // Add to recipient's selected folder if provided in body
+            if (req.body.folder_id) {
+              await ContactFolderModel.create({
+                user_id: meId,
+                contact_id: targetId,
+                folder_id: req.body.folder_id,
+              });
+            }
+            // Ensure sender (target) has an 'All' folder and add me to it
+            let senderAll = await FolderModel.findOne({
+              user_id: targetId,
+              Folder: "All",
+            });
+            if (!senderAll) {
+              senderAll = await FolderModel.create({
+                user_id: targetId,
+                Folder: "All",
+              });
+            }
+            await ContactFolderModel.create({
+              user_id: targetId,
+              contact_id: meId,
+              folder_id: senderAll._id,
+            });
+          } catch (e) {
+            console.error(
+              "Failed adding contact to folders during auto-accept:",
+              e
+            );
+          }
+
+          // Remove pending notifications for this request
+          try {
+            await NotificationModel.deleteMany({
+              user_id: meId,
+              contact_id: targetId,
+            });
+          } catch (e) {
+            console.error("Failed deleting notification after auto-accept", e);
+          }
+
+          // Notify target that their request was accepted
+          try {
+            await NotificationModel.create({
+              user_id: targetId,
+              contact_id: meId,
+              message: `${me.owner_name_english} accepted your contact request`,
+            });
+          } catch (e) {
+            console.error("Failed creating acceptance notification", e);
+          }
+
+          return res
+            .status(200)
+            .json({ success: true, message: "Contact request accepted" });
+        }
+        if (pendingFromTarget.status === 1) {
+          return res
+            .status(200)
+            .json({
+              success: false,
+              message: "This user is already in your contacts",
+            });
+        }
+        // status === 2 -> they had been rejected earlier; proceed to create a fresh request below
+      }
+
+      // No existing records: create a new pending contact for the target
+      const newDoc = await ContactModel.create({
+        user_id: targetId,
+        contact_id: meId,
+        status: 0,
+      });
+      // Create notification for the recipient if not already present
       try {
-        await NotificationModel.create({
-          user_id: req.body.contact_id,
-          contact_id: req.user._id,
-          message: `${req.user.owner_name_english} has sent you a contact request`,
+        const existingNotif = await NotificationModel.findOne({
+          user_id: targetId,
+          contact_id: meId,
         });
+        if (!existingNotif) {
+          await NotificationModel.create({
+            user_id: targetId,
+            contact_id: meId,
+            message: `${me.owner_name_english} has sent you a contact request`,
+          });
+        }
       } catch (e) {
         console.error("Failed creating contact notification", e);
       }
-      let data = await ContactModel.findById(result._id);
-      data = JSON.parse(JSON.stringify(data));
-      let user = await UserModel.findById(data.contact_id);
-      data.owner_name_english = `${user.owner_name_english}`;
-      data.owner_name_chinese = `${user.owner_name_chinese}`;
-      data.profile_image = `${user.profile_image}`;
-      return res.status(200).json({
-        success: true,
-        message: "Contact Added Successfully...",
-      });
+
+      return res
+        .status(200)
+        .json({ success: true, message: "Contact request sent" });
+    } catch (err) {
+      console.error("AddToContact error:", err);
+      return res.status(500).json({ success: false, message: "Server error" });
     }
   };
   // :::::::::::::::::::::::::::::INVITATION CONTACT::::::::::::::::::::::::::::::::::
