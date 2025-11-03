@@ -21,6 +21,7 @@ user.post("/invitationcontact", isUser, UserController.InvitationContact);
 user.get("/contactlist/:id", isUser, UserController.ContactList);
 user.delete("/removefromcontact/:id", isUser, UserController.RemoveFromContact);
 user.post("/searchcontact", isUser, UserController.SearchContact);
+user.post("/iscontactexist", isUser, UserController.isMyContact);
 
 // ..........................CONTACT-FOLDER...................................
 user.post("/addcontactfolder", isUser, UserController.AddContactFolder);

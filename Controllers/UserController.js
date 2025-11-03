@@ -2740,6 +2740,34 @@ class UserController {
     }
   };
 
+  static isMyContact = async (req, res) => {
+    try {
+      const username = req.params.username;
+      const meId = req.user._id;
+      const targetUser = await UserModel.findOne({ username: username });
+      if (!targetUser) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Target user not found" });
+      }
+      const targetId = targetUser._id;
+
+      const isContact = await ContactModel.exists({
+        user_id: meId,
+        contact_id: targetId,
+        status: 1,
+      });
+
+      return res.status(200).json({
+        success: true,
+        isContact: Boolean(isContact),
+      });
+    } catch (err) {
+      console.error("isMyContact error:", err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+  };
+
   static AddContactFolder = async (req, res) => {
     var data = req.body;
     let user = await UserModel.findById(req.user._id);
