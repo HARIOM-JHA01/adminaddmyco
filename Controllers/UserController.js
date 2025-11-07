@@ -1098,39 +1098,75 @@ class UserController {
     let datas = [];
     var newdata = data.data || [];
 
+    // If frontend sent multipart files for a single-item update, save them and attach to the item.
+    try {
+      await makeDir("./assets/companyprofile/");
+    } catch (e) {}
+
+    if (req.files && newdata.length === 1) {
+      const single = newdata[0];
+      // image file
+      if (req.files.image) {
+        const imageFile = req.files.image;
+        const d = new Date();
+        const safeName = imageFile.name.replace(/\s/g, "");
+        const r = (Math.random() + 1).toString(36).substring(7);
+        const imname = d.getSeconds() + "." + r + "." + safeName;
+        const uploadPath = "./assets/companyprofile/" + imname;
+        try {
+          await imageFile.mv(uploadPath);
+          single.image = "companyprofile/" + imname;
+        } catch (e) {
+          console.error("Failed to save uploaded company image:", e);
+          return res
+            .status(500)
+            .json({ success: false, message: "Failed to save uploaded image" });
+        }
+      }
+      // video file
+      if (req.files.video) {
+        const videoFile = req.files.video;
+        const d = new Date();
+        const safeName = videoFile.name.replace(/\s/g, "");
+        const r = (Math.random() + 1).toString(36).substring(7);
+        const imname = d.getSeconds() + "." + r + "." + safeName;
+        const uploadPath = "./assets/companyprofile/" + imname;
+        try {
+          await videoFile.mv(uploadPath);
+          single.video = "companyprofile/" + imname;
+        } catch (e) {
+          console.error("Failed to save uploaded company video:", e);
+          return res
+            .status(500)
+            .json({ success: false, message: "Failed to save uploaded video" });
+        }
+      }
+    }
+
     // Process each company item sequentially to properly await DB ops and file writes.
     for (const item of newdata) {
       // ensure user_id is set
       item.user_id = req.body.user_id;
 
-      // handle base64 image if present
+      // reject base64/data URI in image/video fields — require multipart file uploads instead
       if (item.image != undefined && item.image !== "") {
-        const result = String(item.image).search("base64");
-        if (result != -1) {
-          const matches = item.image.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
-          if (matches && matches.length === 3) {
-            const response = {};
-            // remove the large base64 payload from object before saving
-            delete item["image"];
-            response.type = matches[1];
-            response.data = Buffer.from(matches[2], "base64");
-            const decodedImg = response;
-            const imageBuffer = decodedImg.data;
-            const type = decodedImg.type;
-            const extension = mime.getExtension(type) || "png";
-            const r = (Math.random() + 1).toString(36).substring(7);
-            const fileName = r + "." + extension;
-            try {
-              fs.writeFileSync(
-                "./assets/companyprofile/" + fileName,
-                imageBuffer,
-                "utf8"
-              );
-              item["image"] = "companyprofile/" + fileName;
-            } catch (e) {
-              console.error("Failed to write company image for update:", e);
-            }
-          }
+        const s = String(item.image);
+        if (s.indexOf("base64") !== -1 || s.startsWith("data:")) {
+          return res.status(422).json({
+            success: false,
+            message:
+              "Please upload images/videos as file uploads (multipart/form-data). Do not send base64/data URIs in the request.",
+          });
+        }
+      }
+      if (item.video != undefined && item.video !== "") {
+        const s2 = String(item.video);
+        if (s2.indexOf("base64") !== -1 || s2.startsWith("data:")) {
+          return res.status(422).json({
+            success: false,
+            message:
+              "Please upload images/videos as file uploads (multipart/form-data). Do not send base64/data URIs in the request.",
+          });
         }
       }
 
