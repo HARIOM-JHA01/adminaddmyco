@@ -3483,7 +3483,80 @@ class UserController {
         company_order: 1,
       });
 
-      // Return raw data without URL manipulation
+      // Normalize image/video fields to public URLs.
+      // If a field contains a data URI (base64) - decode, save to assets/companyprofile and update DB.
+      for (let i = 0; i < companies.length; i++) {
+        const c = companies[i];
+        // convert to plain object for manipulation
+        let companyObj = c.toObject ? c.toObject() : { ...c };
+
+        // Ensure assets directory exists
+        try {
+          await makeDir("./assets/companyprofile/");
+        } catch (e) {
+          // ignore - directory may already exist or creation failed later when writing
+        }
+
+        // Helper to handle a file-like field (image/video)
+        const handleField = async (fieldName, defaultFolder) => {
+          const val = companyObj[fieldName];
+          if (!val) return;
+          const str = String(val);
+          // already an absolute url
+          if (str.startsWith("http") || str.startsWith("/")) {
+            // if it starts with '/', prefix baseUrl
+            if (str.startsWith("/") && !str.startsWith("/assets/")) {
+              companyObj[fieldName] = baseUrl.replace(/\/$/, "") + str;
+            } else {
+              companyObj[fieldName] = str;
+            }
+            return;
+          }
+
+          // data URI (base64)
+          if (str.indexOf("base64") !== -1 || str.startsWith("data:")) {
+            const matches = str.match(
+              /^data:([A-Za-z-+\/]+\/[A-Za-z0-9-.+]+);base64,(.+)$/
+            );
+            if (matches && matches.length === 3) {
+              const mimeType = matches[1];
+              const data = matches[2];
+              const extension =
+                mime.getExtension(mimeType) ||
+                (fieldName === "video" ? "mp4" : "png");
+              const r = (Math.random() + 1).toString(36).substring(7);
+              const fileName = r + "." + extension;
+              try {
+                // write file
+                fs.writeFileSync(
+                  "./assets/" + defaultFolder + "/" + fileName,
+                  Buffer.from(data, "base64")
+                );
+                // update DB to saved relative path
+                const relativePath = defaultFolder + "/" + fileName;
+                await CompanyModel.findByIdAndUpdate(c._id, {
+                  [fieldName]: relativePath,
+                });
+                companyObj[fieldName] = baseUrl + "assets/" + relativePath;
+                return;
+              } catch (e) {
+                console.error(
+                  `Failed to save base64 ${fieldName} for company ${c._id}:`,
+                  e
+                );
+              }
+            }
+          }
+
+          // otherwise assume a stored relative path like 'companyprofile/xyz.mp4' and prefix with assets URL
+          companyObj[fieldName] = baseUrl + "assets/" + str;
+        };
+
+        await handleField("image", "companyprofile");
+        await handleField("video", "companyprofile");
+
+        companies[i] = companyObj;
+      }
 
       return res.status(200).json({
         success: true,
