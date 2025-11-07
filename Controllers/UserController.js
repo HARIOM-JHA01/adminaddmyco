@@ -1444,76 +1444,154 @@ class UserController {
   };
 
   static UpdateChamber = async (req, res) => {
-    var data = req.body;
-    let datas = [];
-    var newdata = data.data;
-    for (const err of newdata) {
-      err.user_id = req.body.user_id;
-      if (err.image != undefined) {
-        if (err.image !== "") {
-          let result = err.image.search("base64");
-          if (result != -1) {
-            var matches = err.image.match(/^data:([A-Za-z-+/]+);base64,(.+)$/),
-              response = {};
-            delete err["image"];
-            response.type = matches[1];
-            response.data = new Buffer(matches[2], "base64");
-            let decodedImg = response;
-            let imageBuffer = decodedImg.data;
-            let type = decodedImg.type;
-            let extension = mime.getExtension(type);
-            let r = (Math.random() + 1).toString(36).substring(7);
-            let fileName = r + "." + extension;
-            try {
-              fs.writeFileSync(
-                "./assets/chamber/" + fileName,
-                imageBuffer,
-                "utf8"
-              );
-              err["image"] = "chamber/" + fileName;
-            } catch (e) {}
-          }
-        }
-      }
-      if (err._id) {
-        let id = err._id;
-        ChamberModel.findByIdAndUpdate(id, err)
-          .then((doc) => {})
-          .then((data) => {});
-      } else {
-        // assign chamber_order if not provided
-        if (!err.chamber_order && err.chamber_order !== 0) {
-          const lastCh = await ChamberModel.findOne({ user_id: req.user._id })
-            .sort({ chamber_order: -1 })
-            .select("chamber_order")
-            .lean();
-          err.chamber_order =
-            lastCh && lastCh.chamber_order
-              ? Number(lastCh.chamber_order) + 1
-              : 1;
-        }
-        await ChamberModel.create(err);
-      }
-    }
+    try {
+      // Accept only multipart/form-data for a single chamber update
+      await makeDir("./assets/chamber/");
 
-    let usercontact1 = await ContactModel.find({
-      status: 1,
-      contact_id: req.user._id,
-    });
-    for (var i = 0; i < usercontact1.length; i++) {
-      var contact_id = usercontact1[i].contact_id;
-      var user_id = usercontact1[i].user_id;
-      const doc = {
-        user_id: contact_id,
-        contact_id: user_id,
-        message: `${req.user.owner_name_english} has changed their chamber data`,
-      };
-      let notification = await NotificationModel.create(doc);
+      const body = req.body || {};
+      const chamberId = body._id;
+      if (!chamberId) {
+        return res
+          .status(422)
+          .json({
+            success: false,
+            message: "_id (chamber id) is required in form fields",
+          });
+      }
+
+      // Build update document from allowed fields
+      const allowed = [
+        "chamber_name_english",
+        "chamber_name_chinese",
+        "chamberdesignation",
+        "detail",
+        "WhatsApp",
+        "WeChat",
+        "Line",
+        "Instagram",
+        "Facebook",
+        "Twitter",
+        "Youtube",
+        "Linkedin",
+        "SnapChat",
+        "Skype",
+        "TikTok",
+        "tgchannel",
+        "chamberfanpage",
+        "chamberwebsite",
+        "user_id",
+        "chamber_order",
+      ];
+      const doc = {};
+      for (const k of allowed) {
+        if (typeof body[k] !== "undefined") doc[k] = body[k];
+      }
+
+      // Reject base64/data URIs sent as form fields
+      if (
+        body.image &&
+        (String(body.image).includes("base64") ||
+          String(body.image).startsWith("data:"))
+      ) {
+        return res
+          .status(422)
+          .json({
+            success: false,
+            message:
+              "Please upload image as a file (multipart/form-data). Do not send base64/data URIs.",
+          });
+      }
+      if (
+        body.video &&
+        (String(body.video).includes("base64") ||
+          String(body.video).startsWith("data:"))
+      ) {
+        return res
+          .status(422)
+          .json({
+            success: false,
+            message:
+              "Please upload video as a file (multipart/form-data). Do not send base64/data URIs.",
+          });
+      }
+
+      // Handle uploaded files
+      if (req.files && req.files.image) {
+        const image = req.files.image;
+        const d = new Date();
+        const safeName = image.name.replace(/\s/g, "");
+        const r = (Math.random() + 1).toString(36).substring(7);
+        const imname = d.getSeconds() + "." + r + "." + safeName;
+        const uploadPath = "./assets/chamber/" + imname;
+        try {
+          await image.mv(uploadPath);
+          doc.image = "chamber/" + imname;
+        } catch (e) {
+          console.error("Failed to save uploaded chamber image:", e);
+          return res
+            .status(500)
+            .json({ success: false, message: "Failed to save uploaded image" });
+        }
+      }
+
+      if (req.files && req.files.video) {
+        const video = req.files.video;
+        const d = new Date();
+        const safeName = video.name.replace(/\s/g, "");
+        const r = (Math.random() + 1).toString(36).substring(7);
+        const imname = d.getSeconds() + "." + r + "." + safeName;
+        const uploadPath = "./assets/chamber/" + imname;
+        try {
+          await video.mv(uploadPath);
+          doc.video = "chamber/" + imname;
+        } catch (e) {
+          console.error("Failed to save uploaded chamber video:", e);
+          return res
+            .status(500)
+            .json({ success: false, message: "Failed to save uploaded video" });
+        }
+      }
+
+      // Update existing chamber
+      try {
+        await ChamberModel.findByIdAndUpdate(chamberId, doc, {
+          new: true,
+          upsert: false,
+        });
+      } catch (e) {
+        console.error(`Failed to update chamber ${chamberId}:`, e);
+        return res
+          .status(500)
+          .json({ success: false, message: "Failed to update chamber" });
+      }
+
+      // Notify contacts about the change (same behavior as before)
+      let usercontact1 = await ContactModel.find({
+        status: 1,
+        contact_id: req.user._id,
+      });
+      for (var i = 0; i < usercontact1.length; i++) {
+        var contact_id = usercontact1[i].contact_id;
+        var user_id = usercontact1[i].user_id;
+        const ndoc = {
+          user_id: contact_id,
+          contact_id: user_id,
+          message: `${req.user.owner_name_english} has changed their chamber data`,
+        };
+        try {
+          await NotificationModel.create(ndoc);
+        } catch (e) {
+          console.error("Failed creating chamber update notification:", e);
+        }
+      }
+
+      return res
+        .status(200)
+        .json({ success: true, message: "Data Updated Successfully..." });
+    } catch (error) {
+      console.error("UpdateChamber error:", error);
+      return res.status(500).json({ success: false, message: "Server error" });
     }
-    return res.status(200).json({
-      success: true,
-      message: "Data Updated Successfully...",
-    });
   };
 
   static Chambervideo = async (req, res) => {
