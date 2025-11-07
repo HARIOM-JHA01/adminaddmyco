@@ -1094,28 +1094,85 @@ class UserController {
   };
 
   static Updatecompanyprofile = async (req, res) => {
-    var data = req.body;
-    let datas = [];
-    var newdata = data.data || [];
-
-    // If frontend sent multipart files for a single-item update, save them and attach to the item.
     try {
       await makeDir("./assets/companyprofile/");
-    } catch (e) {}
 
-    if (req.files && newdata.length === 1) {
-      const single = newdata[0];
-      // image file
-      if (req.files.image) {
-        const imageFile = req.files.image;
+      const body = req.body || {};
+
+      const companyId = body._id;
+      if (!companyId) {
+        return res.status(422).json({
+          success: false,
+          message: "_id (company id) is required in form fields",
+        });
+      }
+
+      // Build update document from allowed fields
+      const allowed = [
+        "company_name_english",
+        "company_name_chinese",
+        "companydesignation",
+        "description",
+        "email",
+        "WhatsApp",
+        "WeChat",
+        "Line",
+        "Instagram",
+        "Facebook",
+        "Twitter",
+        "Youtube",
+        "Linkedin",
+        "SnapChat",
+        "Skype",
+        "TikTok",
+        "telegramId",
+        "contact",
+        "fax",
+        "website",
+        "fanpage",
+        "company_order",
+        "user_id",
+      ];
+      const doc = {};
+      for (const k of allowed) {
+        if (typeof body[k] !== "undefined") doc[k] = body[k];
+      }
+
+      // Reject if image/video fields are provided as base64/data URIs in form fields
+      if (
+        body.image &&
+        (String(body.image).includes("base64") ||
+          String(body.image).startsWith("data:"))
+      ) {
+        return res.status(422).json({
+          success: false,
+          message:
+            "Please upload image as a file (multipart/form-data). Do not send base64/data URIs.",
+        });
+      }
+      if (
+        body.video &&
+        (String(body.video).includes("base64") ||
+          String(body.video).startsWith("data:"))
+      ) {
+        return res.status(422).json({
+          success: false,
+          message:
+            "Please upload video as a file (multipart/form-data). Do not send base64/data URIs.",
+        });
+      }
+
+      // Handle uploaded files (image/video)
+      if (req.files && req.files.image) {
+        const image = req.files.image;
         const d = new Date();
-        const safeName = imageFile.name.replace(/\s/g, "");
+        const safeName = image.name.replace(/\s/g, "");
         const r = (Math.random() + 1).toString(36).substring(7);
         const imname = d.getSeconds() + "." + r + "." + safeName;
         const uploadPath = "./assets/companyprofile/" + imname;
         try {
-          await imageFile.mv(uploadPath);
-          single.image = "companyprofile/" + imname;
+          await image.mv(uploadPath);
+          doc.image = "companyprofile/" + imname;
         } catch (e) {
           console.error("Failed to save uploaded company image:", e);
           return res
@@ -1123,17 +1180,17 @@ class UserController {
             .json({ success: false, message: "Failed to save uploaded image" });
         }
       }
-      // video file
-      if (req.files.video) {
-        const videoFile = req.files.video;
+
+      if (req.files && req.files.video) {
+        const video = req.files.video;
         const d = new Date();
-        const safeName = videoFile.name.replace(/\s/g, "");
+        const safeName = video.name.replace(/\s/g, "");
         const r = (Math.random() + 1).toString(36).substring(7);
         const imname = d.getSeconds() + "." + r + "." + safeName;
         const uploadPath = "./assets/companyprofile/" + imname;
         try {
-          await videoFile.mv(uploadPath);
-          single.video = "companyprofile/" + imname;
+          await video.mv(uploadPath);
+          doc.video = "companyprofile/" + imname;
         } catch (e) {
           console.error("Failed to save uploaded company video:", e);
           return res
@@ -1141,73 +1198,47 @@ class UserController {
             .json({ success: false, message: "Failed to save uploaded video" });
         }
       }
-    }
 
-    // Process each company item sequentially to properly await DB ops and file writes.
-    for (const item of newdata) {
-      // ensure user_id is set
-      item.user_id = req.body.user_id;
-
-      // reject base64/data URI in image/video fields — require multipart file uploads instead
-      if (item.image != undefined && item.image !== "") {
-        const s = String(item.image);
-        if (s.indexOf("base64") !== -1 || s.startsWith("data:")) {
-          return res.status(422).json({
-            success: false,
-            message:
-              "Please upload images/videos as file uploads (multipart/form-data). Do not send base64/data URIs in the request.",
-          });
-        }
-      }
-      if (item.video != undefined && item.video !== "") {
-        const s2 = String(item.video);
-        if (s2.indexOf("base64") !== -1 || s2.startsWith("data:")) {
-          return res.status(422).json({
-            success: false,
-            message:
-              "Please upload images/videos as file uploads (multipart/form-data). Do not send base64/data URIs in the request.",
-          });
-        }
+      // Update the company document
+      try {
+        await CompanyModel.findByIdAndUpdate(companyId, doc, {
+          new: true,
+          upsert: false,
+        });
+      } catch (e) {
+        console.error(`Failed to update company ${companyId}:`, e);
+        return res
+          .status(500)
+          .json({ success: false, message: "Failed to update company" });
       }
 
-      // Only update existing companies; do NOT create new company records from this endpoint
-      if (item._id) {
-        const id = item._id;
+      // Notify contacts about the change (preserve existing behavior)
+      let usercontact1 = await ContactModel.find({
+        status: 1,
+        contact_id: req.user._id,
+      });
+      for (var i = 0; i < usercontact1.length; i++) {
+        var contact_id = usercontact1[i].contact_id;
+        var user_id = usercontact1[i].user_id;
+        const ndoc = {
+          user_id: contact_id,
+          contact_id: user_id,
+          message: `${req.user.owner_name_english} has changed their company data`,
+        };
         try {
-          await CompanyModel.findByIdAndUpdate(id, item, {
-            new: true,
-            upsert: false,
-          });
+          await NotificationModel.create(ndoc);
         } catch (e) {
-          console.error(`Failed to update company ${id}:`, e);
+          console.error("Failed creating company update notification:", e);
         }
-      } else {
-        // Skip creating new records here — creating from reorder/update requests caused duplicates.
-        console.warn(
-          "Skipping creation for company update request because _id is missing:",
-          item
-        );
       }
-    }
 
-    let usercontact1 = await ContactModel.find({
-      status: 1,
-      contact_id: req.user._id,
-    });
-    for (var i = 0; i < usercontact1.length; i++) {
-      var contact_id = usercontact1[i].contact_id;
-      var user_id = usercontact1[i].user_id;
-      const doc = {
-        user_id: contact_id,
-        contact_id: user_id,
-        message: `${req.user.owner_name_english} has changed their company data`,
-      };
-      let notification = await NotificationModel.create(doc);
+      return res
+        .status(200)
+        .json({ success: true, message: "Data Updated Successfully..." });
+    } catch (error) {
+      console.error("Updatecompanyprofile error:", error);
+      return res.status(500).json({ success: false, message: "Server error" });
     }
-    return res.status(200).json({
-      success: true,
-      message: "Data Updated Successfully...",
-    });
   };
 
   static video = async (req, res) => {
