@@ -1165,14 +1165,17 @@ class UserController {
         });
 
         for (const contact of myContacts) {
-          const notificationDoc = {
-            user_id: contact.user_id,
-            contact_id: req.user._id,
-            message: `${
-              currentUser.owner_name_english || currentUser.username
-            } has added a new company profile`,
-          };
-          await NotificationModel.create(notificationDoc);
+          // Don't send notification to the creator themselves
+          if (contact.user_id.toString() !== req.user._id.toString()) {
+            const notificationDoc = {
+              user_id: contact.user_id,
+              contact_id: req.user._id,
+              message: `${
+                currentUser.owner_name_english || currentUser.username
+              } has added a new company profile`,
+            };
+            await NotificationModel.create(notificationDoc);
+          }
         }
       } catch (notifError) {
         console.error(
@@ -1543,14 +1546,17 @@ class UserController {
         });
 
         for (const contact of myContacts) {
-          const notificationDoc = {
-            user_id: contact.user_id,
-            contact_id: req.user._id,
-            message: `${
-              currentUser.owner_name_english || currentUser.username
-            } has added a new chamber`,
-          };
-          await NotificationModel.create(notificationDoc);
+          // Don't send notification to the creator themselves
+          if (contact.user_id.toString() !== req.user._id.toString()) {
+            const notificationDoc = {
+              user_id: contact.user_id,
+              contact_id: req.user._id,
+              message: `${
+                currentUser.owner_name_english || currentUser.username
+              } has added a new chamber`,
+            };
+            await NotificationModel.create(notificationDoc);
+          }
         }
       } catch (notifError) {
         console.error(
