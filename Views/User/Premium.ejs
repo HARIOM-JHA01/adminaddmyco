@@ -39,7 +39,8 @@ import session from "express-session"
               <tr>
                 <th>No.</th>
                 <th>Member Id</th>
-                <th>UserName</th>
+                <th>Free UserName</th>
+                <th>Premium UserName</th>
                 <th>TG-id</th>
                 <th>Country</th>
                 <!-- <th>Membership Tenure</th> -->
@@ -61,6 +62,9 @@ import session from "express-session"
                   </span></td>
                 <td><span class="name-field">
                     <%= v.memberid%>
+                  </span></td>
+                <td><span class="name-field">
+                    <%= v.freeUsername || '-'%>
                   </span></td>
                 <td><span class="name-field">
                     <%= v.username%>

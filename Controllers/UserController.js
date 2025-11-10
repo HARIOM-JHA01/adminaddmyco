@@ -59,6 +59,29 @@ class UserController {
   static generateUsername() {
     return crypto.randomBytes(4).toString("hex");
   }
+
+  /**
+   * Helper function to find user by username
+   * Checks both 'username' and 'freeUsername' fields
+   * Priority:
+   * 1. Try to find by 'username' (active username)
+   * 2. If not found, try 'freeUsername' (permanent username)
+   * This ensures:
+   * - Free username always works
+   * - Premium username only works when membership is active
+   * - When premium expires and username reverts to freeUsername, both work
+   */
+  static async findUserByUsername(usernameToFind) {
+    // First try to find by active username
+    let user = await UserModel.findOne({ username: usernameToFind });
+
+    // If not found, try freeUsername
+    if (!user) {
+      user = await UserModel.findOne({ freeUsername: usernameToFind });
+    }
+
+    return user;
+  }
   // ...............USER-REGISTER...............
   static Register1 = async (req, res) => {
     try {
@@ -760,10 +783,21 @@ class UserController {
   };
 
   static Getprofile = async (req, res) => {
+    // Find user by username (checks both username and freeUsername)
+    const user = await UserController.findUserByUsername(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+        data: "",
+      });
+    }
+
     let profile = await UserModel.aggregate([
       {
         $match: {
-          username: req.params.id,
+          _id: user._id,
         },
       },
       {
@@ -808,11 +842,21 @@ class UserController {
   };
 
   static Getprofiles = async (req, res) => {
-    //console.log("username",req.params.id)
+    // Find user by username (checks both username and freeUsername)
+    const user = await UserController.findUserByUsername(req.body.username);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+        data: "",
+      });
+    }
+
     let profile = await UserModel.aggregate([
       {
         $match: {
-          username: req.body.username,
+          _id: user._id,
         },
       },
       {
@@ -912,7 +956,8 @@ class UserController {
   };
 
   static GetLandingpage = async (req, res) => {
-    let user = await UserModel.findOne({ username: req.body.username });
+    // Find user by username (checks both username and freeUsername)
+    let user = await UserController.findUserByUsername(req.body.username);
     if (user) {
       let company = await UserModel.aggregate([
         {
@@ -975,7 +1020,8 @@ class UserController {
           .status(422)
           .json({ success: false, message: "username is required" });
       }
-      const user = await UserModel.findOne({ username: username });
+      // Find user by username (checks both username and freeUsername)
+      const user = await UserController.findUserByUsername(username);
       if (!user) {
         return res
           .status(422)
@@ -1109,6 +1155,33 @@ class UserController {
         companystatus: 1,
       });
       let data = await CompanyModel.findById(result._id);
+
+      // Send notification to all contacts who have this user in their contact list
+      try {
+        const currentUser = await UserModel.findById(req.user._id);
+        const myContacts = await ContactModel.find({
+          contact_id: req.user._id,
+          status: 1,
+        });
+
+        for (const contact of myContacts) {
+          const notificationDoc = {
+            user_id: contact.user_id,
+            contact_id: req.user._id,
+            message: `${
+              currentUser.owner_name_english || currentUser.username
+            } has added a new company profile`,
+          };
+          await NotificationModel.create(notificationDoc);
+        }
+      } catch (notifError) {
+        console.error(
+          "Error sending company creation notifications:",
+          notifError
+        );
+        // Don't fail the request if notification fails
+      }
+
       return res.status(200).json({
         success: true,
         data: data,
@@ -1305,7 +1378,8 @@ class UserController {
   };
 
   static GetCompany = async (req, res) => {
-    let user = await UserModel.findOne({ username: req.body.username });
+    // Find user by username (checks both username and freeUsername)
+    let user = await UserController.findUserByUsername(req.body.username);
     if (user) {
       let company = await CompanyModel.find({ user_id: user._id });
       if (company) {
@@ -1459,6 +1533,33 @@ class UserController {
       }
 
       let result = await ChamberModel.create(doc);
+
+      // Send notification to all contacts who have this user in their contact list
+      try {
+        const currentUser = await UserModel.findById(req.user._id);
+        const myContacts = await ContactModel.find({
+          contact_id: req.user._id,
+          status: 1,
+        });
+
+        for (const contact of myContacts) {
+          const notificationDoc = {
+            user_id: contact.user_id,
+            contact_id: req.user._id,
+            message: `${
+              currentUser.owner_name_english || currentUser.username
+            } has added a new chamber`,
+          };
+          await NotificationModel.create(notificationDoc);
+        }
+      } catch (notifError) {
+        console.error(
+          "Error sending chamber creation notifications:",
+          notifError
+        );
+        // Don't fail the request if notification fails
+      }
+
       return res.status(200).json({
         success: true,
         data: result,
@@ -1650,7 +1751,8 @@ class UserController {
   };
 
   static GetChamber = async (req, res) => {
-    let user = await UserModel.findOne({ username: req.body.username });
+    // Find user by username (checks both username and freeUsername)
+    let user = await UserController.findUserByUsername(req.body.username);
     if (user) {
       let company = await ChamberModel.find({ user_id: user._id });
       if (company) {
@@ -2907,7 +3009,8 @@ class UserController {
     try {
       const username = req.params.username;
       const meId = req.user._id;
-      const targetUser = await UserModel.findOne({ username: username });
+      // Find user by username (checks both username and freeUsername)
+      const targetUser = await UserController.findUserByUsername(username);
       if (!targetUser) {
         return res
           .status(404)
@@ -3413,7 +3516,9 @@ class UserController {
         let generatedUsername = UserController.generateUsername();
         let isUnique = false;
         while (!isUnique) {
-          const conflict = await UserModel.findOne({ freeUsername: generatedUsername });
+          const conflict = await UserModel.findOne({
+            freeUsername: generatedUsername,
+          });
           if (!conflict) {
             isUnique = true;
           } else {
@@ -3424,7 +3529,7 @@ class UserController {
           freeUsername: generatedUsername,
         });
       }
-      
+
       const _startDate =
         userdetails.enddate === null ||
         moment(userdetails.enddate, "YYYY-MM-DD").isBefore(
@@ -3435,7 +3540,7 @@ class UserController {
       const _endDate = moment(_startDate, "YYYY-MM-DD")
         .add(membershipData.membershiperiod, "years")
         .format("YYYY-MM-DD");
-      
+
       // Prepare update object with premium username (tgid)
       let updateObj = {
         usertype: 1,
@@ -3445,7 +3550,7 @@ class UserController {
         paymentBy: 3, // 3 for Stripe
         membertype: "premium",
       };
-      
+
       // Set username to tgid for premium users (handle collisions)
       if (userdetails.tgid) {
         let desiredUsername = userdetails.tgid;
@@ -3459,7 +3564,7 @@ class UserController {
         }
         updateObj.username = desiredUsername;
       }
-      
+
       await UserModel.findByIdAndUpdate(req.user._id, updateObj);
       const doc = new MembershipStrpiePaymentModel({
         user: req.user._id,
@@ -3497,8 +3602,8 @@ class UserController {
         });
       }
 
-      // Find user by username
-      let user = await UserModel.findOne({ username: req.body.username });
+      // Find user by username (checks both username and freeUsername)
+      let user = await UserController.findUserByUsername(req.body.username);
 
       if (!user) {
         return res.status(404).json({
