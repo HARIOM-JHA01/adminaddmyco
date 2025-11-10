@@ -27,6 +27,9 @@
                 <section class="section">
                     <div class="card">
                         <div class="card-header text-end">
+                            <button id="checkExpiredMemberships" class="btn icon icon-left btn-warning btn-sm me-2">
+                                <i class="bi bi-arrow-clockwise"></i> Check Expired Memberships
+                            </button>
                             <a href="<%= baseUrl %>admin/addconfiguration"
                                 class="btn icon icon-left btn-primary btn-sm "><svg xmlns="http://www.w3.org/2000/svg"
                                     width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -92,6 +95,61 @@
         <script>
             $(document).ready(function() {
               var table = $('#data-table1').DataTable();
+            });
+            
+            // Handle Check Expired Memberships button click
+            $(document).on('click', '#checkExpiredMemberships', function() {
+              var baseUrl = '<%= baseUrl %>'
+              var btn = $(this);
+              var originalText = btn.html();
+              
+              // Disable button and show loading state
+              btn.prop('disabled', true);
+              btn.html('<i class="bi bi-hourglass-split"></i> Processing...');
+              
+              $.ajax({
+                type: "GET",
+                url: `${baseUrl}admin/check-expired-memberships`,
+                dataType: "json",
+                success: function(xhr) {
+                  btn.prop('disabled', false);
+                  btn.html(originalText);
+                  
+                  var message = `Membership check completed!\nTotal expired: ${xhr.data.total}\nReverted: ${xhr.data.reverted}\nErrors: ${xhr.data.errors}`;
+                  
+                  Toastify({
+                    text: message,
+                    duration: 5000,
+                    newWindow: true,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    stopOnFocus: true,
+                    style: {
+                      background: xhr.data.reverted > 0 ? "#28a745" : "#17a2b8",
+                    },
+                  }).showToast();
+                  
+                  swal("Success!", message, "success");
+                },
+                error: function(xhr) {
+                  btn.prop('disabled', false);
+                  btn.html(originalText);
+                  
+                  Toastify({
+                    text: "Failed to check expired memberships. Please try again.",
+                    duration: 3000,
+                    newWindow: true,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    stopOnFocus: true,
+                    style: {
+                      background: "#ff2c2c",
+                    },
+                  }).showToast();
+                }
+              });
             });
             $(document).on('click', '.delete-data', function() {
         

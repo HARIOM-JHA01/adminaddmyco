@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema(
     firstname: { type: String },
     lastname: { type: String },
     username: { type: String },
+    freeUsername: { type: String }, // Always contains the random generated username
     tgid: { type: String },
     email: { type: String },
     password: { type: String },

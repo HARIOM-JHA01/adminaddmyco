@@ -11,6 +11,7 @@ import dotenv from "dotenv";
 import http from "http";
 import { swaggerUi, swaggerDocument } from "./swagger.js";
 import { start as startTelegramBot } from "./Utils/telegramBot.js";
+import { startMembershipExpiryCheck } from "./Utils/membershipCron.js";
 
 mongoose.set("strictQuery", false);
 const app = express();
@@ -39,6 +40,9 @@ app.use(cors());
 
 // Start Telegram bot
 startTelegramBot();
+
+// Start membership expiry cron job
+startMembershipExpiryCheck();
 
 //custom logger
 app.use((req, res, next) => {

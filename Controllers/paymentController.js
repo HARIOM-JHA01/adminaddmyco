@@ -185,7 +185,25 @@ class PaymentController {
       user.startdate = startDate;
       user.enddate = endDate;
       user.membershiperiod = membershipPeriodYears.toString();
-      // Ensure username equals tgid for premium users (handle collisions)
+
+      // Ensure freeUsername exists
+      if (!user.freeUsername) {
+        let generatedUsername = crypto.randomBytes(4).toString("hex");
+        let isUnique = false;
+        while (!isUnique) {
+          const conflict = await UserModel.findOne({
+            freeUsername: generatedUsername,
+          });
+          if (!conflict) {
+            isUnique = true;
+          } else {
+            generatedUsername = crypto.randomBytes(4).toString("hex");
+          }
+        }
+        user.freeUsername = generatedUsername;
+      }
+
+      // Set username to tgid for premium users (handle collisions)
       try {
         if (user.tgid) {
           let desiredUsername = user.tgid;

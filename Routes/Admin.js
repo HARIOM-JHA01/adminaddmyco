@@ -219,4 +219,11 @@ admin.post("/editadminusers", MasterAdminController.EditAdminUser);
 admin.get("/deleteadminuser", AdminController.DeleteAdminUser);
 admin.post("/set-telegram-premium", AdminController.setTelegramPremium);
 
+// Membership Expiry Check
+admin.get(
+  "/check-expired-memberships",
+  isAdmin,
+  AdminController.CheckExpiredMemberships
+);
+
 export default admin;

@@ -287,7 +287,23 @@ class UserController {
       });
       let isPremium =
         telegramPremiumSetting && telegramPremiumSetting.ConfigValue === "1";
+
+      // Always generate a random username for freeUsername
       var generatedUsername = UserController.generateUsername();
+
+      // Ensure the generated username is unique
+      let isUnique = false;
+      while (!isUnique) {
+        const conflict = await UserModel.findOne({
+          freeUsername: generatedUsername,
+        });
+        if (!conflict) {
+          isUnique = true;
+        } else {
+          generatedUsername = UserController.generateUsername();
+        }
+      }
+
       // Generate memberid (same logic as Register)
       var countrycount = await UserModel.find({
         country: data.country,
@@ -297,29 +313,37 @@ class UserController {
       var srt1 = "000000000000";
       var countryCode = data.countryCode;
       var id = countryCode + "-" + srt1.slice(0, -srt.length) + srt;
-      // If premium signup, prefer setting username to tgid (with collision handling)
-      let desiredUsername = isPremium
-        ? data.telegram_username
-        : generatedUsername;
+
+      // Determine the active username based on premium status
+      let activeUsername = generatedUsername; // default to free username
       if (isPremium) {
+        // For premium users, try to use tgid as username
         const conflict = await UserModel.findOne({
-          username: desiredUsername,
+          username: data.telegram_username,
         });
-        if (conflict) {
-          // Append short random suffix to avoid collision
-          desiredUsername =
-            desiredUsername + "-" + crypto.randomBytes(2).toString("hex");
+        if (!conflict) {
+          activeUsername = data.telegram_username;
+        } else {
+          // If tgid conflicts, append suffix
+          activeUsername =
+            data.telegram_username +
+            "-" +
+            crypto.randomBytes(2).toString("hex");
         }
       }
 
       const doc = new UserModel({
-        username: desiredUsername,
+        username: activeUsername, // Active username (premium = tgid, free = random)
+        freeUsername: generatedUsername, // Always store the random username
         tgid: data.telegram_username,
         country: data.country,
         countryCode: countryCode,
         membertype: isPremium ? "premium" : "free",
         membershiperiod: isPremium ? "12" : undefined, // 1 year in months for premium
         joindate: new Date().toISOString(),
+        startdate: isPremium
+          ? new Date().toISOString().split("T")[0]
+          : undefined,
         enddate: isPremium
           ? new Date(new Date().setFullYear(new Date().getFullYear() + 1))
               .toISOString()
@@ -1451,12 +1475,10 @@ class UserController {
       const body = req.body || {};
       const chamberId = body._id;
       if (!chamberId) {
-        return res
-          .status(422)
-          .json({
-            success: false,
-            message: "_id (chamber id) is required in form fields",
-          });
+        return res.status(422).json({
+          success: false,
+          message: "_id (chamber id) is required in form fields",
+        });
       }
 
       // Build update document from allowed fields
@@ -1493,26 +1515,22 @@ class UserController {
         (String(body.image).includes("base64") ||
           String(body.image).startsWith("data:"))
       ) {
-        return res
-          .status(422)
-          .json({
-            success: false,
-            message:
-              "Please upload image as a file (multipart/form-data). Do not send base64/data URIs.",
-          });
+        return res.status(422).json({
+          success: false,
+          message:
+            "Please upload image as a file (multipart/form-data). Do not send base64/data URIs.",
+        });
       }
       if (
         body.video &&
         (String(body.video).includes("base64") ||
           String(body.video).startsWith("data:"))
       ) {
-        return res
-          .status(422)
-          .json({
-            success: false,
-            message:
-              "Please upload video as a file (multipart/form-data). Do not send base64/data URIs.",
-          });
+        return res.status(422).json({
+          success: false,
+          message:
+            "Please upload video as a file (multipart/form-data). Do not send base64/data URIs.",
+        });
       }
 
       // Handle uploaded files
@@ -3390,6 +3408,23 @@ class UserController {
       const userdetails = req.user;
       // const userdetails = await UserModel.findById(dec.user)
       let membershipData = await MembershipModel.findById(dec.membership_id);
+      // Ensure freeUsername exists before upgrading
+      if (!userdetails.freeUsername) {
+        let generatedUsername = UserController.generateUsername();
+        let isUnique = false;
+        while (!isUnique) {
+          const conflict = await UserModel.findOne({ freeUsername: generatedUsername });
+          if (!conflict) {
+            isUnique = true;
+          } else {
+            generatedUsername = UserController.generateUsername();
+          }
+        }
+        await UserModel.findByIdAndUpdate(req.user._id, {
+          freeUsername: generatedUsername,
+        });
+      }
+      
       const _startDate =
         userdetails.enddate === null ||
         moment(userdetails.enddate, "YYYY-MM-DD").isBefore(
@@ -3400,13 +3435,32 @@ class UserController {
       const _endDate = moment(_startDate, "YYYY-MM-DD")
         .add(membershipData.membershiperiod, "years")
         .format("YYYY-MM-DD");
-      await UserModel.findByIdAndUpdate(req.user._id, {
+      
+      // Prepare update object with premium username (tgid)
+      let updateObj = {
         usertype: 1,
         startdate: userdetails?.startdate,
         paymentstatus: 1,
         enddate: _endDate,
-        paymentBy: 2,
-      });
+        paymentBy: 3, // 3 for Stripe
+        membertype: "premium",
+      };
+      
+      // Set username to tgid for premium users (handle collisions)
+      if (userdetails.tgid) {
+        let desiredUsername = userdetails.tgid;
+        const conflict = await UserModel.findOne({
+          username: desiredUsername,
+          _id: { $ne: req.user._id },
+        });
+        if (conflict) {
+          desiredUsername =
+            desiredUsername + "-" + crypto.randomBytes(2).toString("hex");
+        }
+        updateObj.username = desiredUsername;
+      }
+      
+      await UserModel.findByIdAndUpdate(req.user._id, updateObj);
       const doc = new MembershipStrpiePaymentModel({
         user: req.user._id,
         telegram_id: req.user.tgid,

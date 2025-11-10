@@ -32,6 +32,7 @@ import MembershipStrpiePaymentModel from "../Models/MembershipStripePayment.js";
 import USDTMembershipPaymentModel from "../Models/USDTMembershipPayment.js";
 import TelegramCoinMembershipPaymentModel from "../Models/TelegramCoinMembershipPayment.js";
 import crypto from "crypto";
+import { checkExpiredMemberships } from "../Utils/membershipCron.js";
 
 const accessTokenSecret = process.env["JWT_SECRET_KEY"];
 const accessTokenLife = process.env["ACCESS_TOKEN_LIFE"];
@@ -1969,6 +1970,24 @@ class AdminController {
           .format("YYYY-MM-DD");
       }
 
+      // Ensure freeUsername exists before upgrading
+      if (!user.freeUsername) {
+        let generatedUsername = crypto.randomBytes(4).toString("hex");
+        let isUnique = false;
+        while (!isUnique) {
+          const conflict = await UserModel.findOne({
+            freeUsername: generatedUsername,
+          });
+          if (!conflict) {
+            isUnique = true;
+          } else {
+            generatedUsername = crypto.randomBytes(4).toString("hex");
+          }
+        }
+        user.freeUsername = generatedUsername;
+        await user.save();
+      }
+
       // Update user to premium
       await UserModel.findByIdAndUpdate(user._id, {
         usertype: 1,
@@ -2108,6 +2127,25 @@ class AdminController {
     } catch (err) {
       console.error("Delete USDT payment error:", err);
       return res.status(500).json({ status: false, message: "Server error" });
+    }
+  };
+
+  // Manual trigger for membership expiry check
+  static CheckExpiredMemberships = async (req, res) => {
+    try {
+      const result = await checkExpiredMemberships();
+      return res.status(200).json({
+        success: true,
+        message: "Membership expiry check completed",
+        data: result,
+      });
+    } catch (error) {
+      console.error("Manual membership expiry check failed:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
     }
   };
 }
