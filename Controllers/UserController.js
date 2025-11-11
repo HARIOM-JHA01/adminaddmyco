@@ -1477,6 +1477,21 @@ class UserController {
     } else {
       const path = await makeDir("./assets/chamber/");
       let pic = await UserModel.findById(req.user._id);
+      // determine chamber_order: use provided value or auto-increment from max existing for this user
+      let chamberOrder;
+      if (
+        req.body.chamber_order !== undefined &&
+        req.body.chamber_order !== ""
+      ) {
+        chamberOrder = Number(req.body.chamber_order);
+      } else {
+        const last = await ChamberModel.findOne({ user_id: req.user._id })
+          .sort({ chamber_order: -1 })
+          .select("chamber_order")
+          .lean();
+        chamberOrder =
+          last && last.chamber_order ? Number(last.chamber_order) + 1 : 1;
+      }
       const doc = {
         chamber_name_english: req.body.chamber_name_english,
         chamber_name_chinese: req.body.chamber_name_chinese,
@@ -1496,6 +1511,7 @@ class UserController {
         tgchannel: req.body.tgchannel,
         chamberfanpage: req.body.chamberfanpage,
         chamberwebsite: req.body.chamberwebsite,
+        chamber_order: chamberOrder,
         user_id: req.user._id,
         // video: imagename
       };
