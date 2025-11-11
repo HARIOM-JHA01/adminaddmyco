@@ -1169,8 +1169,8 @@ class UserController {
 
         for (const follower of myFollowers) {
           const notificationDoc = {
-            user_id: req.user._id,
-            contact_id: follower.user_id,
+            user_id: follower.user_id,
+            contact_id: req.user._id,
             message: `${
               currentUser.owner_name_english || currentUser.username
             } has added a new company profile`,
@@ -1828,13 +1828,13 @@ class UserController {
     let Notification = await NotificationModel.aggregate([
       {
         $match: {
-          contact_id: req.user._id,
+          user_id: req.user._id,
         },
       },
       {
         $lookup: {
           from: "users",
-          localField: "user_id",
+          localField: "contact_id",
           foreignField: "_id",
           as: "userDoc",
         },
