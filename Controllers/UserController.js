@@ -1321,8 +1321,8 @@ class UserController {
         var contact_id = usercontact1[i].contact_id;
         var user_id = usercontact1[i].user_id;
         const ndoc = {
-          user_id: contact_id,
-          contact_id: user_id,
+          user_id: user_id,
+          contact_id: contact_id,
           message: `${req.user.owner_name_english} has changed their company data`,
         };
         try {
