@@ -1169,8 +1169,8 @@ class UserController {
 
         for (const follower of myFollowers) {
           const notificationDoc = {
-            user_id: follower.user_id,
-            contact_id: req.user._id,
+            user_id: req.user._id,
+            contact_id: follower.user_id,
             message: `${
               currentUser.owner_name_english || currentUser.username
             } has added a new company profile`,
