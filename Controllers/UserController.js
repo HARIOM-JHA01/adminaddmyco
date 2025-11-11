@@ -1156,26 +1156,26 @@ class UserController {
       });
       let data = await CompanyModel.findById(result._id);
 
-      // Send notification to all contacts who have this user in their contact list
+      // Send notification to all users who have added this user to their contacts
       try {
         const currentUser = await UserModel.findById(req.user._id);
-        const myContacts = await ContactModel.find({
+        // Find all contacts where contact_id is the current user (people who added me)
+        // and user_id is NOT the current user (don't notify myself)
+        const myFollowers = await ContactModel.find({
           contact_id: req.user._id,
+          user_id: { $ne: req.user._id },
           status: 1,
         });
 
-        for (const contact of myContacts) {
-          // Don't send notification to the creator themselves
-          if (contact.user_id.toString() !== req.user._id.toString()) {
-            const notificationDoc = {
-              user_id: contact.user_id,
-              contact_id: req.user._id,
-              message: `${
-                currentUser.owner_name_english || currentUser.username
-              } has added a new company profile`,
-            };
-            await NotificationModel.create(notificationDoc);
-          }
+        for (const follower of myFollowers) {
+          const notificationDoc = {
+            user_id: follower.user_id,
+            contact_id: req.user._id,
+            message: `${
+              currentUser.owner_name_english || currentUser.username
+            } has added a new company profile`,
+          };
+          await NotificationModel.create(notificationDoc);
         }
       } catch (notifError) {
         console.error(
@@ -1537,26 +1537,26 @@ class UserController {
 
       let result = await ChamberModel.create(doc);
 
-      // Send notification to all contacts who have this user in their contact list
+      // Send notification to all users who have added this user to their contacts
       try {
         const currentUser = await UserModel.findById(req.user._id);
-        const myContacts = await ContactModel.find({
+        // Find all contacts where contact_id is the current user (people who added me)
+        // and user_id is NOT the current user (don't notify myself)
+        const myFollowers = await ContactModel.find({
           contact_id: req.user._id,
+          user_id: { $ne: req.user._id },
           status: 1,
         });
 
-        for (const contact of myContacts) {
-          // Don't send notification to the creator themselves
-          if (contact.user_id.toString() !== req.user._id.toString()) {
-            const notificationDoc = {
-              user_id: contact.user_id,
-              contact_id: req.user._id,
-              message: `${
-                currentUser.owner_name_english || currentUser.username
-              } has added a new chamber`,
-            };
-            await NotificationModel.create(notificationDoc);
-          }
+        for (const follower of myFollowers) {
+          const notificationDoc = {
+            user_id: follower.user_id,
+            contact_id: req.user._id,
+            message: `${
+              currentUser.owner_name_english || currentUser.username
+            } has added a new chamber`,
+          };
+          await NotificationModel.create(notificationDoc);
         }
       } catch (notifError) {
         console.error(
