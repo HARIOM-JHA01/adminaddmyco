@@ -3728,7 +3728,9 @@ class UserController {
       }
 
       // Find user by username
-      let user = await UserModel.findOne({ username: req.body.username });
+      let user =
+        (await UserModel.findOne({ username: req.body.username })) ||
+        (await UserModel.findOne({ freeUsername: req.body.username }));
 
       if (!user) {
         return res.status(404).json({
@@ -3795,7 +3797,7 @@ class UserController {
       }
 
       // Find user by username
-      let user = await UserModel.findOne({ username: req.body.username });
+      let user = await UserController.findUserByUsername(req.body.username);
 
       if (!user) {
         return res.status(404).json({
@@ -3912,7 +3914,7 @@ class UserController {
       }
 
       // Find user by username
-      let user = await UserModel.findOne({ username: req.body.username });
+      let user = await UserController.findUserByUsername(req.body.username);
 
       if (!user) {
         return res.status(404).json({
