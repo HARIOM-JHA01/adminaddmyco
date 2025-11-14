@@ -3630,8 +3630,8 @@ class UserController {
       };
 
       // Set username to tgid for premium users (handle collisions)
+      let desiredUsername = userdetails.tgid;
       if (userdetails.tgid) {
-        let desiredUsername = userdetails.tgid;
         const conflict = await UserModel.findOne({
           username: desiredUsername,
           _id: { $ne: req.user._id },
