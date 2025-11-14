@@ -17,6 +17,7 @@ import fsExtra from "fs-extra";
 import path from "path";
 import handlebars from "handlebars";
 import nodemailer from "nodemailer";
+import { compressVideoInPlace } from "../Utils/videoCompression.js";
 import SystemModel from "../Models/Systemimage.js";
 import UserModel from "../Models/User.js";
 import PaypalModel from "../Models/Paypal.js";
@@ -689,11 +690,28 @@ class UserController {
         let r = (Math.random() + 1).toString(36).substring(7);
         var imname = d.getSeconds() + "." + r + "." + photo;
         let uploadPath = path + "/" + imname;
-        video.mv(uploadPath, function (err) {
-          if (err) return res.status(500).send(err);
-        });
-        doc["video"] = "profileimage/" + imname;
-        doc["profile_image"] = "";
+
+        try {
+          // Upload the video file first
+          await new Promise((resolve, reject) => {
+            video.mv(uploadPath, function (err) {
+              if (err) reject(err);
+              else resolve();
+            });
+          });
+
+          // Compress the video
+          await compressVideoInPlace(uploadPath, { quality: "medium" });
+
+          doc["video"] = "profileimage/" + imname;
+          doc["profile_image"] = "";
+        } catch (err) {
+          console.error("Error uploading/compressing video:", err);
+          return res.status(500).json({
+            success: false,
+            message: "Error processing video file",
+          });
+        }
       }
       const result = await UserModel.findByIdAndUpdate(targetId, doc);
       console.log("123", result);
@@ -1143,11 +1161,28 @@ class UserController {
         var imname = d.getSeconds() + "." + r + "." + photo;
 
         let uploadPath = path + "/" + imname;
-        video.mv(uploadPath, function (err) {
-          if (err) return res.status(500).send(err);
-        });
-        doc["video"] = "companyprofile/" + imname;
-        video = baseUrl + "assets/companyprofile/" + imname;
+
+        try {
+          // Upload the video file first
+          await new Promise((resolve, reject) => {
+            video.mv(uploadPath, function (err) {
+              if (err) reject(err);
+              else resolve();
+            });
+          });
+
+          // Compress the video
+          await compressVideoInPlace(uploadPath, { quality: "medium" });
+
+          doc["video"] = "companyprofile/" + imname;
+          video = baseUrl + "assets/companyprofile/" + imname;
+        } catch (err) {
+          console.error("Error uploading/compressing company video:", err);
+          return res.status(500).json({
+            success: false,
+            message: "Error processing video file",
+          });
+        }
       }
 
       let result = await CompanyModel.create(doc);
@@ -1290,9 +1325,11 @@ class UserController {
         const uploadPath = "./assets/companyprofile/" + imname;
         try {
           await video.mv(uploadPath);
+          // Compress the video
+          await compressVideoInPlace(uploadPath, { quality: "medium" });
           doc.video = "companyprofile/" + imname;
         } catch (e) {
-          console.error("Failed to save uploaded company video:", e);
+          console.error("Failed to save/compress uploaded company video:", e);
           return res
             .status(500)
             .json({ success: false, message: "Failed to save uploaded video" });
@@ -1544,11 +1581,28 @@ class UserController {
         let r = (Math.random() + 1).toString(36).substring(7);
         var imname = d.getSeconds() + "." + r + "." + photo;
         let uploadPath = path + "/" + imname;
-        video.mv(uploadPath, function (err) {
-          if (err) return res.status(500).send(err);
-        });
-        doc["video"] = "chamber/" + imname;
-        video = baseUrl + "assets/chamber/" + imname;
+
+        try {
+          // Upload the video file first
+          await new Promise((resolve, reject) => {
+            video.mv(uploadPath, function (err) {
+              if (err) reject(err);
+              else resolve();
+            });
+          });
+
+          // Compress the video
+          await compressVideoInPlace(uploadPath, { quality: "medium" });
+
+          doc["video"] = "chamber/" + imname;
+          video = baseUrl + "assets/chamber/" + imname;
+        } catch (err) {
+          console.error("Error uploading/compressing chamber video:", err);
+          return res.status(500).json({
+            success: false,
+            message: "Error processing video file",
+          });
+        }
       }
 
       let result = await ChamberModel.create(doc);
@@ -1684,9 +1738,11 @@ class UserController {
         const uploadPath = "./assets/chamber/" + imname;
         try {
           await video.mv(uploadPath);
+          // Compress the video
+          await compressVideoInPlace(uploadPath, { quality: "medium" });
           doc.video = "chamber/" + imname;
         } catch (e) {
-          console.error("Failed to save uploaded chamber video:", e);
+          console.error("Failed to save/compress uploaded chamber video:", e);
           return res
             .status(500)
             .json({ success: false, message: "Failed to save uploaded video" });
