@@ -1,0 +1,325 @@
+<%- include('../Layout/Header') %>
+<link
+  rel="stylesheet"
+  href="//cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css"
+/>
+<%- include('../Layout/Sidebar') %>
+<div id="main">
+  <div class="page-heading">
+    <div class="page-title mb-3">
+      <div class="row">
+        <div class="col-12 col-md-6 order-md-1 order-last">
+          <h3>
+            <a href="<%= baseUrl %>admin/dashboard" class="text-primary"
+              ><i class="fas fa-arrow-left me-2"></i></a
+            >Partner Reports & Analytics
+          </h3>
+        </div>
+        <div class="col-12 col-md-6 order-md-2 order-first">
+          <nav
+            aria-label="breadcrumb"
+            class="breadcrumb-header float-start float-lg-end"
+          >
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item">
+                <a href="<%= baseUrl %>admin/dashboard">Dashboard</a>
+              </li>
+              <li class="breadcrumb-item active">Partner Reports</li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    <section class="section">
+      <!-- Summary Statistics Cards -->
+      <div class="row">
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-muted mb-1">Total Partners</h6>
+                  <h3 class="mb-0"><%= stats.totalPartners %></h3>
+                  <small class="text-success"
+                    ><%= stats.activePartners %> active</small
+                  >
+                </div>
+                <div class="avatar avatar-xl bg-primary">
+                  <i
+                    class="bi bi-people-fill text-white"
+                    style="font-size: 2rem"
+                  ></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-muted mb-1">Total Users</h6>
+                  <h3 class="mb-0"><%= stats.totalUsers %></h3>
+                  <small class="text-info">via partners</small>
+                </div>
+                <div class="avatar avatar-xl bg-success">
+                  <i
+                    class="bi bi-person-check-fill text-white"
+                    style="font-size: 2rem"
+                  ></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-muted mb-1">Total Revenue</h6>
+                  <h3 class="mb-0">$<%= stats.totalRevenue.toFixed(2) %></h3>
+                  <small class="text-success"
+                    ><%= stats.approvedPayments %> payments</small
+                  >
+                </div>
+                <div class="avatar avatar-xl bg-warning">
+                  <i
+                    class="bi bi-cash-stack text-white"
+                    style="font-size: 2rem"
+                  ></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-muted mb-1">Pending Payments</h6>
+                  <h3 class="mb-0"><%= stats.pendingPayments %></h3>
+                  <small class="text-warning">needs approval</small>
+                </div>
+                <div class="avatar avatar-xl bg-danger">
+                  <i
+                    class="bi bi-clock-fill text-white"
+                    style="font-size: 2rem"
+                  ></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Credits Overview -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h4 class="card-title">Credits Distribution</h4>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-6">
+                  <h6 class="text-muted">User Credits</h6>
+                  <h4><%= stats.totalUserCredits %></h4>
+                  <small class="text-info"
+                    ><%= stats.usedUserCredits %> used</small
+                  >
+                </div>
+                <div class="col-6">
+                  <h6 class="text-muted">Renewal Credits</h6>
+                  <h4><%= stats.totalRenewalCredits %></h4>
+                  <small class="text-info"
+                    ><%= stats.usedRenewalCredits %> used</small
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h4 class="card-title">Activity Summary</h4>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-6">
+                  <h6 class="text-muted">Total Renewals</h6>
+                  <h4><%= stats.totalRenewals %></h4>
+                </div>
+                <div class="col-6">
+                  <h6 class="text-muted">Active Memberships</h6>
+                  <h4><%= stats.activeMemberships %></h4>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Partners Table -->
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Top Partners by Users</h4>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped mb-0" id="top_partners_table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Partner</th>
+                  <th>Telegram ID</th>
+                  <th>Total Users</th>
+                  <th>Active Users</th>
+                  <th>Renewals</th>
+                  <th>Revenue</th>
+                  <th>Joined Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% var i=1; topPartners.forEach(function(v) { %>
+                <tr>
+                  <td><strong>#<%= i %></strong></td>
+                  <td>
+                    <a href="<%= baseUrl %>admin/partner/view/<%= v._id %>"
+                      ><%= v.name || 'N/A' %></a
+                    >
+                  </td>
+                  <td>
+                    <a href="https://t.me/<%= v.tgid%>" target="_blank"
+                      ><%= v.tgid%></a
+                    >
+                  </td>
+                  <td>
+                    <span class="badge bg-primary"><%= v.totalUsers %></span>
+                  </td>
+                  <td>
+                    <span class="badge bg-success"><%= v.activeUsers %></span>
+                  </td>
+                  <td>
+                    <span class="badge bg-info"><%= v.totalRenewals %></span>
+                  </td>
+                  <td><strong>$<%= v.revenue.toFixed(2) %></strong></td>
+                  <td><%= moment(v.createdAt).format('DD-MM-YYYY') %></td>
+                </tr>
+                <% i++ %> <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Recent Partner Activity</h4>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped mb-0" id="recent_activity_table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Partner</th>
+                  <th>Activity Type</th>
+                  <th>Details</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% recentActivity.forEach(function(v) { %>
+                <tr>
+                  <td><%= moment(v.date).format('DD-MM-YYYY HH:mm') %></td>
+                  <td><%= v.partnerName %></td>
+                  <td>
+                    <% if (v.type === 'payment') { %>
+                    <span class="badge bg-warning">Payment</span>
+                    <% } else if (v.type === 'user') { %>
+                    <span class="badge bg-success">New User</span>
+                    <% } else if (v.type === 'renewal') { %>
+                    <span class="badge bg-info">Renewal</span>
+                    <% } %>
+                  </td>
+                  <td><%= v.details %></td>
+                  <td>
+                    <% if (v.status === 'completed') { %>
+                    <span class="badge bg-success">Completed</span>
+                    <% } else if (v.status === 'pending') { %>
+                    <span class="badge bg-warning">Pending</span>
+                    <% } %>
+                  </td>
+                </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Package Sales -->
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Package Sales Report</h4>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped mb-0" id="package_sales_table">
+              <thead>
+                <tr>
+                  <th>Package Name</th>
+                  <th>Type</th>
+                  <th>Total Sales</th>
+                  <th>Total Credits Sold</th>
+                  <th>Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% packageSales.forEach(function(v) { %>
+                <tr>
+                  <td><strong><%= v.name %></strong></td>
+                  <td>
+                    <% if (v.type === 'USER_CREDITS') { %>
+                    <span class="badge bg-info">User Credits</span>
+                    <% } else { %>
+                    <span class="badge bg-success">Renewal Credits</span>
+                    <% } %>
+                  </td>
+                  <td><%= v.salesCount %></td>
+                  <td>
+                    <span class="badge bg-primary"><%= v.totalCredits %></span>
+                  </td>
+                  <td><strong>$<%= v.revenue.toFixed(2) %></strong></td>
+                </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="//cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+
+<script>
+  $(document).ready(function () {
+    $("#top_partners_table").DataTable({
+      order: [[3, "desc"]],
+    });
+    $("#recent_activity_table").DataTable({
+      order: [[0, "desc"]],
+    });
+    $("#package_sales_table").DataTable();
+  });
+</script>
+<%- include('../Layout/Footer') %>

@@ -1,0 +1,266 @@
+<%- include('../Layout/Header') %>
+<link
+  rel="stylesheet"
+  href="//cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css"
+/>
+<%- include('../Layout/Sidebar') %>
+<div id="main">
+  <div class="page-heading">
+    <div class="page-title mb-3">
+      <div class="row">
+        <div class="col-12 col-md-6 order-md-1 order-last">
+          <h3>
+            <a href="<%= baseUrl %>admin/partner/list" class="text-primary"
+              ><i class="fas fa-arrow-left me-2"></i></a
+            >Partner Details
+          </h3>
+        </div>
+        <div class="col-12 col-md-6 order-md-2 order-first">
+          <nav
+            aria-label="breadcrumb"
+            class="breadcrumb-header float-start float-lg-end"
+          >
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item">
+                <a href="<%= baseUrl %>admin/dashboard">Dashboard</a>
+              </li>
+              <li class="breadcrumb-item">
+                <a href="<%= baseUrl %>admin/partner/list">Partners</a>
+              </li>
+              <li class="breadcrumb-item active">Details</li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    <section class="section">
+      <!-- Partner Info Card -->
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Partner Information</h4>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <table class="table table-borderless">
+                <tr>
+                  <th width="200">Telegram ID:</th>
+                  <td>
+                    <a href="https://t.me/<%= partner.tgid%>" target="_blank"
+                      ><%= partner.tgid%></a
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <th>Name:</th>
+                  <td><%= partner.name || 'N/A' %></td>
+                </tr>
+                <tr>
+                  <th>Username:</th>
+                  <td><%= partner.username || 'N/A' %></td>
+                </tr>
+                <tr>
+                  <th>Email:</th>
+                  <td><%= partner.email || 'N/A' %></td>
+                </tr>
+                <tr>
+                  <th>Status:</th>
+                  <td>
+                    <% if (partner.status == 1) { %>
+                    <span class="badge bg-success">Active</span>
+                    <% } else { %>
+                    <span class="badge bg-danger">Inactive</span>
+                    <% } %>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <table class="table table-borderless">
+                <tr>
+                  <th width="200">Referral Code:</th>
+                  <td><strong><%= partner.referralCode%></strong></td>
+                </tr>
+                <tr>
+                  <th>Referral URL:</th>
+                  <td><code><%= partner.referralUrl%></code></td>
+                </tr>
+                <tr>
+                  <th>User Credits:</th>
+                  <td>
+                    <span class="badge bg-info"
+                      ><%= partner.userCredits - partner.usedUserCredits %>
+                      available / <%= partner.userCredits %> total</span
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <th>Renewal Credits:</th>
+                  <td>
+                    <span class="badge bg-success"
+                      ><%= partner.renewalCredits - partner.usedRenewalCredits
+                      %> available / <%= partner.renewalCredits %> total</span
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <th>Joined Date:</th>
+                  <td>
+                    <%= moment(partner.createdAt).format('DD-MM-YYYY HH:mm') %>
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics Cards -->
+      <div class="row">
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-body">
+              <h6 class="text-muted">Total Users</h6>
+              <h3><%= stats.totalUsers %></h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-body">
+              <h6 class="text-muted">Active Users</h6>
+              <h3><%= stats.activeUsers %></h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-body">
+              <h6 class="text-muted">Total Renewals</h6>
+              <h3><%= stats.totalRenewals %></h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-body">
+              <h6 class="text-muted">Total Payments</h6>
+              <h3><%= stats.totalPayments %></h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Partner Users Table -->
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Recruited Users</h4>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped mb-0" id="users_table">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Username</th>
+                  <th>Member ID</th>
+                  <th>Country</th>
+                  <th>Membership Expiry</th>
+                  <th>Renewals</th>
+                  <th>Status</th>
+                  <th>Joined Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% var i=1; partnerUsers.forEach(function(v) { %>
+                <tr>
+                  <td><%= i %></td>
+                  <td><%= v.user.username %></td>
+                  <td><%= v.user.memberid %></td>
+                  <td><%= v.user.country %></td>
+                  <td>
+                    <%= moment(v.membershipExpiryDate).format('DD-MM-YYYY') %>
+                  </td>
+                  <td>
+                    <span class="badge bg-primary"><%= v.renewalCount %></span>
+                  </td>
+                  <td>
+                    <% if (moment(v.membershipExpiryDate).isAfter(moment())) {
+                    %>
+                    <span class="badge bg-success">Active</span>
+                    <% } else { %>
+                    <span class="badge bg-danger">Expired</span>
+                    <% } %>
+                  </td>
+                  <td><%= moment(v.createdAt).format('DD-MM-YYYY') %></td>
+                </tr>
+                <% i++ %> <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment History Table -->
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Payment History</h4>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped mb-0" id="payments_table">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Package</th>
+                  <th>Amount</th>
+                  <th>Transaction ID</th>
+                  <th>Status</th>
+                  <th>Payment Date</th>
+                  <th>Approved By</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% var i=1; payments.forEach(function(v) { %>
+                <tr>
+                  <td><%= i %></td>
+                  <td><%= v.package.name %></td>
+                  <td>$<%= v.amount %></td>
+                  <td><%= v.transactionId %></td>
+                  <td>
+                    <% if (v.status == 0) { %>
+                    <span class="badge bg-warning">Pending</span>
+                    <% } else if (v.status == 1) { %>
+                    <span class="badge bg-success">Approved</span>
+                    <% } else { %>
+                    <span class="badge bg-danger">Rejected</span>
+                    <% } %>
+                  </td>
+                  <td><%= moment(v.createdAt).format('DD-MM-YYYY HH:mm') %></td>
+                  <td><%= v.approvedBy ? v.approvedBy.name : 'N/A' %></td>
+                </tr>
+                <% i++ %> <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="//cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+
+<script>
+  $(document).ready(function () {
+    $("#users_table").DataTable({
+      order: [[7, "desc"]],
+    });
+    $("#payments_table").DataTable({
+      order: [[5, "desc"]],
+    });
+  });
+</script>
+<%- include('../Layout/Footer') %>

@@ -5,6 +5,7 @@ import ReferralController from "../Controllers/ReferralController.js";
 import AdminController from "../Controllers/AdminController.js";
 import MasterAdminController from "../Controllers/MasterAdminController.js";
 import { isAdmin } from "../Middleware/AdminAuthentication.js";
+import PartnerAdminController from "../Controllers/PartnerAdminController.js";
 
 // .........................DASHBOARD-CONTROLLER........................
 admin.get("/", DashboardController.signIn);
@@ -153,6 +154,26 @@ admin.get(
 );
 
 // :::::::::::::::::::REFERRAL-DETAIL:::::::::::::::::::::
+
+// Partner admin views
+admin.get("/partner/list", isAdmin, PartnerAdminController.PartnerList);
+admin.get("/partner/view/:id", isAdmin, PartnerAdminController.PartnerView);
+admin.get("/partner/reports", isAdmin, PartnerAdminController.PartnerReports);
+
+// Package views
+admin.get("/package/list", isAdmin, PartnerAdminController.PackageList);
+admin.get("/package/create", isAdmin, PartnerAdminController.PackageCreate);
+admin.get("/package/edit/:id", isAdmin, PartnerAdminController.PackageEdit);
+
+// Payment admin view
+admin.get("/payment/list", isAdmin, PartnerAdminController.PaymentList);
+
+// Renewal price view
+admin.get(
+  "/renewal-price/list",
+  isAdmin,
+  PartnerAdminController.RenewalPriceList
+);
 admin.get("/referralreport/:id", isAdmin, DashboardController.ReferralDetail);
 admin.get("/referralreport", isAdmin, DashboardController.ReferralReport);
 

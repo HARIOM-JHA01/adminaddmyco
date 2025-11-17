@@ -1,0 +1,240 @@
+<%- include('../Layout/Header') %> <%- include('../Layout/Sidebar') %>
+<div id="main">
+  <div class="page-heading">
+    <div class="page-title mb-3">
+      <div class="row">
+        <div class="col-12 col-md-6 order-md-1 order-last">
+          <h3>
+            <a href="<%= baseUrl %>admin/package/list" class="text-primary"
+              ><i class="fas fa-arrow-left me-2"></i></a
+            >Create Package
+          </h3>
+        </div>
+        <div class="col-12 col-md-6 order-md-2 order-first">
+          <nav
+            aria-label="breadcrumb"
+            class="breadcrumb-header float-start float-lg-end"
+          >
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item">
+                <a href="<%= baseUrl %>admin/dashboard">Dashboard</a>
+              </li>
+              <li class="breadcrumb-item">
+                <a href="<%= baseUrl %>admin/package/list">Packages</a>
+              </li>
+              <li class="breadcrumb-item active">Create</li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Package Details</h4>
+        </div>
+        <div class="card-body">
+          <form id="packageForm">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="name"
+                    >Package Name <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="name"
+                    name="name"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="type"
+                    >Package Type <span class="text-danger">*</span></label
+                  >
+                  <select class="form-control" id="type" name="type" required>
+                    <option value="">Select Type</option>
+                    <option value="USER_CREDITS">User Credits</option>
+                    <option value="RENEWAL_CREDITS">Renewal Credits</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label for="credits"
+                    >Credits <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="credits"
+                    name="credits"
+                    min="1"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label for="price"
+                    >Price (USDT) <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="price"
+                    name="price"
+                    min="0"
+                    step="0.01"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label for="discount">Discount (%)</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="discount"
+                    name="discount"
+                    min="0"
+                    max="100"
+                    value="0"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="row" id="renewalMonthsRow" style="display: none">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label for="renewalMonths"
+                    >Renewal Period (Months)
+                    <span class="text-danger">*</span></label
+                  >
+                  <select
+                    class="form-control"
+                    id="renewalMonths"
+                    name="renewalMonths"
+                  >
+                    <option value="">Select Period</option>
+                    <option value="1">1 Month</option>
+                    <option value="3">3 Months</option>
+                    <option value="6">6 Months</option>
+                    <option value="12">12 Months (1 Year)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label for="description">Description</label>
+                  <textarea
+                    class="form-control"
+                    id="description"
+                    name="description"
+                    rows="3"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label for="status">Status</label>
+                  <select class="form-control" id="status" name="status">
+                    <option value="1">Active</option>
+                    <option value="0">Inactive</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-3">
+              <div class="col-md-12">
+                <button type="submit" class="btn btn-primary">
+                  Create Package
+                </button>
+                <a
+                  href="<%= baseUrl %>admin/package/list"
+                  class="btn btn-secondary"
+                  >Cancel</a
+                >
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  const baseUrl = "<%= baseUrl %>";
+
+  // Show/hide renewal months based on type
+  $("#type").on("change", function () {
+    if ($(this).val() === "RENEWAL_CREDITS") {
+      $("#renewalMonthsRow").show();
+      $("#renewalMonths").prop("required", true);
+    } else {
+      $("#renewalMonthsRow").hide();
+      $("#renewalMonths").prop("required", false);
+    }
+  });
+
+  // Handle form submission
+  $("#packageForm").on("submit", function (e) {
+    e.preventDefault();
+
+    const formData = {
+      name: $("#name").val(),
+      type: $("#type").val(),
+      credits: parseInt($("#credits").val()),
+      price: parseFloat($("#price").val()),
+      discount: parseFloat($("#discount").val()) || 0,
+      description: $("#description").val(),
+      status: parseInt($("#status").val()),
+    };
+
+    if (formData.type === "RENEWAL_CREDITS") {
+      formData.renewalMonths = parseInt($("#renewalMonths").val());
+    }
+
+    $.ajax({
+      url: `${baseUrl}admin/package/create`,
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify(formData),
+      success: function (response) {
+        Swal.fire("Success!", "Package created successfully.", "success").then(
+          () => {
+            window.location.href = `${baseUrl}admin/package/list`;
+          }
+        );
+      },
+      error: function (err) {
+        Swal.fire(
+          "Error!",
+          err.responseJSON?.message || "Failed to create package.",
+          "error"
+        );
+      },
+    });
+  });
+</script>
+<%- include('../Layout/Footer') %>

@@ -17,6 +17,7 @@ import fsExtra from "fs-extra";
 import path from "path";
 import handlebars from "handlebars";
 import nodemailer from "nodemailer";
+import { handlePartnerReferral } from "../Utils/partnerHelper.js";
 import SystemModel from "../Models/Systemimage.js";
 import UserModel from "../Models/User.js";
 import PaypalModel from "../Models/Paypal.js";
@@ -304,6 +305,8 @@ class UserController {
     }
     let user = await UserModel.findOne({ tgid: data.telegram_username });
     if (!user) {
+      // Extract referral code if provided
+      const referralCode = data.referralCode || data.ref || null;
       // Check configuration for Telegram signup user type
       let telegramPremiumSetting = await ConfigurationModel.findOne({
         ConfigKey: "telegram_signup_premium",
@@ -376,6 +379,19 @@ class UserController {
         memberid: id,
       });
       const result = await doc.save();
+
+      // Handle partner referral if referral code provided
+      let partnerMessage = "";
+      if (referralCode) {
+        const referralResult = await handlePartnerReferral(
+          referralCode,
+          result
+        );
+        if (referralResult.success) {
+          partnerMessage = ` You have been successfully registered through a partner referral.`;
+        }
+      }
+
       // Create membership record only for premium
       // if (isPremium) {
       //   const membership = new MembershipModel({
@@ -387,7 +403,7 @@ class UserController {
       // Generate token
       let payload = {
         id: result._id,
-        username: desiredUsername,
+        username: data.telegram_username,
       };
       let accessToken = await jwt.sign(payload, accessTokenSecret, {
         algorithm: "HS256",
@@ -404,8 +420,8 @@ class UserController {
         success: true,
         data: user1,
         message: isPremium
-          ? "Welcome! You have been rewarded free premium membership for 1 year."
-          : "Welcome! You have been registered as a free user.",
+          ? `Welcome! You have been rewarded free premium membership for 1 year.${partnerMessage}`
+          : `Welcome! You have been registered as a free user.${partnerMessage}`,
       });
     } else {
       // Existing user, just login

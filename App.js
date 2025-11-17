@@ -3,6 +3,7 @@ import bodyParser from "body-parser";
 import connectDB from "./Db/Connectdb.js";
 import admin from "./Routes/Admin.js";
 import user from "./Routes/User.js";
+import partner from "./Routes/Partner.js";
 import fileUpload from "express-fileupload";
 import session from "express-session";
 import mongoose from "mongoose";
@@ -70,6 +71,7 @@ app.use(function (req, res, next) {
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json({ extended: false }));
 app.use("/admin", admin);
+app.use("/partner", partner);
 app.use("/", user);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 

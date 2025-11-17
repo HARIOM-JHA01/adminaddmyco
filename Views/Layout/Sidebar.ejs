@@ -130,6 +130,29 @@
           </ul>
         </li>
         <% } %>
+        <li class="sidebar-item has-sub <%= (path == 'partnerlist') || (path == 'partnerview') || (path == 'packagelist') || (path == 'partnerpaymentslist') || (path == 'renewalpricelist') || (path == 'partnerreports') ? 'active' : '' %> ">
+          <a href="#" class='sidebar-link'>
+            <i class="bi bi-person-badge"></i>
+            <span>Partner Program</span>
+          </a>
+          <ul class="submenu <%= (path == 'partnerlist') || (path == 'partnerview') || (path == 'packagelist') || (path == 'partnerpaymentslist') || (path == 'renewalpricelist') || (path == 'partnerreports') ? 'active' : '' %> ">
+            <li class="submenu-item <%= (path == 'partnerlist') || (path == 'partnerview') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/partner/list">Partners</a>
+            </li>
+            <li class="submenu-item <%= (path == 'packagelist') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/package/list">Packages</a>
+            </li>
+            <li class="submenu-item <%= (path == 'partnerpaymentslist') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/payment/list">Payments</a>
+            </li>
+            <li class="submenu-item <%= (path == 'renewalpricelist') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/renewal-price/list">Renewal Prices</a>
+            </li>
+            <li class="submenu-item <%= (path == 'partnerreports') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/partner/reports">Reports & Analytics</a>
+            </li>
+          </ul>
+        </li>
           <li
           class="sidebar-item has-sub <%= (path == 'createadmin') || (path == 'adminuserlist') ? 'active' : '' %>">
           <a href="#" class='sidebar-link'>

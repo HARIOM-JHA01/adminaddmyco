@@ -9,6 +9,17 @@ export function start() {
     return;
   }
 
+  // Respect environment flag to enable/disable the Telegram bot.
+  // Set `TELEGRAM_BOT_ENABLED=false` or `0` to disable polling.
+  const enabledEnv = process.env.TELEGRAM_BOT_ENABLED;
+  if (typeof enabledEnv !== "undefined") {
+    const normalized = String(enabledEnv).toLowerCase();
+    if (normalized === "false" || normalized === "0" || normalized === "no") {
+      console.log("Telegram bot disabled via TELEGRAM_BOT_ENABLED flag.");
+      return;
+    }
+  }
+
   const bot = new TelegramBot(token, { polling: true });
 
   // Helper function to handle the /start command and username parameter

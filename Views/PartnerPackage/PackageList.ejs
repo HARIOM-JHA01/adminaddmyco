@@ -1,0 +1,226 @@
+<%- include('../Layout/Header') %>
+<link
+  rel="stylesheet"
+  href="//cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css"
+/>
+<%- include('../Layout/Sidebar') %>
+<div id="main">
+  <div class="page-heading">
+    <div class="page-title mb-3">
+      <div class="row">
+        <div class="col-12 col-md-6 order-md-1 order-last">
+          <h3>
+            <a href="<%= baseUrl %>admin/dashboard" class="text-primary"
+              ><i class="fas fa-arrow-left me-2"></i></a
+            >Partner Packages
+          </h3>
+        </div>
+        <div
+          class="col-12 col-md-6 order-md-2 order-first d-flex justify-content-end align-items-center"
+        >
+          <nav
+            aria-label="breadcrumb"
+            class="breadcrumb-header float-start float-lg-end me-4 mb-0"
+          >
+            <ol class="breadcrumb" style="margin-bottom: 0px">
+              <li class="breadcrumb-item">
+                <a href="<%= baseUrl %>admin/dashboard">Dashboard</a>
+              </li>
+            </ol>
+          </nav>
+          <a href="<%= baseUrl %>admin/package/create">
+            <button type="button" class="btn btn-primary btn-sm">
+              <i class="bi bi-plus-circle"></i> Create Package
+            </button>
+          </a>
+        </div>
+      </div>
+    </div>
+    <section class="section">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped mb-0" id="package_table">
+            <thead>
+              <tr>
+                <th>No.</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Credits</th>
+                <th>Price</th>
+                <th>Discount</th>
+                <th>Final Price</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% var i=1; packages.forEach(function(v) { %>
+              <tr data-id="<%= v._id%>">
+                <td><span class="name-field"><%= i %></span></td>
+                <td>
+                  <span class="name-field"><strong><%= v.name%></strong></span>
+                </td>
+                <td>
+                  <% if (v.type == 'USER_CREDITS') { %>
+                  <span class="badge bg-info">User Credits</span>
+                  <% } else { %>
+                  <span class="badge bg-success">Renewal Credits</span>
+                  <% } %>
+                </td>
+                <td><span class="badge bg-primary"><%= v.credits %></span></td>
+                <td>$<%= v.price %></td>
+                <td><%= v.discount %>%</td>
+                <td><strong>$<%= v.finalPrice %></strong></td>
+                <td><%= v.description || 'N/A' %></td>
+                <td>
+                  <% if (v.status == 1) { %>
+                  <span class="badge bg-success">Active</span>
+                  <% } else { %>
+                  <span class="badge bg-danger">Inactive</span>
+                  <% } %>
+                </td>
+                <td>
+                  <a
+                    href="<%= baseUrl %>admin/package/edit/<%= v._id %>"
+                    class="btn btn-primary btn-sm"
+                  >
+                    <i class="bi bi-pencil-square"></i>
+                  </a>
+                  <% if (v.status == 1) { %>
+                  <button
+                    class="btn btn-warning btn-sm deactivate-btn"
+                    data-id="<%= v._id%>"
+                  >
+                    <i class="bi bi-pause-circle"></i>
+                  </button>
+                  <% } else { %>
+                  <button
+                    class="btn btn-success btn-sm activate-btn"
+                    data-id="<%= v._id%>"
+                  >
+                    <i class="bi bi-check-circle"></i>
+                  </button>
+                  <% } %>
+                  <button
+                    class="btn btn-danger btn-sm delete-btn"
+                    data-id="<%= v._id%>"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <% i++ %> <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="//cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  const baseUrl = "<%= baseUrl %>";
+
+  $(document).ready(function () {
+    $("#package_table").DataTable();
+
+    // Activate package
+    $(".activate-btn").on("click", function () {
+      const id = $(this).data("id");
+      Swal.fire({
+        title: "Activate Package?",
+        text: "Partners will be able to purchase this package.",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, activate!",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            url: `${baseUrl}admin/package/activate?id=${id}`,
+            method: "GET",
+            success: function (response) {
+              Swal.fire(
+                "Activated!",
+                "Package has been activated.",
+                "success"
+              ).then(() => location.reload());
+            },
+            error: function (err) {
+              Swal.fire("Error!", "Failed to activate package.", "error");
+            },
+          });
+        }
+      });
+    });
+
+    // Deactivate package
+    $(".deactivate-btn").on("click", function () {
+      const id = $(this).data("id");
+      Swal.fire({
+        title: "Deactivate Package?",
+        text: "Partners will not be able to purchase this package.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, deactivate!",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            url: `${baseUrl}admin/package/deactivate?id=${id}`,
+            method: "GET",
+            success: function (response) {
+              Swal.fire(
+                "Deactivated!",
+                "Package has been deactivated.",
+                "success"
+              ).then(() => location.reload());
+            },
+            error: function (err) {
+              Swal.fire("Error!", "Failed to deactivate package.", "error");
+            },
+          });
+        }
+      });
+    });
+
+    // Delete package
+    $(".delete-btn").on("click", function () {
+      const id = $(this).data("id");
+      Swal.fire({
+        title: "Delete Package?",
+        text: "This action cannot be undone!",
+        icon: "error",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it!",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            url: `${baseUrl}admin/package/delete?id=${id}`,
+            method: "GET",
+            success: function (response) {
+              Swal.fire(
+                "Deleted!",
+                "Package has been deleted.",
+                "success"
+              ).then(() => location.reload());
+            },
+            error: function (err) {
+              Swal.fire("Error!", "Failed to delete package.", "error");
+            },
+          });
+        }
+      });
+    });
+  });
+</script>
+<%- include('../Layout/Footer') %>
