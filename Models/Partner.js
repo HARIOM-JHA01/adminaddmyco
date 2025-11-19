@@ -5,10 +5,11 @@ const partnerSchema = new mongoose.Schema(
     name: { type: String },
     tgid: { type: String, required: true, unique: true },
     username: { type: String },
-    email: { type: String },
     token: { type: String },
     referralCode: { type: String, unique: true },
     referralUrl: { type: String },
+    country: { type: String },
+    countryCode: { type: String },
 
     // Credits for user signups
     userCredits: { type: Number, default: 0 },

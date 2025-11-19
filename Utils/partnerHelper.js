@@ -77,7 +77,7 @@ export const handlePartnerReferral = async (referralCode, user) => {
       message: "User successfully linked to partner",
       data: {
         partnerId: partner._id,
-        partnerName: partner.name,
+        partnerName: partner.username || partner.tgid,
         remainingCredits: partner.userCredits - partner.usedUserCredits,
         membershipExpiryDate,
       },
@@ -125,7 +125,7 @@ export const validateReferralCode = async (referralCode) => {
       valid: true,
       message: "Valid referral code",
       data: {
-        partnerName: partner.name,
+        partnerName: partner.username || partner.tgid,
         availableCredits,
       },
     };

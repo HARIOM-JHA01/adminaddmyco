@@ -38,14 +38,12 @@
             <thead>
               <tr>
                 <th>No.</th>
-                <th>Telegram ID</th>
-                <th>Name</th>
-                <th>Username</th>
-                <th>Email</th>
+                <th>tgUsername</th>
+                <th>Country</th>
                 <th>Referral Code</th>
                 <th>User Credits</th>
                 <th>Renewal Credits</th>
-                <th>Total Users</th>
+                <th>User Joined</th>
                 <th>Status</th>
                 <th>Joined Date</th>
                 <th>Action</th>
@@ -56,17 +54,24 @@
               <tr data-id="<%= v._id%>">
                 <td><span class="name-field"><%= i %></span></td>
                 <td>
+                  <span class="name-field">
+                    <% if (v.username) { %>
+                    <a href="https://t.me/<%= v.username %>" target="_blank"
+                      ><%= v.username %></a
+                    >
+                    <% } else if (v.tgid) { %>
+                    <a href="https://t.me/<%= v.tgid %>" target="_blank"
+                      ><%= v.tgid %></a
+                    >
+                    <% } else { %> N/A <% } %>
+                  </span>
+                </td>
+                <td>
                   <span class="name-field"
-                    ><a href="https://t.me/<%= v.tgid%>" target="_blank"
-                      ><%= v.tgid%></a
-                    ></span
+                    ><%= v.country ? v.country + (v.countryCode ? ' (' +
+                    v.countryCode + ')' : '') : 'N/A' %></span
                   >
                 </td>
-                <td><span class="name-field"><%= v.name || 'N/A' %></span></td>
-                <td>
-                  <span class="name-field"><%= v.username || 'N/A' %></span>
-                </td>
-                <td><span class="name-field"><%= v.email || 'N/A' %></span></td>
                 <td>
                   <span class="name-field"
                     ><strong><%= v.referralCode%></strong></span
@@ -147,7 +152,7 @@
 
   $(document).ready(function () {
     $("#partner_table").DataTable({
-      order: [[10, "desc"]], // Sort by join date descending
+      order: [[8, "desc"]], // Sort by join date descending (Joined Date column)
     });
 
     // Activate partner

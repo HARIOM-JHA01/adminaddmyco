@@ -98,7 +98,7 @@
                   <tr>
                     <th>No.</th>
                     <th>Partner</th>
-                    <th>Telegram ID</th>
+                    <th>tgUsername</th>
                     <th>Package</th>
                     <th>Amount</th>
                     <th>Transaction ID</th>
@@ -113,17 +113,19 @@
                   <tr data-id="<%= v._id%>">
                     <td><%= i %></td>
                     <td>
-                      <a
-                        href="<%= baseUrl %>admin/partner/view/<%= v.partner._id %>"
-                        ><%= v.partner.name || v.partner.tgid %></a
+                        <a
+                          href="<%= baseUrl %>admin/partner/view/<%= v.partner._id %>"
+                          ><%= v.partner.username || v.partner.tgid %></a
                       >
                     </td>
                     <td>
-                      <a
-                        href="https://t.me/<%= v.partner.tgid%>"
-                        target="_blank"
-                        ><%= v.partner.tgid%></a
-                      >
+                      <% if (v.partner.username) { %>
+                      <a href="https://t.me/<%= v.partner.username%>" target="_blank"><%= v.partner.username%></a>
+                      <% } else if (v.partner.tgid) { %>
+                      <a href="https://t.me/<%= v.partner.tgid%>" target="_blank"><%= v.partner.tgid%></a>
+                      <% } else { %>
+                      N/A
+                      <% } %>
                     </td>
                     <td>
                       <%= v.package.name %> (<%= v.package.type ===
@@ -166,6 +168,7 @@
               >
                 <thead>
                   <tr>
+                      ><%= v.partner.username || v.partner.tgid %></a
                     <th>No.</th>
                     <th>Partner</th>
                     <th>Package</th>
@@ -184,7 +187,7 @@
                     <td>
                       <a
                         href="<%= baseUrl %>admin/partner/view/<%= v.partner._id %>"
-                        ><%= v.partner.name || v.partner.tgid %></a
+                        ><%= v.partner.username || v.partner.tgid %></a
                       >
                     </td>
                     <td><%= v.package.name %></td>
@@ -232,7 +235,7 @@
                     <td>
                       <a
                         href="<%= baseUrl %>admin/partner/view/<%= v.partner._id %>"
-                        ><%= v.partner.name || v.partner.tgid %></a
+                        ><%= v.partner.username || v.partner.tgid %></a
                       >
                     </td>
                     <td><%= v.package.name %></td>
@@ -278,7 +281,7 @@
                     <td>
                       <a
                         href="<%= baseUrl %>admin/partner/view/<%= v.partner._id %>"
-                        ><%= v.partner.name || v.partner.tgid %></a
+                        ><%= v.partner.username || v.partner.tgid %></a
                       >
                     </td>
                     <td><%= v.package.name %></td>
@@ -308,23 +311,43 @@
   </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="//cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
   const baseUrl = "<%= baseUrl %>";
 
   $(document).ready(function () {
-    // Initialize DataTables for all tables
-    $(".payment-table").DataTable({
-      order: [[7, "desc"]], // Sort by date descending
+    console.log("PaymentList script loaded");
+    console.log("jQuery version:", $.fn.jquery);
+    console.log("baseUrl:", baseUrl);
+
+    // Initialize DataTables for all tables with specific configurations
+    $("#pending_table").DataTable({
+      order: [[7, "desc"]], // Sort by Payment Date descending
+      columnDefs: [
+        { orderable: false, targets: 8 }, // Disable sorting on Action column
+      ],
     });
 
-    // Approve payment
-    $(".approve-btn").on("click", function () {
+    $("#approved_table, #rejected_table, #all_table").DataTable({
+      order: [[0, "asc"]], // Sort by No. ascending
+    });
+
+    console.log("DataTables initialized");
+    console.log("Approve buttons found:", $(".approve-btn").length);
+    console.log("Reject buttons found:", $(".reject-btn").length);
+
+    // Approve payment (delegated handler to work with DataTables DOM)
+    $(document).on("click", ".approve-btn", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log("Approve button clicked");
+
       const id = $(this).data("id");
-      const partnerId = $(this).data("partner");
+      const $btn = $(this);
+      const origHtml = $btn.html();
+
+      console.log("Payment ID:", id);
 
       Swal.fire({
         title: "Approve Payment?",
@@ -336,20 +359,33 @@
         confirmButtonText: "Yes, approve it!",
       }).then((result) => {
         if (result.isConfirmed) {
+          // Use POST JSON instead of GET. Keep server GET support for backwards compatibility.
+          $btn
+            .prop("disabled", true)
+            .html(
+              '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Approving...'
+            );
+
           $.ajax({
-            url: `${baseUrl}admin/payment/approve?id=${id}`,
-            method: "GET",
+            url: `${baseUrl}admin/payment/approve`,
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ paymentId: id }),
             success: function (response) {
+              console.log("Approve success:", response);
               Swal.fire(
                 "Approved!",
                 "Payment has been approved and credits added.",
                 "success"
               ).then(() => location.reload());
             },
-            error: function (err) {
+            error: function (xhr, status, error) {
+              console.error("Approve error:", xhr, status, error);
+              // restore button state
+              $btn.prop("disabled", false).html(origHtml);
               Swal.fire(
                 "Error!",
-                err.responseJSON?.message || "Failed to approve payment.",
+                xhr.responseJSON?.message || "Failed to approve payment.",
                 "error"
               );
             },
@@ -358,9 +394,17 @@
       });
     });
 
-    // Reject payment
-    $(".reject-btn").on("click", function () {
+    // Reject payment (delegated handler)
+    $(document).on("click", ".reject-btn", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log("Reject button clicked");
+
       const id = $(this).data("id");
+      const $btn = $(this);
+      const origHtml = $btn.html();
+
+      console.log("Payment ID:", id);
 
       Swal.fire({
         title: "Reject Payment?",
@@ -382,22 +426,32 @@
         },
       }).then((result) => {
         if (result.isConfirmed) {
+          $btn
+            .prop("disabled", true)
+            .html(
+              '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Rejecting...'
+            );
+
           $.ajax({
             url: `${baseUrl}admin/payment/reject`,
             method: "POST",
             contentType: "application/json",
-            data: JSON.stringify({ id: id, reason: result.value }),
+            data: JSON.stringify({ paymentId: id, reason: result.value }),
             success: function (response) {
+              console.log("Reject success:", response);
               Swal.fire(
                 "Rejected!",
                 "Payment has been rejected.",
                 "success"
               ).then(() => location.reload());
             },
-            error: function (err) {
+            error: function (xhr, status, error) {
+              console.error("Reject error:", xhr, status, error);
+              // restore button state
+              $btn.prop("disabled", false).html(origHtml);
               Swal.fire(
                 "Error!",
-                err.responseJSON?.message || "Failed to reject payment.",
+                xhr.responseJSON?.message || "Failed to reject payment.",
                 "error"
               );
             },

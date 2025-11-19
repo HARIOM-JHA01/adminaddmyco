@@ -159,20 +159,41 @@ admin.get(
 admin.get("/partner/list", isAdmin, PartnerAdminController.PartnerList);
 admin.get("/partner/view/:id", isAdmin, PartnerAdminController.PartnerView);
 admin.get("/partner/reports", isAdmin, PartnerAdminController.PartnerReports);
+admin.get("/partner/delete/:id", isAdmin, PartnerAdminController.DeletePartner);
 
 // Package views
 admin.get("/package/list", isAdmin, PartnerAdminController.PackageList);
 admin.get("/package/create", isAdmin, PartnerAdminController.PackageCreate);
+admin.post(
+  "/package/create",
+  isAdmin,
+  PartnerAdminController.PackageCreatePost
+);
 admin.get("/package/edit/:id", isAdmin, PartnerAdminController.PackageEdit);
+admin.post("/package/edit", isAdmin, PartnerAdminController.PackageEditPost);
 
 // Payment admin view
 admin.get("/payment/list", isAdmin, PartnerAdminController.PaymentList);
+// Support both GET (UI calls) and POST for approving payments
+admin.get("/payment/approve", isAdmin, PartnerAdminController.ApprovePayment);
+admin.post("/payment/approve", isAdmin, PartnerAdminController.ApprovePayment);
+admin.post("/payment/reject", isAdmin, PartnerAdminController.RejectPayment);
 
 // Renewal price view
 admin.get(
   "/renewal-price/list",
   isAdmin,
   PartnerAdminController.RenewalPriceList
+);
+admin.post(
+  "/renewal-price/create",
+  isAdmin,
+  PartnerAdminController.RenewalPriceCreatePost
+);
+admin.post(
+  "/renewal-price/edit",
+  isAdmin,
+  PartnerAdminController.RenewalPriceEditPost
 );
 admin.get("/referralreport/:id", isAdmin, DashboardController.ReferralDetail);
 admin.get("/referralreport", isAdmin, DashboardController.ReferralReport);

@@ -157,7 +157,7 @@ class PartnerAdminController {
 
       const recentActivity = payments.slice(0, 20).map((p) => ({
         date: p.createdAt,
-        partnerName: p.partner?.name || p.partner?.tgid,
+        partnerName: p.partner?.username || p.partner?.tgid,
         type: "payment",
         details: `Payment ${p.transactionId}`,
         status: p.status === 1 ? "completed" : "pending",
@@ -205,7 +205,27 @@ class PartnerAdminController {
       res.status(500).send("Server error");
     }
   };
+  static DeletePartner = async (req, res) => {
+    try {
+      const id = req.params.id;
+      const partner = await PartnerModel.findById(id);
+      if (!partner) return res.status(404).send("Partner not found");
 
+      // Delete associated partner users
+      await PartnerUserModel.deleteMany({ partner: partner._id });
+
+      // Delete associated payments
+      await PartnerPaymentModel.deleteMany({ partner: partner._id });
+
+      // Finally, delete the partner
+      await partner.remove();
+
+      res.redirect(baseUrl + "/admin/partner/list");
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Server error");
+    }
+  };
   static PackageList = async (req, res) => {
     try {
       const packages = await PartnerPackageModel.find({})
@@ -235,6 +255,54 @@ class PartnerAdminController {
     });
   };
 
+  static PackageCreatePost = async (req, res) => {
+    try {
+      const {
+        name,
+        type,
+        credits,
+        price,
+        discount,
+        description,
+        status,
+        renewalMonths,
+      } = req.body;
+
+      // Calculate final price
+      const finalPrice = price - (price * (discount || 0)) / 100;
+
+      const packageData = {
+        name,
+        type,
+        credits: parseInt(credits),
+        price: parseFloat(price),
+        discount: parseFloat(discount || 0),
+        finalPrice,
+        description: description || "",
+        status: parseInt(status),
+      };
+
+      // Add renewalMonths if type is RENEWAL_CREDITS
+      if (type === "RENEWAL_CREDITS" && renewalMonths) {
+        packageData.renewalMonths = parseInt(renewalMonths);
+      }
+
+      await PartnerPackageModel.create(packageData);
+
+      return res.status(200).json({
+        success: true,
+        message: "Package created successfully",
+      });
+    } catch (err) {
+      console.error("Package create error:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: err.message,
+      });
+    }
+  };
+
   static PackageEdit = async (req, res) => {
     try {
       const pkg = await PartnerPackageModel.findById(req.params.id).lean();
@@ -250,6 +318,63 @@ class PartnerAdminController {
     } catch (err) {
       console.error(err);
       res.status(500).send("Server error");
+    }
+  };
+
+  static PackageEditPost = async (req, res) => {
+    try {
+      const {
+        id,
+        name,
+        type,
+        credits,
+        price,
+        discount,
+        description,
+        status,
+        renewalMonths,
+      } = req.body;
+
+      const pkg = await PartnerPackageModel.findById(id);
+      if (!pkg) {
+        return res.status(404).json({
+          success: false,
+          message: "Package not found",
+        });
+      }
+
+      // Calculate final price
+      const finalPrice = price - (price * (discount || 0)) / 100;
+
+      pkg.name = name;
+      pkg.type = type;
+      pkg.credits = parseInt(credits);
+      pkg.price = parseFloat(price);
+      pkg.discount = parseFloat(discount || 0);
+      pkg.finalPrice = finalPrice;
+      pkg.description = description || "";
+      pkg.status = parseInt(status);
+
+      // Update renewalMonths if type is RENEWAL_CREDITS
+      if (type === "RENEWAL_CREDITS" && renewalMonths) {
+        pkg.renewalMonths = parseInt(renewalMonths);
+      } else {
+        pkg.renewalMonths = undefined;
+      }
+
+      await pkg.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Package updated successfully",
+      });
+    } catch (err) {
+      console.error("Package edit error:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: err.message,
+      });
     }
   };
 
@@ -296,6 +421,183 @@ class PartnerAdminController {
     } catch (err) {
       console.error(err);
       res.status(500).send("Server error");
+    }
+  };
+
+  static RenewalPriceCreatePost = async (req, res) => {
+    try {
+      const { membershipMonths, creditCost, description, status } = req.body;
+
+      await PartnerRenewalPriceModel.create({
+        membershipMonths: parseInt(membershipMonths),
+        creditCost: parseInt(creditCost),
+        description: description || "",
+        status: parseInt(status),
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Renewal price created successfully",
+      });
+    } catch (err) {
+      console.error("Renewal price create error:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: err.message,
+      });
+    }
+  };
+
+  static RenewalPriceEditPost = async (req, res) => {
+    try {
+      const { id, membershipMonths, creditCost, description, status } =
+        req.body;
+
+      const renewalPrice = await PartnerRenewalPriceModel.findById(id);
+      if (!renewalPrice) {
+        return res.status(404).json({
+          success: false,
+          message: "Renewal price not found",
+        });
+      }
+
+      renewalPrice.membershipMonths = parseInt(membershipMonths);
+      renewalPrice.creditCost = parseInt(creditCost);
+      renewalPrice.description = description || "";
+      renewalPrice.status = parseInt(status);
+
+      await renewalPrice.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Renewal price updated successfully",
+      });
+    } catch (err) {
+      console.error("Renewal price edit error:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: err.message,
+      });
+    }
+  };
+
+  static ApprovePayment = async (req, res) => {
+    try {
+      const paymentId = req.body.paymentId || req.body.id || req.query.id;
+      const adminId = req.user && req.user._id;
+
+      if (!paymentId) {
+        return res
+          .status(400)
+          .json({ success: false, message: "paymentId is required" });
+      }
+
+      const payment = await PartnerPaymentModel.findById(paymentId);
+      if (!payment) {
+        return res.status(404).json({
+          success: false,
+          message: "Payment not found",
+        });
+      }
+
+      if (payment.status !== 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Payment already processed",
+        });
+      }
+
+      // Update payment status
+      payment.status = 1;
+      payment.paymentStatus = 1;
+      if (adminId) payment.approvedBy = adminId;
+      payment.approvedAt = new Date();
+      await payment.save();
+
+      // Add credits to partner
+      const partner = await PartnerModel.findById(payment.partner);
+      if (!partner) {
+        return res.status(404).json({
+          success: false,
+          message: "Partner not found",
+        });
+      }
+
+      if (payment.packageType === "USER_CREDITS") {
+        partner.userCredits += payment.credits;
+      } else if (payment.packageType === "RENEWAL_CREDITS") {
+        partner.renewalCredits += payment.credits;
+      }
+
+      // Activate referral if not already active and has credits
+      if (
+        !partner.isReferralActive &&
+        (partner.userCredits > 0 || partner.renewalCredits > 0)
+      ) {
+        partner.isReferralActive = true;
+      }
+
+      await partner.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Payment approved and credits added successfully",
+      });
+    } catch (err) {
+      console.error("Approve payment error:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: err.message,
+      });
+    }
+  };
+
+  static RejectPayment = async (req, res) => {
+    try {
+      const paymentId = req.body.paymentId || req.body.id || req.query.id;
+      const reason = req.body.reason || req.query.reason || "";
+
+      if (!paymentId) {
+        return res
+          .status(400)
+          .json({ success: false, message: "paymentId is required" });
+      }
+
+      const payment = await PartnerPaymentModel.findById(paymentId);
+      if (!payment) {
+        return res.status(404).json({
+          success: false,
+          message: "Payment not found",
+        });
+      }
+
+      if (payment.status !== 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Payment already processed",
+        });
+      }
+
+      // Update payment status
+      payment.status = 2;
+      payment.paymentStatus = 2;
+      payment.rejectionReason = reason || "";
+      await payment.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Payment rejected",
+      });
+    } catch (err) {
+      console.error("Reject payment error:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: err.message,
+      });
     }
   };
 }

@@ -45,24 +45,26 @@
             <div class="col-md-6">
               <table class="table table-borderless">
                 <tr>
-                  <th width="200">Telegram ID:</th>
+                  <th width="200">tgUsername:</th>
                   <td>
-                    <a href="https://t.me/<%= partner.tgid%>" target="_blank"
-                      ><%= partner.tgid%></a
+                    <% if (partner.username) { %>
+                    <a
+                      href="https://t.me/<%= partner.username %>"
+                      target="_blank"
+                      ><%= partner.username %></a
                     >
+                    <% } else { %>
+                    <span>N/A</span>
+                    <% } %>
                   </td>
                 </tr>
                 <tr>
-                  <th>Name:</th>
-                  <td><%= partner.name || 'N/A' %></td>
-                </tr>
-                <tr>
-                  <th>Username:</th>
-                  <td><%= partner.username || 'N/A' %></td>
-                </tr>
-                <tr>
-                  <th>Email:</th>
-                  <td><%= partner.email || 'N/A' %></td>
+                  <th>Country:</th>
+                  <td>
+                    <%= partner.country ? partner.country : 'N/A' %> <% if
+                    (partner.countryCode) { %> (<%= partner.countryCode %>) <% }
+                    %>
+                  </td>
                 </tr>
                 <tr>
                   <th>Status:</th>
@@ -121,7 +123,7 @@
         <div class="col-md-3">
           <div class="card">
             <div class="card-body">
-              <h6 class="text-muted">Total Users</h6>
+              <h6 class="text-muted">User Joined</h6>
               <h3><%= stats.totalUsers %></h3>
             </div>
           </div>
@@ -178,7 +180,11 @@
                   <td><%= i %></td>
                   <td><%= v.user.username %></td>
                   <td><%= v.user.memberid %></td>
-                  <td><%= v.user.country %></td>
+                  <td>
+                    <%= v.user.country ? v.user.country : 'N/A' %> <% if
+                    (v.user.countryCode) { %> (<%= v.user.countryCode %>) <% }
+                    %>
+                  </td>
                   <td>
                     <%= moment(v.membershipExpiryDate).format('DD-MM-YYYY') %>
                   </td>

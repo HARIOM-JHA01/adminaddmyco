@@ -30,7 +30,7 @@ class PartnerController {
    */
   static TelegramLogin = async (req, res) => {
     try {
-      const { tgid, name, username, email } = req.body;
+      const { tgid, name, username, country, countryCode } = req.body;
 
       const validator = new Validator(req.body, {
         tgid: "required|string",
@@ -55,7 +55,8 @@ class PartnerController {
           tgid,
           name: name || "",
           username: username || "",
-          email: email || "",
+          country: country || "",
+          countryCode: countryCode || "",
           referralCode,
           referralUrl,
           userCredits: 0,
@@ -85,9 +86,11 @@ class PartnerController {
         data: {
           partner: {
             id: partner._id,
-            name: partner.name,
             tgid: partner.tgid,
+            tgUsername: partner.username,
             username: partner.username,
+            country: partner.country,
+            countryCode: partner.countryCode,
             referralCode: partner.referralCode,
             referralUrl: partner.referralUrl,
             userCredits: partner.userCredits,
@@ -120,10 +123,9 @@ class PartnerController {
         success: true,
         data: {
           id: partner._id,
-          name: partner.name,
           tgid: partner.tgid,
+          tgUsername: partner.username,
           username: partner.username,
-          email: partner.email,
           referralCode: partner.referralCode,
           referralUrl: partner.referralUrl,
           userCredits: partner.userCredits,
