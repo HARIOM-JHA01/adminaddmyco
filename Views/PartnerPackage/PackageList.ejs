@@ -45,11 +45,10 @@
                 <th>No.</th>
                 <th>Name</th>
                 <th>Type</th>
-                <th>Credits</th>
-                <th>Price</th>
-                <th>Discount</th>
-                <th>Final Price</th>
-                <th>Description</th>
+                <th class="text-center">Credits</th>
+                <th class="text-center">Price</th>
+                <!-- Final Price removed -->
+                <!-- Discount and Description removed per new requirements -->
                 <th>Status</th>
                 <th>Action</th>
               </tr>
@@ -68,11 +67,11 @@
                   <span class="badge bg-success">Renewal Credits</span>
                   <% } %>
                 </td>
-                <td><span class="badge bg-primary"><%= v.credits %></span></td>
-                <td>$<%= v.price %></td>
-                <td><%= v.discount %>%</td>
-                <td><strong>$<%= v.finalPrice %></strong></td>
-                <td><%= v.description || 'N/A' %></td>
+                <td class="text-center">
+                  <span class="badge bg-primary"><%= v.credits %></span>
+                </td>
+                <td class="text-center"><span>$<%= v.price %></span></td>
+                <!-- Final Price removed -->
                 <td>
                   <% if (v.status == 1) { %>
                   <span class="badge bg-success">Active</span>

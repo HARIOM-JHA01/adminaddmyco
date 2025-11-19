@@ -257,34 +257,22 @@ class PartnerAdminController {
 
   static PackageCreatePost = async (req, res) => {
     try {
-      const {
-        name,
-        type,
-        credits,
-        price,
-        discount,
-        description,
-        status,
-        renewalMonths,
-      } = req.body;
+      const { name, type, credits, price, status, renewalYears } = req.body;
 
-      // Calculate final price
-      const finalPrice = price - (price * (discount || 0)) / 100;
+      // store price as-is
 
       const packageData = {
         name,
         type,
         credits: parseInt(credits),
         price: parseFloat(price),
-        discount: parseFloat(discount || 0),
-        finalPrice,
-        description: description || "",
+        // finalPrice removed
         status: parseInt(status),
       };
 
-      // Add renewalMonths if type is RENEWAL_CREDITS
-      if (type === "RENEWAL_CREDITS" && renewalMonths) {
-        packageData.renewalMonths = parseInt(renewalMonths);
+      // Add renewalYears if type is RENEWAL_CREDITS
+      if (type === "RENEWAL_CREDITS" && renewalYears) {
+        packageData.renewalYears = parseInt(renewalYears);
       }
 
       await PartnerPackageModel.create(packageData);
@@ -323,17 +311,7 @@ class PartnerAdminController {
 
   static PackageEditPost = async (req, res) => {
     try {
-      const {
-        id,
-        name,
-        type,
-        credits,
-        price,
-        discount,
-        description,
-        status,
-        renewalMonths,
-      } = req.body;
+      const { id, name, type, credits, price, status, renewalYears } = req.body;
 
       const pkg = await PartnerPackageModel.findById(id);
       if (!pkg) {
@@ -343,23 +321,18 @@ class PartnerAdminController {
         });
       }
 
-      // Calculate final price
-      const finalPrice = price - (price * (discount || 0)) / 100;
-
       pkg.name = name;
       pkg.type = type;
       pkg.credits = parseInt(credits);
       pkg.price = parseFloat(price);
-      pkg.discount = parseFloat(discount || 0);
-      pkg.finalPrice = finalPrice;
-      pkg.description = description || "";
+      // finalPrice removed
       pkg.status = parseInt(status);
 
-      // Update renewalMonths if type is RENEWAL_CREDITS
-      if (type === "RENEWAL_CREDITS" && renewalMonths) {
-        pkg.renewalMonths = parseInt(renewalMonths);
+      // Update renewalYears if type is RENEWAL_CREDITS
+      if (type === "RENEWAL_CREDITS" && renewalYears) {
+        pkg.renewalYears = parseInt(renewalYears);
       } else {
-        pkg.renewalMonths = undefined;
+        pkg.renewalYears = undefined;
       }
 
       await pkg.save();

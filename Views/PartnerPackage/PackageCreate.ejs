@@ -39,6 +39,18 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
+                  <label for="type"
+                    >Package Type <span class="text-danger">*</span></label
+                  >
+                  <select class="form-control" id="type" name="type" required>
+                    <option value="">Select Type</option>
+                    <option value="USER_CREDITS">User Credits</option>
+                    <option value="RENEWAL_CREDITS">Renewal Credits</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
                   <label for="name"
                     >Package Name <span class="text-danger">*</span></label
                   >
@@ -51,22 +63,10 @@
                   />
                 </div>
               </div>
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label for="type"
-                    >Package Type <span class="text-danger">*</span></label
-                  >
-                  <select class="form-control" id="type" name="type" required>
-                    <option value="">Select Type</option>
-                    <option value="USER_CREDITS">User Credits</option>
-                    <option value="RENEWAL_CREDITS">Renewal Credits</option>
-                  </select>
-                </div>
-              </div>
             </div>
 
             <div class="row">
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <div class="form-group">
                   <label for="credits"
                     >Credits <span class="text-danger">*</span></label
@@ -81,7 +81,7 @@
                   />
                 </div>
               </div>
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <div class="form-group">
                   <label for="price"
                     >Price (USDT) <span class="text-danger">*</span></label
@@ -97,57 +97,31 @@
                   />
                 </div>
               </div>
-              <div class="col-md-4">
-                <div class="form-group">
-                  <label for="discount">Discount (%)</label>
-                  <input
-                    type="number"
-                    class="form-control"
-                    id="discount"
-                    name="discount"
-                    min="0"
-                    max="100"
-                    value="0"
-                  />
-                </div>
-              </div>
+              <!-- discount removed per new requirements -->
             </div>
 
-            <div class="row" id="renewalMonthsRow" style="display: none">
+            <div class="row" id="renewalYearsRow" style="display: none">
               <div class="col-md-12">
                 <div class="form-group">
-                  <label for="renewalMonths"
-                    >Renewal Period (Months)
+                  <label for="renewalYears"
+                    >Renewal Period (Years)
                     <span class="text-danger">*</span></label
                   >
                   <select
                     class="form-control"
-                    id="renewalMonths"
-                    name="renewalMonths"
+                    id="renewalYears"
+                    name="renewalYears"
                   >
                     <option value="">Select Period</option>
-                    <option value="1">1 Month</option>
-                    <option value="3">3 Months</option>
-                    <option value="6">6 Months</option>
-                    <option value="12">12 Months (1 Year)</option>
+                    <option value="1">1 Year</option>
+                    <option value="2">2 Years</option>
+                    <option value="3">3 Years</option>
                   </select>
                 </div>
               </div>
             </div>
 
-            <div class="row">
-              <div class="col-md-12">
-                <div class="form-group">
-                  <label for="description">Description</label>
-                  <textarea
-                    class="form-control"
-                    id="description"
-                    name="description"
-                    rows="3"
-                  ></textarea>
-                </div>
-              </div>
-            </div>
+            <!-- Description removed per requirements -->
 
             <div class="row">
               <div class="col-md-12">
@@ -186,14 +160,14 @@
 <script>
   const baseUrl = "<%= baseUrl %>";
 
-  // Show/hide renewal months based on type
+  // Show/hide renewal years based on type
   $("#type").on("change", function () {
     if ($(this).val() === "RENEWAL_CREDITS") {
-      $("#renewalMonthsRow").show();
-      $("#renewalMonths").prop("required", true);
+      $("#renewalYearsRow").show();
+      $("#renewalYears").prop("required", true);
     } else {
-      $("#renewalMonthsRow").hide();
-      $("#renewalMonths").prop("required", false);
+      $("#renewalYearsRow").hide();
+      $("#renewalYears").prop("required", false);
     }
   });
 
@@ -206,13 +180,11 @@
       type: $("#type").val(),
       credits: parseInt($("#credits").val()),
       price: parseFloat($("#price").val()),
-      discount: parseFloat($("#discount").val()) || 0,
-      description: $("#description").val(),
       status: parseInt($("#status").val()),
     };
 
     if (formData.type === "RENEWAL_CREDITS") {
-      formData.renewalMonths = parseInt($("#renewalMonths").val());
+      formData.renewalYears = parseInt($("#renewalYears").val());
     }
 
     $.ajax({

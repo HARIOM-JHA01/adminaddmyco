@@ -222,7 +222,7 @@ class PartnerController {
         partner: partnerId,
         package: packageId,
         packageType: packageData.type,
-        amount: packageData.finalPrice,
+        amount: packageData.price,
         credits: packageData.credits,
         transactionId,
         walletAddress,

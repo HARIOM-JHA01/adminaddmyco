@@ -30,12 +30,6 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="name">Package Name <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" id="name" name="name" value="<%= package.name %>" required>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="form-group">
                   <label for="type">Package Type <span class="text-danger">*</span></label>
                   <select class="form-control" id="type" name="type" required>
                     <option value="">Select Type</option>
@@ -44,52 +38,45 @@
                   </select>
                 </div>
               </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="name">Package Name <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="name" name="name" value="<%= package.name %>" required>
+                </div>
+              </div>
             </div>
 
             <div class="row">
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <div class="form-group">
                   <label for="credits">Credits <span class="text-danger">*</span></label>
                   <input type="number" class="form-control" id="credits" name="credits" min="1" value="<%= package.credits %>" required>
                 </div>
               </div>
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <div class="form-group">
                   <label for="price">Price (USD) <span class="text-danger">*</span></label>
                   <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" value="<%= package.price %>" required>
                 </div>
               </div>
-              <div class="col-md-4">
-                <div class="form-group">
-                  <label for="discount">Discount (%)</label>
-                  <input type="number" class="form-control" id="discount" name="discount" min="0" max="100" value="<%= package.discount %>">
-                </div>
-              </div>
+              <!-- discount removed per requirements -->
             </div>
 
-            <div class="row" id="renewalMonthsRow" <%= package.type === 'RENEWAL_CREDITS' ? '' : 'style="display:none;"' %>>
+            <div class="row" id="renewalYearsRow" <%= package.type === 'RENEWAL_CREDITS' ? '' : 'style="display:none;"' %>>
               <div class="col-md-12">
                 <div class="form-group">
-                  <label for="renewalMonths">Renewal Period (Months) <span class="text-danger">*</span></label>
-                  <select class="form-control" id="renewalMonths" name="renewalMonths">
+                  <label for="renewalYears">Renewal Period (Years) <span class="text-danger">*</span></label>
+                  <select class="form-control" id="renewalYears" name="renewalYears">
                     <option value="">Select Period</option>
-                    <option value="1" <%= package.renewalMonths === 1 ? 'selected' : '' %>>1 Month</option>
-                    <option value="3" <%= package.renewalMonths === 3 ? 'selected' : '' %>>3 Months</option>
-                    <option value="6" <%= package.renewalMonths === 6 ? 'selected' : '' %>>6 Months</option>
-                    <option value="12" <%= package.renewalMonths === 12 ? 'selected' : '' %>>12 Months (1 Year)</option>
+                    <option value="1" <%= package.renewalYears === 1 ? 'selected' : '' %>>1 Year</option>
+                    <option value="2" <%= package.renewalYears === 2 ? 'selected' : '' %>>2 Years</option>
+                    <option value="3" <%= package.renewalYears === 3 ? 'selected' : '' %>>3 Years</option>
                   </select>
                 </div>
               </div>
             </div>
 
-            <div class="row">
-              <div class="col-md-12">
-                <div class="form-group">
-                  <label for="description">Description</label>
-                  <textarea class="form-control" id="description" name="description" rows="3"><%= package.description || '' %></textarea>
-                </div>
-              </div>
-            </div>
+            <!-- Description removed per requirements -->
 
             <div class="row">
               <div class="col-md-12">
@@ -125,11 +112,11 @@
   // Show/hide renewal months based on type
   $('#type').on('change', function() {
     if ($(this).val() === 'RENEWAL_CREDITS') {
-      $('#renewalMonthsRow').show();
-      $('#renewalMonths').prop('required', true);
+      $('#renewalYearsRow').show();
+      $('#renewalYears').prop('required', true);
     } else {
-      $('#renewalMonthsRow').hide();
-      $('#renewalMonths').prop('required', false);
+      $('#renewalYearsRow').hide();
+      $('#renewalYears').prop('required', false);
     }
   });
 
@@ -143,13 +130,12 @@
       type: $('#type').val(),
       credits: parseInt($('#credits').val()),
       price: parseFloat($('#price').val()),
-      discount: parseFloat($('#discount').val()) || 0,
-      description: $('#description').val(),
+      // discount and description removed
       status: parseInt($('#status').val())
     };
 
     if (formData.type === 'RENEWAL_CREDITS') {
-      formData.renewalMonths = parseInt($('#renewalMonths').val());
+      formData.renewalYears = parseInt($('#renewalYears').val());
     }
 
     $.ajax({
