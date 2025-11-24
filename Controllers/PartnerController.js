@@ -49,7 +49,7 @@ class PartnerController {
       if (!partner) {
         // Create new partner
         const referralCode = PartnerController.generateReferralCode();
-        const referralUrl = `${baseUrl}?ref=${referralCode}`;
+        const referralUrl = `https://partner.addmy.co/${referralCode}`;
 
         partner = await PartnerModel.create({
           tgid,
