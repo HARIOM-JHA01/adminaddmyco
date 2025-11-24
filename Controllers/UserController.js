@@ -404,7 +404,7 @@ class UserController {
       // Generate token
       let payload = {
         id: result._id,
-        username: data.telegram_username,
+        username: activeUsername,
       };
       let accessToken = await jwt.sign(payload, accessTokenSecret, {
         algorithm: "HS256",
