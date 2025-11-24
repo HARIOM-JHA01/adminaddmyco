@@ -38,7 +38,7 @@
             <thead>
               <tr>
                 <th>No.</th>
-                <th>tgUsername</th>
+                <th>TGUsername</th>
                 <th>Country</th>
                 <th>Referral Code</th>
                 <th>User Credits</th>
@@ -231,7 +231,7 @@
       }).then((result) => {
         if (result.isConfirmed) {
           $.ajax({
-            url: `${baseUrl}admin/partner/delete?id=${id}`,
+            url: `${baseUrl}admin/partner/delete/${id}`,
             method: "GET",
             success: function (response) {
               Swal.fire(

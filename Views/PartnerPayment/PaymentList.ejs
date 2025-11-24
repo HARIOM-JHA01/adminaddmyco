@@ -113,19 +113,26 @@
                   <tr data-id="<%= v._id%>">
                     <td><%= i %></td>
                     <td>
-                        <a
-                          href="<%= baseUrl %>admin/partner/view/<%= v.partner._id %>"
-                          ><%= v.partner.username || v.partner.tgid %></a
+                      <a
+                        href="<%= baseUrl %>admin/partner/view/<%= v.partner._id %>"
                       >
+                        <%= v.partner.username || v.partner.tgid %>
+                      </a>
                     </td>
                     <td>
                       <% if (v.partner.username) { %>
-                      <a href="https://t.me/<%= v.partner.username%>" target="_blank"><%= v.partner.username%></a>
+                      <a
+                        href="https://t.me/<%= v.partner.username%>"
+                        target="_blank"
+                        ><%= v.partner.username%></a
+                      >
                       <% } else if (v.partner.tgid) { %>
-                      <a href="https://t.me/<%= v.partner.tgid%>" target="_blank"><%= v.partner.tgid%></a>
-                      <% } else { %>
-                      N/A
-                      <% } %>
+                      <a
+                        href="https://t.me/<%= v.partner.tgid%>"
+                        target="_blank"
+                        ><%= v.partner.tgid%></a
+                      >
+                      <% } else { %> N/A <% } %>
                     </td>
                     <td>
                       <%= v.package.name %> (<%= v.package.type ===
@@ -168,7 +175,6 @@
               >
                 <thead>
                   <tr>
-                      ><%= v.partner.username || v.partner.tgid %></a
                     <th>No.</th>
                     <th>Partner</th>
                     <th>Package</th>
@@ -187,8 +193,9 @@
                     <td>
                       <a
                         href="<%= baseUrl %>admin/partner/view/<%= v.partner._id %>"
-                        ><%= v.partner.username || v.partner.tgid %></a
                       >
+                        <%= v.partner.username || v.partner.tgid %>
+                      </a>
                     </td>
                     <td><%= v.package.name %></td>
                     <td>$<%= v.amount %></td>
@@ -235,8 +242,9 @@
                     <td>
                       <a
                         href="<%= baseUrl %>admin/partner/view/<%= v.partner._id %>"
-                        ><%= v.partner.username || v.partner.tgid %></a
                       >
+                        <%= v.partner.username || v.partner.tgid %>
+                      </a>
                     </td>
                     <td><%= v.package.name %></td>
                     <td>$<%= v.amount %></td>
@@ -281,8 +289,9 @@
                     <td>
                       <a
                         href="<%= baseUrl %>admin/partner/view/<%= v.partner._id %>"
-                        ><%= v.partner.username || v.partner.tgid %></a
                       >
+                        <%= v.partner.username || v.partner.tgid %>
+                      </a>
                     </td>
                     <td><%= v.package.name %></td>
                     <td>$<%= v.amount %></td>

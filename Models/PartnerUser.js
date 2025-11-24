@@ -17,6 +17,12 @@ const partnerUserSchema = new mongoose.Schema(
     lastRenewalDate: { type: Date },
     lastRenewalBy: { type: String, default: "PARTNER" }, // PARTNER or USER
 
+    // Login tracking
+    isFirstLogin: { type: Boolean, default: true },
+    firstLoginAt: { type: Date },
+    lastLoginAt: { type: Date },
+    loginCount: { type: Number, default: 0 },
+
     status: { type: Number, default: 1 }, // 1: active, 0: inactive
   },
   { timestamps: true }

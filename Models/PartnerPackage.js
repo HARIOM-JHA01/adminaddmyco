@@ -12,8 +12,8 @@ const partnerPackageSchema = new mongoose.Schema(
     price: { type: Number, required: true }, // Price in USDT
     // discount removed, finalPrice removed
 
-    // For renewal credits package
-    renewalYears: { type: Number }, // Number of years each renewal gives
+    // For renewal credits package - default to 1 year
+    renewalYears: { type: Number, default: 1 }, // Number of years each renewal gives
 
     status: { type: Number, default: 1 }, // 1: active, 0: inactive
     isPopular: { type: Boolean, default: false },

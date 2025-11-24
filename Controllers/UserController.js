@@ -18,6 +18,7 @@ import path from "path";
 import handlebars from "handlebars";
 import nodemailer from "nodemailer";
 import { handlePartnerReferral } from "../Utils/partnerHelper.js";
+import PartnerUserModel from "../Models/PartnerUser.js";
 import SystemModel from "../Models/Systemimage.js";
 import UserModel from "../Models/User.js";
 import PaypalModel from "../Models/Paypal.js";
@@ -415,6 +416,23 @@ class UserController {
           token: accessToken,
         }
       );
+      // If the user was linked to a partner via referral, mark their first login
+      try {
+        const partnerUsers = await PartnerUserModel.find({ user: result._id });
+        if (partnerUsers && partnerUsers.length > 0) {
+          for (const pu of partnerUsers) {
+            if (pu.isFirstLogin) {
+              pu.isFirstLogin = false;
+              pu.firstLoginAt = new Date();
+            }
+            pu.lastLoginAt = new Date();
+            pu.loginCount = (pu.loginCount || 0) + 1;
+            await pu.save();
+          }
+        }
+      } catch (e) {
+        console.error("Error updating PartnerUser login on registration:", e);
+      }
       let user1 = await UserModel.findById(result._id);
       return res.status(200).json({
         success: true,
@@ -441,6 +459,24 @@ class UserController {
         }
       );
       let user1 = await UserModel.findById(user._id);
+
+      // Update partner-user login tracking if user is linked to any partner
+      try {
+        const partnerUsers = await PartnerUserModel.find({ user: user._id });
+        if (partnerUsers && partnerUsers.length > 0) {
+          for (const pu of partnerUsers) {
+            if (pu.isFirstLogin) {
+              pu.isFirstLogin = false;
+              pu.firstLoginAt = new Date();
+            }
+            pu.lastLoginAt = new Date();
+            pu.loginCount = (pu.loginCount || 0) + 1;
+            await pu.save();
+          }
+        }
+      } catch (e) {
+        console.error("Error updating PartnerUser login on login:", e);
+      }
       return res.status(200).json({
         success: true,
         data: user1,

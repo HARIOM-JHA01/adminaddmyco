@@ -54,6 +54,11 @@ export const handlePartnerReferral = async (referralCode, user) => {
       joinDate: new Date(),
       membershipExpiryDate,
       renewalCount: 0,
+      // initialize login tracking
+      isFirstLogin: true,
+      firstLoginAt: null,
+      lastLoginAt: null,
+      loginCount: 0,
       status: 1,
     });
 

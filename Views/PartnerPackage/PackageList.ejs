@@ -43,7 +43,7 @@
             <thead>
               <tr>
                 <th>No.</th>
-                <th>Name</th>
+                <th>Pkg. Name</th>
                 <th>Type</th>
                 <th class="text-center">Credits</th>
                 <th class="text-center">Price</th>
@@ -142,7 +142,7 @@
       }).then((result) => {
         if (result.isConfirmed) {
           $.ajax({
-            url: `${baseUrl}admin/package/activate?id=${id}`,
+            url: `${baseUrl}admin/package/activate/${id}`,
             method: "GET",
             success: function (response) {
               Swal.fire(
@@ -173,7 +173,7 @@
       }).then((result) => {
         if (result.isConfirmed) {
           $.ajax({
-            url: `${baseUrl}admin/package/deactivate?id=${id}`,
+            url: `${baseUrl}admin/package/deactivate/${id}`,
             method: "GET",
             success: function (response) {
               Swal.fire(
@@ -204,7 +204,7 @@
       }).then((result) => {
         if (result.isConfirmed) {
           $.ajax({
-            url: `${baseUrl}admin/package/delete?id=${id}`,
+            url: `${baseUrl}admin/package/delete/${id}`,
             method: "GET",
             success: function (response) {
               Swal.fire(

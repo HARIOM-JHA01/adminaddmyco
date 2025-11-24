@@ -62,19 +62,7 @@
               <!-- discount removed per requirements -->
             </div>
 
-            <div class="row" id="renewalYearsRow" <%= package.type === 'RENEWAL_CREDITS' ? '' : 'style="display:none;"' %>>
-              <div class="col-md-12">
-                <div class="form-group">
-                  <label for="renewalYears">Renewal Period (Years) <span class="text-danger">*</span></label>
-                  <select class="form-control" id="renewalYears" name="renewalYears">
-                    <option value="">Select Period</option>
-                    <option value="1" <%= package.renewalYears === 1 ? 'selected' : '' %>>1 Year</option>
-                    <option value="2" <%= package.renewalYears === 2 ? 'selected' : '' %>>2 Years</option>
-                    <option value="3" <%= package.renewalYears === 3 ? 'selected' : '' %>>3 Years</option>
-                  </select>
-                </div>
-              </div>
-            </div>
+            <!-- RenewalYears removed per request; default set to 1 in model -->
 
             <!-- Description removed per requirements -->
 
@@ -110,15 +98,7 @@
   const baseUrl = "<%= baseUrl %>";
 
   // Show/hide renewal months based on type
-  $('#type').on('change', function() {
-    if ($(this).val() === 'RENEWAL_CREDITS') {
-      $('#renewalYearsRow').show();
-      $('#renewalYears').prop('required', true);
-    } else {
-      $('#renewalYearsRow').hide();
-      $('#renewalYears').prop('required', false);
-    }
-  });
+  // renewalYears removed from UI; server defaults to 1 year
 
   // Handle form submission
   $('#packageForm').on('submit', function(e) {
@@ -134,9 +114,10 @@
       status: parseInt($('#status').val())
     };
 
-    if (formData.type === 'RENEWAL_CREDITS') {
-      formData.renewalYears = parseInt($('#renewalYears').val());
-    }
+    // include id in body to support both /package/edit (body id) and /package/edit/:id
+    formData.id = packageId;
+
+    // renewalYears is defaulted to 1 by the server; no client input
 
     $.ajax({
       url: `${baseUrl}admin/package/edit/${packageId}`,

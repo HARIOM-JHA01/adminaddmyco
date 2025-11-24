@@ -154,9 +154,17 @@ class PartnerController {
    */
   static GetPackages = async (req, res) => {
     try {
-      const packages = await PartnerPackageModel.find({ status: 1 }).sort({
-        price: 1,
-      });
+      // Show USER_CREDITS packages first by default; still sort by price within type
+      const packages = await PartnerPackageModel.aggregate([
+        { $match: { status: 1 } },
+        {
+          $addFields: {
+            sortOrder: { $cond: [{ $eq: ["$type", "USER_CREDITS"] }, 0, 1] },
+          },
+        },
+        { $sort: { sortOrder: 1, price: 1 } },
+        { $project: { sortOrder: 0 } },
+      ]);
 
       return res.status(200).json({
         success: true,
@@ -421,6 +429,11 @@ class PartnerController {
           : 0,
         renewalCount: pu.renewalCount,
         lastRenewalDate: pu.lastRenewalDate,
+        // Login tracking
+        isFirstLogin: pu.isFirstLogin,
+        firstLoginAt: pu.firstLoginAt,
+        lastLoginAt: pu.lastLoginAt,
+        loginCount: pu.loginCount,
       }));
 
       return res.status(200).json({
@@ -631,6 +644,11 @@ class PartnerController {
           renewalCount: partnerUser.renewalCount,
           lastRenewalDate: partnerUser.lastRenewalDate,
           lastRenewalBy: partnerUser.lastRenewalBy,
+          // Login tracking
+          isFirstLogin: partnerUser.isFirstLogin,
+          firstLoginAt: partnerUser.firstLoginAt,
+          lastLoginAt: partnerUser.lastLoginAt,
+          loginCount: partnerUser.loginCount,
         },
       });
     } catch (error) {

@@ -160,6 +160,8 @@ admin.get("/partner/list", isAdmin, PartnerAdminController.PartnerList);
 admin.get("/partner/view/:id", isAdmin, PartnerAdminController.PartnerView);
 admin.get("/partner/reports", isAdmin, PartnerAdminController.PartnerReports);
 admin.get("/partner/delete/:id", isAdmin, PartnerAdminController.DeletePartner);
+// Also accept query param for older or external links
+admin.get("/partner/delete", isAdmin, PartnerAdminController.DeletePartner);
 
 // Package views
 admin.get("/package/list", isAdmin, PartnerAdminController.PackageList);
@@ -171,6 +173,32 @@ admin.post(
 );
 admin.get("/package/edit/:id", isAdmin, PartnerAdminController.PackageEdit);
 admin.post("/package/edit", isAdmin, PartnerAdminController.PackageEditPost);
+// also support sending id in URL for clients that POST to /package/edit/:id
+admin.post(
+  "/package/edit/:id",
+  isAdmin,
+  PartnerAdminController.PackageEditPost
+);
+admin.get("/package/delete/:id", isAdmin, PartnerAdminController.PackageDelete);
+admin.get("/package/delete", isAdmin, PartnerAdminController.PackageDelete);
+admin.get(
+  "/package/activate/:id",
+  isAdmin,
+  PartnerAdminController.PackageActivate
+);
+// also accept query param for backward compatibility
+admin.get("/package/activate", isAdmin, PartnerAdminController.PackageActivate);
+admin.get(
+  "/package/deactivate/:id",
+  isAdmin,
+  PartnerAdminController.PackageDeactivate
+);
+// also accept query param for backward compatibility
+admin.get(
+  "/package/deactivate",
+  isAdmin,
+  PartnerAdminController.PackageDeactivate
+);
 
 // Payment admin view
 admin.get("/payment/list", isAdmin, PartnerAdminController.PaymentList);
@@ -179,22 +207,7 @@ admin.get("/payment/approve", isAdmin, PartnerAdminController.ApprovePayment);
 admin.post("/payment/approve", isAdmin, PartnerAdminController.ApprovePayment);
 admin.post("/payment/reject", isAdmin, PartnerAdminController.RejectPayment);
 
-// Renewal price view
-admin.get(
-  "/renewal-price/list",
-  isAdmin,
-  PartnerAdminController.RenewalPriceList
-);
-admin.post(
-  "/renewal-price/create",
-  isAdmin,
-  PartnerAdminController.RenewalPriceCreatePost
-);
-admin.post(
-  "/renewal-price/edit",
-  isAdmin,
-  PartnerAdminController.RenewalPriceEditPost
-);
+// Renewal price admin pages removed per request
 admin.get("/referralreport/:id", isAdmin, DashboardController.ReferralDetail);
 admin.get("/referralreport", isAdmin, DashboardController.ReferralReport);
 

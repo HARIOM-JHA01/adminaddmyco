@@ -100,26 +100,7 @@
               <!-- discount removed per new requirements -->
             </div>
 
-            <div class="row" id="renewalYearsRow" style="display: none">
-              <div class="col-md-12">
-                <div class="form-group">
-                  <label for="renewalYears"
-                    >Renewal Period (Years)
-                    <span class="text-danger">*</span></label
-                  >
-                  <select
-                    class="form-control"
-                    id="renewalYears"
-                    name="renewalYears"
-                  >
-                    <option value="">Select Period</option>
-                    <option value="1">1 Year</option>
-                    <option value="2">2 Years</option>
-                    <option value="3">3 Years</option>
-                  </select>
-                </div>
-              </div>
-            </div>
+            <!-- RenewalYears removed per request; default set to 1 in model -->
 
             <!-- Description removed per requirements -->
 
@@ -160,16 +141,7 @@
 <script>
   const baseUrl = "<%= baseUrl %>";
 
-  // Show/hide renewal years based on type
-  $("#type").on("change", function () {
-    if ($(this).val() === "RENEWAL_CREDITS") {
-      $("#renewalYearsRow").show();
-      $("#renewalYears").prop("required", true);
-    } else {
-      $("#renewalYearsRow").hide();
-      $("#renewalYears").prop("required", false);
-    }
-  });
+  // renewalYears removed from UI; default 1 is used by the server
 
   // Handle form submission
   $("#packageForm").on("submit", function (e) {
@@ -183,9 +155,7 @@
       status: parseInt($("#status").val()),
     };
 
-    if (formData.type === "RENEWAL_CREDITS") {
-      formData.renewalYears = parseInt($("#renewalYears").val());
-    }
+    // renewalYears is defaulted to 1 in the server; no client input
 
     $.ajax({
       url: `${baseUrl}admin/package/create`,

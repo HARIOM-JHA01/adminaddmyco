@@ -38,7 +38,7 @@ class PartnerAdminController {
 
   static PartnerView = async (req, res) => {
     try {
-      const id = req.params.id;
+      const id = req.params.id || req.query.id;
       const partner = await PartnerModel.findById(id).lean();
       if (!partner) return res.status(404).send("Partner not found");
 
@@ -207,7 +207,7 @@ class PartnerAdminController {
   };
   static DeletePartner = async (req, res) => {
     try {
-      const id = req.params.id;
+      const id = req.params.id || req.query.id;
       const partner = await PartnerModel.findById(id);
       if (!partner) return res.status(404).send("Partner not found");
 
@@ -220,17 +220,95 @@ class PartnerAdminController {
       // Finally, delete the partner
       await partner.remove();
 
-      res.redirect(baseUrl + "/admin/partner/list");
+      res.redirect(baseUrl + "admin/partner/list");
     } catch (err) {
       console.error(err);
       res.status(500).send("Server error");
     }
   };
+
+  static PackageActivate = async (req, res) => {
+    try {
+      const id = req.params.id || req.query.id;
+      const pkg = await PartnerPackageModel.findById(id);
+      if (!pkg)
+        return res
+          .status(404)
+          .json({ success: false, message: "Package not found" });
+
+      pkg.status = 1;
+      await pkg.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Package activated",
+        Url: `${baseUrl}admin/package/list`,
+      });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+  };
+
+  static PackageDeactivate = async (req, res) => {
+    try {
+      const id = req.params.id || req.query.id;
+      const pkg = await PartnerPackageModel.findById(id);
+      if (!pkg)
+        return res
+          .status(404)
+          .json({ success: false, message: "Package not found" });
+
+      pkg.status = 0;
+      await pkg.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Package deactivated",
+        Url: `${baseUrl}admin/package/list`,
+      });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+  };
+
+  static PackageDelete = async (req, res) => {
+    try {
+      const id = req.params.id || req.query.id;
+      const pkg = await PartnerPackageModel.findById(id);
+      if (!pkg)
+        return res
+          .status(404)
+          .json({ success: false, message: "Package not found" });
+
+      // Optionally: remove related partner payments if desired.
+      // await PartnerPaymentModel.deleteMany({ package: pkg._id });
+
+      await pkg.deleteOne();
+
+      return res.status(200).json({
+        success: true,
+        message: "Package deleted",
+        Url: `${baseUrl}admin/package/list`,
+      });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+  };
   static PackageList = async (req, res) => {
     try {
-      const packages = await PartnerPackageModel.find({})
-        .sort({ createdAt: -1 })
-        .lean();
+      // Ensure USER_CREDITS packages appear first by default; still sort newest first within type
+      const packages = await PartnerPackageModel.aggregate([
+        {
+          $addFields: {
+            sortOrder: { $cond: [{ $eq: ["$type", "USER_CREDITS"] }, 0, 1] },
+          },
+        },
+        { $sort: { sortOrder: 1, createdAt: -1 } },
+        { $project: { sortOrder: 0 } },
+      ]);
       res.render("PartnerPackage/PackageList", {
         baseUrl,
         packages,
@@ -271,8 +349,9 @@ class PartnerAdminController {
       };
 
       // Add renewalYears if type is RENEWAL_CREDITS
-      if (type === "RENEWAL_CREDITS" && renewalYears) {
-        packageData.renewalYears = parseInt(renewalYears);
+      if (type === "RENEWAL_CREDITS") {
+        // default to 1 when not provided
+        packageData.renewalYears = renewalYears ? parseInt(renewalYears) : 1;
       }
 
       await PartnerPackageModel.create(packageData);
@@ -311,7 +390,9 @@ class PartnerAdminController {
 
   static PackageEditPost = async (req, res) => {
     try {
-      const { id, name, type, credits, price, status, renewalYears } = req.body;
+      // id may be passed in req.params (URL /package/edit/:id) or in req.body
+      const id = req.params.id || req.body.id;
+      const { name, type, credits, price, status, renewalYears } = req.body;
 
       const pkg = await PartnerPackageModel.findById(id);
       if (!pkg) {
@@ -321,16 +402,36 @@ class PartnerAdminController {
         });
       }
 
+      // Validate inputs
+      if (!name || !type) {
+        return res
+          .status(400)
+          .json({ success: false, message: "name and type are required" });
+      }
+
+      const parsedCredits = parseInt(credits);
+      const parsedPrice = parseFloat(price);
+      if (Number.isNaN(parsedCredits) || parsedCredits < 0) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Valid credits are required" });
+      }
+      if (Number.isNaN(parsedPrice) || parsedPrice < 0) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Valid price is required" });
+      }
+
       pkg.name = name;
       pkg.type = type;
-      pkg.credits = parseInt(credits);
-      pkg.price = parseFloat(price);
+      pkg.credits = parsedCredits;
+      pkg.price = parsedPrice;
       // finalPrice removed
       pkg.status = parseInt(status);
 
-      // Update renewalYears if type is RENEWAL_CREDITS
-      if (type === "RENEWAL_CREDITS" && renewalYears) {
-        pkg.renewalYears = parseInt(renewalYears);
+      // Update renewalYears if type is RENEWAL_CREDITS; default to 1 if not supplied
+      if (type === "RENEWAL_CREDITS") {
+        pkg.renewalYears = renewalYears ? parseInt(renewalYears) : 1;
       } else {
         pkg.renewalYears = undefined;
       }
