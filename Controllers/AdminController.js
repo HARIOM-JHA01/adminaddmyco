@@ -25,7 +25,7 @@ import CategoryModel from "../Models/Category.js";
 import moment from "moment/moment.js";
 import { log } from "console";
 import AdminTokenModel from "../Models/AdminToken.js";
-import localStorage from "localStorage";
+// localStorage used on server is not suitable for per-user state; store tokens in session instead
 import LogoModel from "../Models/Logo.js";
 import ReferralMembershipStipePayment from "../Models/ReferralMembershipStipePayment.js";
 import MembershipStrpiePaymentModel from "../Models/MembershipStripePayment.js";
@@ -123,8 +123,9 @@ class AdminController {
           }
         );
         let user1 = await AdminModel.findById(user._id);
-        localStorage.setItem("token", token);
+        // store token in session (don't use server-side localStorage for per-user authentication)
         req.session.user_id = user1._id;
+        req.session.token = token;
         req.session.token = token;
         req.session.tostMsg = "You Are Logged in Successfully...";
         req.session.tostBackground = "#0b6a3c";
