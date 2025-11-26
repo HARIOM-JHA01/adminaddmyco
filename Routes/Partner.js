@@ -15,6 +15,11 @@ partner.post("/purchase-package", isPartner, PartnerController.PurchasePackage);
 
 // Payment History
 partner.get("/payment-history", isPartner, PartnerController.GetPaymentHistory);
+partner.get(
+  "/pending-transactions",
+  isPartner,
+  PartnerController.GetPendingTransactions
+);
 
 // Dashboard
 partner.get("/dashboard", isPartner, PartnerController.GetDashboard);

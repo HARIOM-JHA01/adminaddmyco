@@ -659,6 +659,35 @@ class PartnerController {
       });
     }
   };
+
+  /**
+   * Get Pending Transactions
+   */
+  static GetPendingTransactions = async (req, res) => {
+    try {
+      const partnerId = req.partner._id;
+
+      const pendingPayments = await PartnerPaymentModel.find({
+        partner: partnerId,
+        status: 0,
+      })
+        .populate("package", "name type credits")
+        .sort({ createdAt: -1 });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          pendingTransactions: pendingPayments,
+        },
+      });
+    } catch (error) {
+      console.error("Get pending transactions error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+      });
+    }
+  };
 }
 
 export default PartnerController;
