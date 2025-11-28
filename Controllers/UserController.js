@@ -307,7 +307,8 @@ class UserController {
     let user = await UserModel.findOne({ tgid: data.telegram_username });
     if (!user) {
       // Extract referral code if provided
-      const referralCode = data.referralCode || data.ref || null;
+      const referralCode =
+        data.partnercode || data.referralCode || data.ref || null;
       // Check configuration for Telegram signup user type
       let telegramPremiumSetting = await ConfigurationModel.findOne({
         ConfigKey: "telegram_signup_premium",
@@ -389,7 +390,9 @@ class UserController {
           result
         );
         if (referralResult.success) {
-          partnerMessage = ` You have been successfully registered through a partner referral.`;
+          partnerMessage = ` You have been successfully linked to a partner.`;
+        } else {
+          partnerMessage = ` ${referralResult.message}`;
         }
       }
 
@@ -460,6 +463,20 @@ class UserController {
       );
       let user1 = await UserModel.findById(user._id);
 
+      // Handle partner referral if partnercode provided for existing user
+      let partnerMessage = "";
+      if (data.partnercode) {
+        const referralResult = await handlePartnerReferral(
+          data.partnercode,
+          user
+        );
+        if (referralResult.success) {
+          partnerMessage = " You have been successfully linked to a partner.";
+        } else {
+          partnerMessage = ` ${referralResult.message}`;
+        }
+      }
+
       // Update partner-user login tracking if user is linked to any partner
       try {
         const partnerUsers = await PartnerUserModel.find({ user: user._id });
@@ -480,7 +497,7 @@ class UserController {
       return res.status(200).json({
         success: true,
         data: user1,
-        message: "Login successful.",
+        message: `Login successful.${partnerMessage}`,
       });
     }
   };

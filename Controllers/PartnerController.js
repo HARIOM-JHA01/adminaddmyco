@@ -21,7 +21,9 @@ class PartnerController {
    * Generate unique referral code
    */
   static generateReferralCode = () => {
-    return crypto.randomBytes(6).toString("hex").toUpperCase();
+    const prefix = "partner-";
+    const randomPart = crypto.randomBytes(6).toString("hex").toUpperCase();
+    return prefix + randomPart;
   };
 
   /**
@@ -49,7 +51,7 @@ class PartnerController {
       if (!partner) {
         // Create new partner
         const referralCode = PartnerController.generateReferralCode();
-        const referralUrl = `https://partner.addmy.co/${referralCode}`;
+        const referralUrl = `https://partner.addmy.co/t.me/${referralCode}`;
 
         partner = await PartnerModel.create({
           tgid,

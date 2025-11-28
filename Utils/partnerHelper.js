@@ -14,9 +14,9 @@ export const handlePartnerReferral = async (referralCode, user) => {
       return { success: false, message: "No referral code provided" };
     }
 
-    // Find partner by referral code
+    // Find partner by referral code (case insensitive)
     const partner = await PartnerModel.findOne({
-      referralCode: referralCode.toUpperCase(),
+      referralCode: { $regex: new RegExp(`^${referralCode}$`, "i") },
       status: 1,
     });
 
