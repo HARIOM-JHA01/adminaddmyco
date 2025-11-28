@@ -21,7 +21,7 @@ class PartnerController {
    * Generate unique referral code
    */
   static generateReferralCode = () => {
-    const prefix = "partner-";
+    const prefix = "ref-";
     const randomPart = crypto.randomBytes(6).toString("hex").toUpperCase();
     return prefix + randomPart;
   };
