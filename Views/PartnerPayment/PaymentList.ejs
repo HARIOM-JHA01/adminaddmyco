@@ -133,12 +133,14 @@
                         class="btn btn-success btn-sm approve-btn"
                         data-id="<%= v._id%>"
                         data-partner="<%= v.partner._id%>"
+                        type="button"
                       >
                         <i class="bi bi-check-circle"></i> Approve
                       </button>
                       <button
                         class="btn btn-warning btn-sm reject-btn"
                         data-id="<%= v._id%>"
+                        type="button"
                       >
                         <i class="bi bi-x-circle"></i> Reject
                       </button>
@@ -316,9 +318,9 @@
 
     // Initialize DataTables for all tables with specific configurations
     $("#pending_table").DataTable({
-      order: [[7, "desc"]], // Sort by Payment Date descending
+      order: [[6, "desc"]], // Sort by Payment Date descending
       columnDefs: [
-        { orderable: false, targets: 8 }, // Disable sorting on Action column
+        { orderable: false, targets: 7 }, // Disable sorting on Action column
       ],
     });
 
@@ -362,8 +364,7 @@
           $.ajax({
             url: `${baseUrl}admin/payment/approve`,
             method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({ paymentId: id }),
+            data: { paymentId: id },
             success: function (response) {
               console.log("Approve success:", response);
               Swal.fire(
@@ -442,8 +443,7 @@
           $.ajax({
             url: `${baseUrl}admin/payment/reject`,
             method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({ paymentId: id, reason: result.value }),
+            data: { paymentId: id, reason: result.value },
             success: function (response) {
               console.log("Reject success:", response);
               Swal.fire(
