@@ -370,7 +370,21 @@
                 "Approved!",
                 "Payment has been approved and credits added.",
                 "success"
-              ).then(() => location.reload());
+              ).then(() => {
+                // Remove the row from the table instead of reloading
+                $("#pending_table")
+                  .DataTable()
+                  .row($btn.closest("tr"))
+                  .remove()
+                  .draw();
+                // Update pending count badge
+                const currentPending =
+                  parseInt($("#pending-tab .badge").text()) - 1;
+                $("#pending-tab .badge").text(currentPending);
+                // Update all count badge
+                const currentAll = parseInt($("#all-tab .badge").text()) - 1;
+                $("#all-tab .badge").text(currentAll);
+              });
             },
             error: function (xhr, status, error) {
               console.error("Approve error:", xhr, status, error);
@@ -436,7 +450,21 @@
                 "Rejected!",
                 "Payment has been rejected.",
                 "success"
-              ).then(() => location.reload());
+              ).then(() => {
+                // Remove the row from the table instead of reloading
+                $("#pending_table")
+                  .DataTable()
+                  .row($btn.closest("tr"))
+                  .remove()
+                  .draw();
+                // Update pending count badge
+                const currentPending =
+                  parseInt($("#pending-tab .badge").text()) - 1;
+                $("#pending-tab .badge").text(currentPending);
+                // Update all count badge
+                const currentAll = parseInt($("#all-tab .badge").text()) - 1;
+                $("#all-tab .badge").text(currentAll);
+              });
             },
             error: function (xhr, status, error) {
               console.error("Reject error:", xhr, status, error);
