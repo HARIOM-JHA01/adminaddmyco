@@ -98,7 +98,6 @@
                   <tr>
                     <th>No.</th>
                     <th>Partner</th>
-                    <th>tgUsername</th>
                     <th>Package</th>
                     <th>Amount</th>
                     <th>Transaction ID</th>
@@ -118,21 +117,6 @@
                       >
                         <%= v.partner.username || v.partner.tgid %>
                       </a>
-                    </td>
-                    <td>
-                      <% if (v.partner.username) { %>
-                      <a
-                        href="https://t.me/<%= v.partner.username%>"
-                        target="_blank"
-                        ><%= v.partner.username%></a
-                      >
-                      <% } else if (v.partner.tgid) { %>
-                      <a
-                        href="https://t.me/<%= v.partner.tgid%>"
-                        target="_blank"
-                        ><%= v.partner.tgid%></a
-                      >
-                      <% } else { %> N/A <% } %>
                     </td>
                     <td>
                       <%= v.package.name %> (<%= v.package.type ===
