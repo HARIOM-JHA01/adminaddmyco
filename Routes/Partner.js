@@ -40,4 +40,7 @@ partner.post(
   PartnerController.RenewUserMembership
 );
 
+// Credits
+partner.get("/credits", PartnerController.GetCredits);
+
 export default partner;

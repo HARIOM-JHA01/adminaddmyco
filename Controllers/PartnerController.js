@@ -600,6 +600,56 @@ class PartnerController {
   };
 
   /**
+   * Get Credits by Referral Code
+   */
+  static GetCredits = async (req, res) => {
+    try {
+      const { code } = req.query;
+
+      if (!code) {
+        return res.status(400).json({
+          success: false,
+          message: "Referral code is required",
+        });
+      }
+
+      // Find partner by referral code (case insensitive)
+      const partner = await PartnerModel.findOne({
+        referralCode: { $regex: new RegExp(`^${code}$`, "i") },
+        status: 1,
+      });
+
+      if (!partner) {
+        return res.status(404).json({
+          success: false,
+          message: "Invalid referral code",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          referralCode: partner.referralCode,
+          userCredits: partner.userCredits,
+          usedUserCredits: partner.usedUserCredits,
+          availableUserCredits: partner.userCredits - partner.usedUserCredits,
+          renewalCredits: partner.renewalCredits,
+          usedRenewalCredits: partner.usedRenewalCredits,
+          availableRenewalCredits:
+            partner.renewalCredits - partner.usedRenewalCredits,
+          isReferralActive: partner.isReferralActive,
+        },
+      });
+    } catch (error) {
+      console.error("Get credits error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+      });
+    }
+  };
+
+  /**
    * Get Single User Details
    */
   static GetUserDetails = async (req, res) => {
