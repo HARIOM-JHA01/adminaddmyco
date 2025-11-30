@@ -313,8 +313,9 @@ class UserController {
       let telegramPremiumSetting = await ConfigurationModel.findOne({
         ConfigKey: "telegram_signup_premium",
       });
-      let isPremium =
-        telegramPremiumSetting && telegramPremiumSetting.ConfigValue === "1";
+      let isPremium = false; // Always free for now
+      // let isPremium =
+      //   telegramPremiumSetting && telegramPremiumSetting.ConfigValue === "1";
 
       // Always generate a random username for freeUsername
       var generatedUsername = UserController.generateUsername();

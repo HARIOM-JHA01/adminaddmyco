@@ -418,6 +418,7 @@ class PartnerController {
         tgid: pu.user.tgid,
         joinDate: pu.joinDate,
         membershipExpiryDate: pu.membershipExpiryDate,
+        membershipType: pu.user.membertype,
         isExpired: pu.membershipExpiryDate
           ? new Date(pu.membershipExpiryDate) < new Date()
           : true,

@@ -44,8 +44,11 @@ export const handlePartnerReferral = async (referralCode, user) => {
       };
     }
 
-    // Calculate membership expiry date (1 year from now as default for partner users)
-    const membershipExpiryDate = moment().add(1, "year").toDate();
+    // Calculate membership expiry date based on user type
+    let membershipExpiryDate = null;
+    if (user.membertype === "premium") {
+      membershipExpiryDate = moment().add(1, "year").toDate();
+    }
 
     // Create partner-user relationship
     await PartnerUserModel.create({
