@@ -535,30 +535,17 @@ class PartnerController {
         });
       }
 
-      // Get renewal price
-      const renewalPrice = await PartnerRenewalPriceModel.findOne({
-        membershipMonths: months,
-        status: 1,
-      });
-
-      if (!renewalPrice) {
-        return res.status(404).json({
-          success: false,
-          message: `Renewal price for ${months} months not configured`,
-        });
-      }
-
-      // Calculate new expiry date
+      // Calculate new expiry date (always add 1 year)
       let newExpiryDate;
       const currentExpiry = partnerUser.membershipExpiryDate;
       const now = new Date();
 
       if (currentExpiry && new Date(currentExpiry) > now) {
         // Extend from current expiry
-        newExpiryDate = moment(currentExpiry).add(months, "months").toDate();
+        newExpiryDate = moment(currentExpiry).add(12, "months").toDate();
       } else {
         // Start from now
-        newExpiryDate = moment().add(months, "months").toDate();
+        newExpiryDate = moment().add(12, "months").toDate();
       }
 
       // Update partner user
@@ -580,7 +567,7 @@ class PartnerController {
 
       return res.status(200).json({
         success: true,
-        message: `Membership renewed successfully for ${months} month(s)`,
+        message: `Membership renewed successfully for 12 months`,
         data: {
           userId: user._id,
           username: user.username,
