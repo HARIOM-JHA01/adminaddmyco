@@ -418,7 +418,7 @@ class PartnerController {
           name: pu.user.owner_name_english,
           tgid: pu.user.tgid,
           joinDate: pu.joinDate,
-          membershipType: pu.user.membertype,
+          membershipType: pu.user.membertype || "free",
           isExpired: pu.membershipExpiryDate
             ? new Date(pu.membershipExpiryDate) < new Date()
             : true,
