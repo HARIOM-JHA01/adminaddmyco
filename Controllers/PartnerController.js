@@ -550,6 +550,7 @@ class PartnerController {
 
       // Update partner user
       partnerUser.membershipExpiryDate = newExpiryDate;
+      partnerUser.membertype = "premium";
       partnerUser.renewalCount += 1;
       partnerUser.lastRenewalDate = new Date();
       partnerUser.lastRenewalBy = "PARTNER";
