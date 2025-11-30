@@ -401,6 +401,8 @@ class PartnerController {
         query.membershipExpiryDate = { $lt: new Date() };
       }
 
+      const totalAll = await PartnerUserModel.countDocuments(query);
+
       const users = await PartnerUserModel.aggregate([
         { $match: query },
         {
@@ -434,6 +436,7 @@ class PartnerController {
 
       const totalResult = await PartnerUserModel.aggregate(totalPipeline);
       const total = totalResult.length > 0 ? totalResult[0].total : 0;
+      const deletedCount = totalAll - total;
 
       // Format response
       const formattedUsers = users.map((pu) => {
@@ -476,6 +479,7 @@ class PartnerController {
         success: true,
         data: {
           users: formattedUsers,
+          deletedUsers: deletedCount,
           pagination: {
             currentPage: parseInt(page),
             totalPages: Math.ceil(total / limit),
