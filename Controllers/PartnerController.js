@@ -410,32 +410,40 @@ class PartnerController {
       const total = await PartnerUserModel.countDocuments(query);
 
       // Format response
-      const formattedUsers = users.map((pu) => ({
-        id: pu._id,
-        userId: pu.user._id,
-        username: pu.user.username,
-        name: pu.user.owner_name_english,
-        tgid: pu.user.tgid,
-        joinDate: pu.joinDate,
-        membershipExpiryDate: pu.membershipExpiryDate,
-        membershipType: pu.user.membertype,
-        isExpired: pu.membershipExpiryDate
-          ? new Date(pu.membershipExpiryDate) < new Date()
-          : true,
-        daysUntilExpiry: pu.membershipExpiryDate
-          ? Math.ceil(
-              (new Date(pu.membershipExpiryDate) - new Date()) /
-                (1000 * 60 * 60 * 24)
-            )
-          : 0,
-        renewalCount: pu.renewalCount,
-        lastRenewalDate: pu.lastRenewalDate,
-        // Login tracking
-        isFirstLogin: pu.isFirstLogin,
-        firstLoginAt: pu.firstLoginAt,
-        lastLoginAt: pu.lastLoginAt,
-        loginCount: pu.loginCount,
-      }));
+      const formattedUsers = users.map((pu) => {
+        const userData = {
+          id: pu._id,
+          userId: pu.user._id,
+          username: pu.user.username,
+          name: pu.user.owner_name_english,
+          tgid: pu.user.tgid,
+          joinDate: pu.joinDate,
+          membershipType: pu.user.membertype,
+          isExpired: pu.membershipExpiryDate
+            ? new Date(pu.membershipExpiryDate) < new Date()
+            : true,
+          daysUntilExpiry: pu.membershipExpiryDate
+            ? Math.ceil(
+                (new Date(pu.membershipExpiryDate) - new Date()) /
+                  (1000 * 60 * 60 * 24)
+              )
+            : 0,
+          renewalCount: pu.renewalCount,
+          lastRenewalDate: pu.lastRenewalDate,
+          // Login tracking
+          isFirstLogin: pu.isFirstLogin,
+          firstLoginAt: pu.firstLoginAt,
+          lastLoginAt: pu.lastLoginAt,
+          loginCount: pu.loginCount,
+        };
+
+        // Only include membershipExpiryDate if it exists (for premium users)
+        if (pu.membershipExpiryDate) {
+          userData.membershipExpiryDate = pu.membershipExpiryDate;
+        }
+
+        return userData;
+      });
 
       return res.status(200).json({
         success: true,
