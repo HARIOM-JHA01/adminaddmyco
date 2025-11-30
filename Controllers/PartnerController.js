@@ -402,7 +402,10 @@ class PartnerController {
       }
 
       const users = await PartnerUserModel.find(query)
-        .populate("user", "username owner_name_english tgid email")
+        .populate(
+          "user",
+          "username owner_name_english tgid email membertype membershipType"
+        )
         .sort({ joinDate: -1 })
         .skip(skip)
         .limit(parseInt(limit));
