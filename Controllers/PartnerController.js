@@ -479,8 +479,8 @@ class PartnerController {
         success: true,
         data: {
           users: formattedUsers,
-          deletedUsers: deletedCount,
           pagination: {
+            deletedUsers: deletedCount,
             currentPage: parseInt(page),
             totalPages: Math.ceil(total / limit),
             totalRecords: total,
