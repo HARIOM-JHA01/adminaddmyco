@@ -401,17 +401,39 @@ class PartnerController {
         query.membershipExpiryDate = { $lt: new Date() };
       }
 
-      const users = await PartnerUserModel.find(query)
-        .populate(
-          "user",
-          "username owner_name_english tgid email membertype membershipType"
-        )
-        .sort({ joinDate: -1 })
-        .skip(skip)
-        .limit(parseInt(limit));
+      const users = await PartnerUserModel.aggregate([
+        { $match: query },
+        {
+          $lookup: {
+            from: "users",
+            localField: "user",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        { $match: { "user.0": { $exists: true } } },
+        { $unwind: "$user" },
+        { $sort: { joinDate: -1 } },
+        { $skip: skip },
+        { $limit: parseInt(limit) },
+      ]);
 
-      const total = await PartnerUserModel.countDocuments(query);
-      console.log(users);
+      const totalPipeline = [
+        { $match: query },
+        {
+          $lookup: {
+            from: "users",
+            localField: "user",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        { $match: { "user.0": { $exists: true } } },
+        { $count: "total" },
+      ];
+
+      const totalResult = await PartnerUserModel.aggregate(totalPipeline);
+      const total = totalResult.length > 0 ? totalResult[0].total : 0;
 
       // Format response
       const formattedUsers = users.map((pu) => {
