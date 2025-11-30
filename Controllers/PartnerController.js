@@ -566,7 +566,7 @@ class PartnerController {
       const user = partnerUser.user;
       user.membertype = "premium";
       user.usertype = 1;
-      user.membershiperiod = newExpiryDate;
+      user.membershipExpiryDate = newExpiryDate;
       await user.save();
 
       // Deduct renewal credit from partner
