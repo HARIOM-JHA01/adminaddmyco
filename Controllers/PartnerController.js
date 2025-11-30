@@ -556,6 +556,7 @@ class PartnerController {
       // Update partner user
       partnerUser.membershipExpiryDate = newExpiryDate;
       partnerUser.membertype = "premium";
+      partnerUser.usertype = 1;
       partnerUser.renewalCount += 1;
       partnerUser.lastRenewalDate = new Date();
       partnerUser.lastRenewalBy = "PARTNER";
@@ -564,6 +565,7 @@ class PartnerController {
       // Update user membership
       const user = partnerUser.user;
       user.membertype = "premium";
+      user.usertype = 1;
       user.membershiperiod = newExpiryDate;
       await user.save();
 
