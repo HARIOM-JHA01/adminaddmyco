@@ -408,6 +408,7 @@ class PartnerController {
         .limit(parseInt(limit));
 
       const total = await PartnerUserModel.countDocuments(query);
+      console.log(users);
 
       // Format response
       const formattedUsers = users.map((pu) => {
