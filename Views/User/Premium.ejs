@@ -103,6 +103,8 @@ import session from "express-session"
                       By TgCoin
                       <% } else if(v.paymentBy == 3) { %>
                       By Admin
+              <% } else if(v.paymentBy == 4) { %>
+                      By Partner Renewal
               <% } else { %>
                     By Reward
                  <% } %>

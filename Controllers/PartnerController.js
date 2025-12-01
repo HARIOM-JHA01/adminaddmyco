@@ -591,9 +591,51 @@ class PartnerController {
 
       // Update user membership
       const user = partnerUser.user;
-      user.membertype = "premium";
+
+      // Ensure freeUsername exists before upgrading
+      if (!user.freeUsername) {
+        let generatedUsername = crypto.randomBytes(4).toString("hex");
+        let isUnique = false;
+        while (!isUnique) {
+          const conflict = await UserModel.findOne({
+            freeUsername: generatedUsername,
+          });
+          if (!conflict) {
+            isUnique = true;
+          } else {
+            generatedUsername = crypto.randomBytes(4).toString("hex");
+          }
+        }
+        user.freeUsername = generatedUsername;
+      }
+
+      // Set startdate if not set
+      const startDate = user.startdate || moment().format("YYYY-MM-DD");
+
+      // Update user to premium with all fields as in admin approval
       user.usertype = 1;
-      user.enddate = newExpiryDate;
+      user.membertype = "premium";
+      user.startdate = startDate;
+      user.paymentstatus = 1;
+      user.enddate = moment(newExpiryDate).format("YYYY-MM-DD");
+      user.referralType = 0;
+      user.paymentBy = 4; // 4 for Partner Renewal
+      user.membershiperiod = "12"; // 12 months
+
+      // Ensure username equals tgid for premium users (handle collisions)
+      if (user.tgid) {
+        let desiredUsername = user.tgid;
+        const conflict = await UserModel.findOne({
+          username: desiredUsername,
+          _id: { $ne: user._id },
+        });
+        if (conflict) {
+          desiredUsername =
+            desiredUsername + "-" + crypto.randomBytes(2).toString("hex");
+        }
+        user.username = desiredUsername;
+      }
+
       await user.save();
 
       // Deduct renewal credit from partner

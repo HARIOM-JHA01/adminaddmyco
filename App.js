@@ -33,7 +33,7 @@ app.use(
     secret: "keyboard cat",
     resave: true,
     saveUninitialized: true,
-    cookie: { maxAge: 60000 },
+    cookie: { maxAge: 172800000 }, // 48 hours in milliseconds
   })
 );
 app.use("/assets", express.static("assets"));
