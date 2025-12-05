@@ -18,6 +18,40 @@ const accessTokenLife = process.env["ACCESS_TOKEN_LIFE"];
 
 class PartnerController {
   /**
+   * Search users by name, username, or email
+   */
+  static SearchUser = async (req, res) => {
+    try {
+      const { query } = req.query;
+      if (!query || query.trim() === "") {
+        return res.status(400).json({
+          success: false,
+          message: "Search query is required.",
+        });
+      }
+
+      // Search by firstname, lastname, username, or email (case-insensitive)
+      const users = await UserModel.find({
+        $or: [
+          { firstname: { $regex: query, $options: "i" } },
+          { lastname: { $regex: query, $options: "i" } },
+          { username: { $regex: query, $options: "i" } },
+        ],
+      }).limit(20);
+
+      return res.status(200).json({
+        success: true,
+        data: users,
+      });
+    } catch (error) {
+      console.error("SearchUser error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+      });
+    }
+  };
+  /**
    * Generate unique referral code
    */
   static generateReferralCode = () => {

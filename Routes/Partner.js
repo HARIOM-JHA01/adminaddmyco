@@ -32,6 +32,9 @@ partner.get(
   PartnerController.GetUserDetails
 );
 
+// User Search
+partner.get("/search-user", isPartner, PartnerController.SearchUser);
+
 // Renewal
 partner.get("/renewal-prices", isPartner, PartnerController.GetRenewalPrices);
 partner.post(
