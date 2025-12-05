@@ -168,7 +168,6 @@
                     <th>Transaction ID</th>
                     <th>Payment Date</th>
                     <th>Approved Date</th>
-                    <th>Approved By</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -184,6 +183,10 @@
                       </a>
                     </td>
                     <td><%= v.package.name %></td>
+                    <td>
+                      <%= v.package.name %> (<%= v.package.type ===
+                      'USER_CREDITS' ? 'User' : 'Renewal' %>)
+                    </td>
                     <td>$<%= v.amount %></td>
                     <td><%= v.transactionId %></td>
                     <td>
@@ -192,7 +195,6 @@
                     <td>
                       <%= moment(v.approvedAt).format('DD-MM-YYYY HH:mm') %>
                     </td>
-                    <td><%= v.approvedBy ? v.approvedBy.name : 'N/A' %></td>
                   </tr>
                   <% i++ %> <% }) %>
                 </tbody>
@@ -216,7 +218,6 @@
                     <th>Transaction ID</th>
                     <th>Payment Date</th>
                     <th>Rejected Date</th>
-                    <th>Rejected By</th>
                     <th>Reason</th>
                   </tr>
                 </thead>
@@ -233,6 +234,10 @@
                       </a>
                     </td>
                     <td><%= v.package.name %></td>
+                    <td>
+                      <%= v.package.name %> (<%= v.package.type ===
+                      'USER_CREDITS' ? 'User' : 'Renewal' %>)
+                    </td>
                     <td>$<%= v.amount %></td>
                     <td><%= v.transactionId %></td>
                     <td>
@@ -241,7 +246,6 @@
                     <td>
                       <%= moment(v.approvedAt).format('DD-MM-YYYY HH:mm') %>
                     </td>
-                    <td><%= v.approvedBy ? v.approvedBy.name : 'N/A' %></td>
                     <td><%= v.rejectionReason || 'N/A' %></td>
                   </tr>
                   <% i++ %> <% }) %>
