@@ -182,7 +182,6 @@
                         <%= v.partner.username || v.partner.tgid %>
                       </a>
                     </td>
-                    <td><%= v.package.name %></td>
                     <td>
                       <%= v.package.name %> (<%= v.package.type ===
                       'USER_CREDITS' ? 'User' : 'Renewal' %>)
@@ -233,7 +232,6 @@
                         <%= v.partner.username || v.partner.tgid %>
                       </a>
                     </td>
-                    <td><%= v.package.name %></td>
                     <td>
                       <%= v.package.name %> (<%= v.package.type ===
                       'USER_CREDITS' ? 'User' : 'Renewal' %>)
@@ -283,7 +281,10 @@
                         <%= v.partner.username || v.partner.tgid %>
                       </a>
                     </td>
-                    <td><%= v.package.name %></td>
+                    <td>
+                      <%= v.package.name %> (<%= v.package.type ===
+                      'USER_CREDITS' ? 'User' : 'Renewal' %>)
+                    </td>
                     <td>$<%= v.amount %></td>
                     <td><%= v.transactionId %></td>
                     <td>
