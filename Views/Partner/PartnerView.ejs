@@ -84,6 +84,18 @@
                   <th>Referral Code:</th>
                   <td><strong><%= partner.referralCode%></strong></td>
                 </tr>
+                <tr>
+                  <th>Partner Referral Link:</th>
+                  <td>
+                    <a
+                      href="https://partner.addmy.co/t.me/ref-<%= partner.referralCode %>"
+                      target="_blank"
+                    >
+                      https://partner.addmy.co/t.me/ref-<%= partner.referralCode
+                      %>
+                    </a>
+                  </td>
+                </tr>
                 <!-- <tr>
                   <th>Referral URL:</th>
                   <td><code><%= partner.referralUrl%></code></td>
