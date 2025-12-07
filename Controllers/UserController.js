@@ -313,9 +313,11 @@ class UserController {
       let telegramPremiumSetting = await ConfigurationModel.findOne({
         ConfigKey: "telegram_signup_premium",
       });
-      let isPremium = false; // Always free for now
-      // let isPremium =
-      //   telegramPremiumSetting && telegramPremiumSetting.ConfigValue === "1";
+      let isPremium =
+        telegramPremiumSetting && telegramPremiumSetting.ConfigValue === "1";
+      if (referralCode) {
+        isPremium = true;
+      }
 
       // Always generate a random username for freeUsername
       var generatedUsername = UserController.generateUsername();
@@ -333,7 +335,7 @@ class UserController {
         }
       }
 
-      // Generate memberid (same logic as Register)
+      // Generate memberid
       var countrycount = await UserModel.find({
         country: data.country,
       }).count();
