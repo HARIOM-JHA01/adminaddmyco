@@ -123,7 +123,7 @@ include('../Layout/Sidebar') %>
             <div class="card-body">
               <div class="row">
                 <div class="col-6">
-                  <h6 class="text-muted">User Credits</h6>
+                  <h6 class="text-muted">Premium Credits</h6>
                   <h4><%= stats.totalUserCredits %></h4>
                   <small class="text-info"
                     ><%= stats.usedUserCredits %> used</small
@@ -290,7 +290,7 @@ include('../Layout/Sidebar') %>
                   <td><strong><%= v.name %></strong></td>
                   <td>
                     <% if (v.type === 'USER_CREDITS') { %>
-                    <span class="badge bg-info">User Credits</span>
+                    <span class="badge bg-info">Premium Credits</span>
                     <% } else { %>
                     <span class="badge bg-success">Renewal Credits</span>
                     <% } %>
