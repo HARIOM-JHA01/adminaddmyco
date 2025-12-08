@@ -51,6 +51,7 @@ import user from "../Routes/User.js";
 import ReferralMembershipStipePayment from "../Models/ReferralMembershipStipePayment.js";
 import AdminNotificationModel from "../Models/AdminNotification.js";
 import MembershipStrpiePaymentModel from "../Models/MembershipStripePayment.js";
+import PartnerModel from "../Models/Partner.js";
 
 const accessTokenSecret = process.env["JWT_SECRET_KEY"];
 const accessTokenLife = process.env["ACCESS_TOKEN_LIFE"];
@@ -309,6 +310,24 @@ class UserController {
       // Extract referral code if provided
       const referralCode =
         data.partnercode || data.referralCode || data.ref || null;
+
+      // get partner from code and check if has user user credit left
+      const partnerUser = await PartnerModel.findOne({
+        referralCode: referralCode,
+      });
+      if (referralCode && !partnerUser) {
+        return res.status(422).json({
+          success: false,
+          message: "Invalid referral code.",
+        });
+      }
+      const leftCredit = partnerUser.userCredits - partnerUser.usedUserCredits;
+      if (referralCode && leftCredit <= 0) {
+        return res.status(422).json({
+          success: false,
+          message: "Partner has no remaining user credits.",
+        });
+      }
       // Check configuration for Telegram signup user type
       let telegramPremiumSetting = await ConfigurationModel.findOne({
         ConfigKey: "telegram_signup_premium",
