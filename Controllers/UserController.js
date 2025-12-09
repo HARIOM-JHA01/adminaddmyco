@@ -321,12 +321,15 @@ class UserController {
           message: "Invalid referral code.",
         });
       }
-      const leftCredit = partnerUser.userCredits - partnerUser.usedUserCredits;
-      if (referralCode && leftCredit <= 0) {
-        return res.status(422).json({
-          success: false,
-          message: "Partner has no remaining user credits.",
-        });
+      if (partnerUser) {
+        const leftCredit =
+          partnerUser.userCredits - partnerUser.usedUserCredits;
+        if (referralCode && leftCredit <= 0) {
+          return res.status(422).json({
+            success: false,
+            message: "Partner has no remaining user credits.",
+          });
+        }
       }
       // Check configuration for Telegram signup user type
       let telegramPremiumSetting = await ConfigurationModel.findOne({
