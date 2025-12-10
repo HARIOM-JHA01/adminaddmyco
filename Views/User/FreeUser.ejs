@@ -148,26 +148,6 @@ $("document").ready(function () {
       var table = $('#filterTable').DataTable();
       $("#filterTable_filter.dataTables_filter").prepend($(".category-filter"));
       
-      var categoryIndex = 5;
-    //   $("#filterTable th").each(function (i) {
-    //     if ($($(this)).html() == "Country") {
-    //       categoryIndex = i; return false;
-    //     }
-    //   });
-      $.fn.dataTable.ext.search.push(
-        function (settings, data, dataIndex) {
-          var selectedItem = $('#categoryFilter').val()
-          var category = data[categoryIndex];
-          console.log(selectedItem);
-          if (selectedItem === "" || category.includes(selectedItem)) {
-            return true;
-          }
-          return false;
-        }
-      );
-      $("#categoryFilter").change(function (e) {
-        table.draw();
-      });
       table.draw();
     });
 </script>
