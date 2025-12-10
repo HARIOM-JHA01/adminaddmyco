@@ -48,6 +48,7 @@ import session from "express-session"
                 <!-- <th>Start-Date</th> -->
                 <th>End-Date</th>
                 <th>Paid</th>
+                <th>Partner Code</th>
                 <th></th>
                 <th>Action</th>
               </tr>
@@ -109,6 +110,9 @@ import session from "express-session"
                     By Reward
                  <% } %>
                   </span></td>
+                <td><span class="name-field">
+                  <%= v.partner && v.partner.length > 0 ? v.partner[0].referralCode : 'N/A' %>
+                </span></td>
                 <td>
                   <% if(v.isReferral != 1){ %> 
                     <button type="button" id="refresh" class="btn  btn-refer">

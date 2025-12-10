@@ -126,6 +126,22 @@ class DashboardController {
         },
       },
       {
+        $lookup: {
+          from: "partnerusers",
+          localField: "_id",
+          foreignField: "user",
+          as: "partnerUser",
+        },
+      },
+      {
+        $lookup: {
+          from: "partners",
+          localField: "partnerUser.partner",
+          foreignField: "_id",
+          as: "partner",
+        },
+      },
+      {
         $sort: { startdate: -1 },
       },
       {
