@@ -78,7 +78,11 @@ class DashboardController {
 
   // ...............................USERS............................
   static FreeUser = async (req, res) => {
-    let freeuser = await UserModel.find({ usertype: 0 }).sort({ _id: -1 });
+    let query = { usertype: 0 };
+    if (req.query.country && req.query.country !== "") {
+      query.country = req.query.country;
+    }
+    let freeuser = await UserModel.find(query).sort({ _id: -1 });
     let country1 = await UserModel.aggregate([
       {
         $match: {
@@ -99,6 +103,7 @@ class DashboardController {
       baseUrl,
       freeuser: freeuser,
       country1: country1,
+      selectedCountry: req.query.country || "",
       path: "freeuser",
       session: req.session,
       moment: moment,
@@ -107,6 +112,10 @@ class DashboardController {
   };
 
   static PremiumUser = async (req, res) => {
+    let matchConditions = [{ usertype: 1 }];
+    if (req.query.country && req.query.country !== "") {
+      matchConditions.push({ country: req.query.country });
+    }
     let premium = await UserModel.aggregate([
       {
         $lookup: {
@@ -121,7 +130,7 @@ class DashboardController {
       },
       {
         $match: {
-          $and: [{ usertype: 1 }],
+          $and: matchConditions,
         },
       },
     ]);
@@ -151,17 +160,22 @@ class DashboardController {
         session: req.session,
         moment: moment,
         country: country,
+        selectedCountry: req.query.country || "",
         result: result,
       });
     });
   };
 
   static DonatedUser = async (req, res) => {
-    let donateduser = await UserModel.find({ usertype: 2 }).sort({ _id: -1 });
+    let query = { usertype: 2 };
+    if (req.query.country && req.query.country !== "") {
+      query.country = req.query.country;
+    }
+    let donateduser = await UserModel.find(query).sort({ _id: -1 });
     let country1 = await UserModel.aggregate([
       {
         $match: {
-          $and: [{ usertype: 0 }],
+          $and: [{ usertype: 2 }],
         },
       },
       {
@@ -177,6 +191,7 @@ class DashboardController {
       baseUrl,
       donateduser: donateduser,
       country1: country1,
+      selectedCountry: req.query.country || "",
       path: "donateduser",
       session: req.session,
       moment: moment,

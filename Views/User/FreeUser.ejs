@@ -26,9 +26,9 @@ import session from "express-session"
             <label>
                 Country: 
                 <select id="categoryFilter" class="form-control">
-                  <option value="">Show All</option>
+                  <option value="" <%= selectedCountry === '' ? 'selected' : '' %>>Show All</option>
                   <% var i=1; country1.forEach(function(v) { %>
-                    <option value="<%= v._id.country %>"><%= v._id.country %></option>
+                    <option value="<%= v._id.country %>" <%= selectedCountry === v._id.country ? 'selected' : '' %>><%= v._id.country %></option>
                     <% }) %>
                 </select>        
             </label>        
@@ -366,6 +366,21 @@ $("document").ready(function () {
           });
         }
       });
+  });
+</script>
+
+<script>
+  $(document).ready(function() {
+    $('#categoryFilter').change(function() {
+      var selectedCountry = $(this).val();
+      var url = window.location.pathname;
+      if (selectedCountry) {
+        url += '?country=' + encodeURIComponent(selectedCountry);
+      } else {
+        url = window.location.pathname;
+      }
+      window.location.href = url;
+    });
   });
 </script>
 

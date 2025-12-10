@@ -29,9 +29,9 @@
                             <label>
                                 Country: 
                                 <select id="categoryFilter" class="form-control">
-                                  <option value="">Show All</option>
+                                  <option value="" <%= selectedCountry === '' ? 'selected' : '' %>>Show All</option>
                                   <% var i=1; country1.forEach(function(v) { %>
-                                    <option value="<%= v._id.country %>"><%= v._id.country %></option>
+                                    <option value="<%= v._id.country %>" <%= selectedCountry === v._id.country ? 'selected' : '' %>><%= v._id.country %></option>
                                     <% }) %>
                                 </select>        
                             </label>        
@@ -150,24 +150,15 @@
                   $("#filterTable_filter.dataTables_filter").prepend($(".category-filter"));
                   
                   var categoryIndex = 5;
-                //   $("#filterTable th").each(function (i) {
-                //     if ($($(this)).html() == "Country") {
-                //       categoryIndex = i; return false;
-                //     }
-                //   });
-                  $.fn.dataTable.ext.search.push(
-                    function (settings, data, dataIndex) {
-                      var selectedItem = $('#categoryFilter').val()
-                      var category = data[categoryIndex];
-                      console.log(selectedItem);
-                      if (selectedItem === "" || category.includes(selectedItem)) {
-                        return true;
-                      }
-                      return false;
-                    }
-                  );
                   $("#categoryFilter").change(function (e) {
-                    table.draw();
+                    var selectedCountry = $(this).val();
+                    var url = window.location.pathname;
+                    if (selectedCountry) {
+                      url += '?country=' + encodeURIComponent(selectedCountry);
+                    } else {
+                      url = window.location.pathname;
+                    }
+                    window.location.href = url;
                   });
                   table.draw();
                 });
