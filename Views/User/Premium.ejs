@@ -42,13 +42,13 @@ import session from "express-session"
                 <th>Free UserName</th>
                 <th>Premium UserName</th>
                 <th>TG-id</th>
-                <th>Partner Code</th>
                 <th>Country</th>
                 <!-- <th>Membership Tenure</th> -->
                 <th>Join-Date</th>
                 <!-- <th>Start-Date</th> -->
                 <th>End-Date</th>
                 <th>Paid</th>
+                <th>Partner Code</th>
                 <th></th>
                 <th>Action</th>
               </tr>
@@ -73,9 +73,6 @@ import session from "express-session"
                 <td><span class="name-field">
                     <a href="https://t.me/<%= v.tgid%>"> https://t.me/<%= v.tgid%></a>
                   </span></td>
-                <td><span class="name-field">
-                  <%= v.paymentBy == 4 && v.partnerCode ? v.partnerCode : 'N/A' %>
-                </span></td>
                 <td><span class="name-field">
                     <%= v.country%>
                   </span></td>
@@ -113,6 +110,9 @@ import session from "express-session"
                     By Reward
                  <% } %>
                   </span></td>
+                <td><span class="name-field">
+                  <%= v.partner && v.partner.length > 0 ? v.partner[0].referralCode : 'N/A' %>
+                </span></td>
                 <td>
                   <% if(v.isReferral != 1){ %> 
                     <button type="button" id="refresh" class="btn  btn-refer">
@@ -166,7 +166,7 @@ import session from "express-session"
     var table = $('#filterTable').DataTable();
     $("#filterTable_filter.dataTables_filter").prepend($(".category-filter"));
 
-    var categoryIndex = 6;
+    var categoryIndex = 5;
     $("#categoryFilter").change(function(e) {
       var selectedCountry = $(this).val();
       var url = window.location.pathname;
