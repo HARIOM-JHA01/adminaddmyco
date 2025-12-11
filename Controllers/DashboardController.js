@@ -16,6 +16,8 @@ import CategoryModel from "../Models/Category.js";
 import LogoModel from "../Models/Logo.js";
 import RoleModel from "../Models/Role.js";
 import ReferralReportModel from "../Models/ReferralReport.js";
+import PartnerUserModel from "../Models/PartnerUser.js";
+import PartnerModel from "../Models/Partner.js";
 import moment from "moment";
 import USDTMembershipPaymentModel from "../Models/USDTMembershipPayment.js";
 import TelegramCoinMembershipPaymentModel from "../Models/TelegramCoinMembershipPayment.js";
@@ -168,10 +170,30 @@ class DashboardController {
         },
       },
     ]);
-    Promise.all(_list).then((result) => {
+    Promise.all(_list).then(async (result) => {
+      // Attach partnerCode for users paid by Partner Renewal (paymentBy == 4)
+      const premiumWithPartnerCode = await Promise.all(
+        premium.map(async (u) => {
+          let partnerCode = "N/A";
+          try {
+            if (u.paymentBy === 4) {
+              const pu = await PartnerUserModel.findOne({ user: u._id });
+              if (pu && pu.partner) {
+                const p = await PartnerModel.findById(pu.partner);
+                partnerCode = p && p.referralCode ? p.referralCode : "N/A";
+              }
+            }
+          } catch (e) {
+            console.error("Error resolving partner code for user", u._id, e);
+          }
+          // Return a shallow copy with partnerCode attached
+          return { ...u, partnerCode };
+        })
+      );
+
       res.render("User/Premium", {
         baseUrl,
-        premium: premium,
+        premium: premiumWithPartnerCode,
         path: "premium",
         session: req.session,
         moment: moment,
