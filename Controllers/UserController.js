@@ -384,6 +384,10 @@ class UserController {
             crypto.randomBytes(2).toString("hex");
         }
       }
+      let paymentBy = 10;
+      if (isPremium && partnerUser) {
+        paymentBy = 4;
+      }
 
       const doc = new UserModel({
         username: activeUsername, // Active username (premium = tgid, free = random)
@@ -404,6 +408,7 @@ class UserController {
           : undefined,
         usertype: isPremium ? 1 : 0,
         memberid: id,
+        paymentBy: paymentBy,
       });
       const result = await doc.save();
 
