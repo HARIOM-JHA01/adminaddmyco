@@ -875,6 +875,30 @@ class UserController {
     if (!profile[0]["logoTelegramUrl"]) {
       profile[0]["logoTelegramUrl"] = "";
     }
+    // Attach partner info if available
+    try {
+      const partnerUser = await PartnerUserModel.findOne({
+        user: req.user._id,
+      }).populate("partner");
+      if (partnerUser && partnerUser.partner) {
+        // Attach limited partner info to profile
+        profile[0]["partner"] = {
+          _id: partnerUser.partner._id,
+          referralCode: partnerUser.partner.referralCode,
+          username: partnerUser.partner.username,
+          tgid: partnerUser.partner.tgid,
+          country: partnerUser.partner.country,
+        };
+        // Optional: include partner-user relation info
+        profile[0]["partnerRelation"] = {
+          joinDate: partnerUser.joinDate,
+          membershipExpiryDate: partnerUser.membershipExpiryDate,
+          renewalCount: partnerUser.renewalCount,
+        };
+      }
+    } catch (err) {
+      console.error("Error fetching partner info for profile:", err);
+    }
     return res.status(200).json({
       success: true,
       data: profile[0],
