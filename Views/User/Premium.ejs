@@ -74,7 +74,7 @@ import session from "express-session"
                     <a href="https://t.me/<%= v.tgid%>"> https://t.me/<%= v.tgid%></a>
                   </span></td>
                 <td><span class="name-field">
-                  <%= v.paymentBy == 4 && v.partner && v.partner.length > 0 ? v.partner[0].referralCode : 'N/A' %>
+                  <%= v.paymentBy == 4 && v.partnerCode ? v.partnerCode : 'N/A' %>
                 </span></td>
                 <td><span class="name-field">
                     <%= v.country%>
