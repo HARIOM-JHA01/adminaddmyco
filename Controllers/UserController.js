@@ -1235,43 +1235,74 @@ class UserController {
         // video: imagename
       };
 
-      if (req.files?.image != undefined) {
-        let photo = path + "/" + req.files?.image;
-        if (fs.existsSync(photo)) fs.unlinkSync(photo);
-
-        let image = req.files?.image;
-        var d = new Date();
-        photo = image.name;
-        photo = photo.replace(/\s/g, "");
-        let r = (Math.random() + 1).toString(36).substring(7);
-        var imname = d.getSeconds() + "." + r + "." + photo;
-        // imagename = 'profileimage/' + imname;
-        let uploadPath = path + "/" + imname;
-        image.mv(uploadPath, function (err) {
-          if (err) return res.status(500).send(err);
-        });
-        doc["image"] = "companyprofile/" + imname;
-        image = baseUrl + "assets/companyprofile/" + imname;
+      // Handle up to 3 files: file1 is required, file2/file3 optional.
+      // Backwards-compatible: if file1 is omitted, accept legacy `image` or `video` as file1.
+      const incomingFiles = [];
+      for (let i = 1; i <= 3; i++) {
+        let f = req.files?.[`file${i}`];
+        if (!f && i === 1) {
+          // fall back to legacy single-file fields
+          if (req.files?.image) f = req.files.image;
+          else if (req.files?.video) f = req.files.video;
+        }
+        if (!f) continue;
+        // If middleware returned array for a single field, take first file
+        if (Array.isArray(f)) f = f[0];
+        incomingFiles.push(f);
       }
 
-      if (req.files?.video != undefined) {
-        let photo = path + "/" + req.files?.video;
-        if (fs.existsSync(photo)) fs.unlinkSync(photo);
-
-        let video = req.files?.video;
-        var d = new Date();
-        photo = video.name;
-        photo = photo.replace(/\s/g, "");
-        let r = (Math.random() + 1).toString(36).substring(7);
-        var imname = d.getSeconds() + "." + r + "." + photo;
-
-        let uploadPath = path + "/" + imname;
-        video.mv(uploadPath, function (err) {
-          if (err) return res.status(500).send(err);
+      if (incomingFiles.length === 0) {
+        return res.status(422).json({
+          success: false,
+          message: "Please upload at least one file (file1 is required).",
         });
-        doc["video"] = "companyprofile/" + imname;
-        video = baseUrl + "assets/companyprofile/" + imname;
       }
+
+      const images = [];
+      const videos = [];
+      for (const file of incomingFiles) {
+        const d = new Date();
+        const safeName = file.name.replace(/\s/g, "");
+        const r = (Math.random() + 1).toString(36).substring(7);
+        const imname = d.getSeconds() + "." + r + "." + safeName;
+        const uploadPath = path + "/" + imname;
+        try {
+          await new Promise((resolve, reject) =>
+            file.mv(uploadPath, (err) => (err ? reject(err) : resolve()))
+          );
+        } catch (err) {
+          console.error("Failed to save uploaded file:", err);
+          return res
+            .status(500)
+            .json({ success: false, message: "Failed to save uploaded file" });
+        }
+        const mtype = file.mimetype || mime.getType(safeName) || "";
+        if (String(mtype).startsWith("image")) {
+          images.push("companyprofile/" + imname);
+        } else if (String(mtype).startsWith("video")) {
+          videos.push("companyprofile/" + imname);
+        } else {
+          return res
+            .status(422)
+            .json({
+              success: false,
+              message: "Unsupported file type: " + safeName,
+            });
+        }
+      }
+
+      // Ensure total attachments (images + videos) does not exceed 3
+      if (images.length + videos.length > 3) {
+        return res
+          .status(422)
+          .json({ success: false, message: "Maximum 3 files allowed" });
+      }
+
+      if (images.length) doc.images = images;
+      if (videos.length) doc.videos = videos;
+      // keep legacy single `image` / `video` fields for compatibility
+      if (images.length) doc.image = images[0];
+      if (videos.length) doc.video = videos[0];
 
       let result = await CompanyModel.create(doc);
       let user = await UserModel.findByIdAndUpdate(req.user._id, {
@@ -1385,42 +1416,93 @@ class UserController {
         });
       }
 
-      // Handle uploaded files (image/video)
-      if (req.files && req.files.image) {
-        const image = req.files.image;
-        const d = new Date();
-        const safeName = image.name.replace(/\s/g, "");
-        const r = (Math.random() + 1).toString(36).substring(7);
-        const imname = d.getSeconds() + "." + r + "." + safeName;
-        const uploadPath = "./assets/companyprofile/" + imname;
-        try {
-          await image.mv(uploadPath);
-          doc.image = "companyprofile/" + imname;
-        } catch (e) {
-          console.error("Failed to save uploaded company image:", e);
-          return res
-            .status(500)
-            .json({ success: false, message: "Failed to save uploaded image" });
+      // Handle up to 3 files: file1, file2, file3 (all optional here). Fall back to legacy fields if provided.
+      // Load existing attachments so we can enforce a maximum of 3 total attachments
+      let existing = null;
+      try {
+        existing = await CompanyModel.findById(companyId).lean();
+      } catch (e) {
+        console.error(
+          "Failed to load existing company for attachments check:",
+          e
+        );
+      }
+      const existingImages =
+        (existing &&
+          (existing.images || (existing.image ? [existing.image] : []))) ||
+        [];
+      const existingVideos =
+        (existing &&
+          (existing.videos || (existing.video ? [existing.video] : []))) ||
+        [];
+
+      const incomingFiles = [];
+      for (let i = 1; i <= 3; i++) {
+        let f = req.files?.[`file${i}`];
+        if (!f && i === 1) {
+          if (req.files?.image) f = req.files.image;
+          else if (req.files?.video) f = req.files.video;
         }
+        if (!f) continue;
+        if (Array.isArray(f)) f = f[0];
+        incomingFiles.push(f);
       }
 
-      if (req.files && req.files.video) {
-        const video = req.files.video;
+      const newImages = [];
+      const newVideos = [];
+      for (const file of incomingFiles) {
         const d = new Date();
-        const safeName = video.name.replace(/\s/g, "");
+        const safeName = file.name.replace(/\s/g, "");
         const r = (Math.random() + 1).toString(36).substring(7);
         const imname = d.getSeconds() + "." + r + "." + safeName;
         const uploadPath = "./assets/companyprofile/" + imname;
         try {
-          await video.mv(uploadPath);
-          doc.video = "companyprofile/" + imname;
+          await new Promise((resolve, reject) =>
+            file.mv(uploadPath, (err) => (err ? reject(err) : resolve()))
+          );
         } catch (e) {
-          console.error("Failed to save uploaded company video:", e);
+          console.error("Failed to save uploaded company file:", e);
           return res
             .status(500)
-            .json({ success: false, message: "Failed to save uploaded video" });
+            .json({ success: false, message: "Failed to save uploaded file" });
         }
+        const mtype = file.mimetype || mime.getType(safeName) || "";
+        if (String(mtype).startsWith("image"))
+          newImages.push("companyprofile/" + imname);
+        else if (String(mtype).startsWith("video"))
+          newVideos.push("companyprofile/" + imname);
+        else
+          return res
+            .status(422)
+            .json({
+              success: false,
+              message: "Unsupported file type: " + safeName,
+            });
       }
+
+      // enforce max 3 attachments total
+      if (
+        existingImages.length +
+          existingVideos.length +
+          newImages.length +
+          newVideos.length >
+        3
+      ) {
+        return res
+          .status(422)
+          .json({
+            success: false,
+            message: "Maximum 3 total attachments allowed (images + videos)",
+          });
+      }
+
+      if (newImages.length) doc.images = existingImages.concat(newImages);
+      if (newVideos.length) doc.videos = existingVideos.concat(newVideos);
+      // keep legacy single `image` / `video` fields pointing at first items for backward compatibility
+      const finalImages = doc.images || existingImages || [];
+      const finalVideos = doc.videos || existingVideos || [];
+      if (finalImages.length) doc.image = finalImages[0];
+      if (finalVideos.length) doc.video = finalVideos[0];
 
       // Update the company document
       try {
@@ -1542,13 +1624,23 @@ class UserController {
         message: "Company not found...",
       });
     }
-    const path = await makeDir("./assets/companyprofile/");
-    if (company1.video) {
-      const url = company1.video;
-      let filename = new URL(url).pathname.split("/").pop();
-      let image = path + "/" + filename;
-      if (fs.existsSync(image)) fs.unlinkSync(image);
+    const folderPath = await makeDir("./assets/companyprofile/");
+    // Delete any stored attachments (legacy single fields + arrays)
+    const toDelete = [];
+    if (company1.video) toDelete.push(company1.video);
+    if (company1.image) toDelete.push(company1.image);
+    if (Array.isArray(company1.images)) toDelete.push(...company1.images);
+    if (Array.isArray(company1.videos)) toDelete.push(...company1.videos);
+    for (const url of toDelete) {
+      try {
+        let filename = new URL(url).pathname.split("/").pop();
+        let filePath = folderPath + "/" + filename;
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      } catch (e) {
+        console.error("Error deleting attachment", url, e);
+      }
     }
+
     let company = await CompanyModel.findByIdAndDelete(id);
     return res.status(200).json({
       success: true,

@@ -5,6 +5,9 @@ const companySchema = new mongoose.Schema({
   user_id: { type: mongoose.Schema.Types.ObjectId, default: null, ref: "User" },
   video: { type: String, trim: true, get: setImageUrl },
   image: { type: String, trim: true, get: setImageUrl },
+  // Support multiple images/videos (first will remain in `image`/`video` for compatibility)
+  videos: [{ type: String, trim: true, get: setImageUrl }],
+  images: [{ type: String, trim: true, get: setImageUrl }],
   company_name_english: { type: String },
   company_name_chinese: { type: String },
   companydesignation: { type: String },
