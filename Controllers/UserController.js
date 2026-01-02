@@ -1282,12 +1282,10 @@ class UserController {
         } else if (String(mtype).startsWith("video")) {
           videos.push("companyprofile/" + imname);
         } else {
-          return res
-            .status(422)
-            .json({
-              success: false,
-              message: "Unsupported file type: " + safeName,
-            });
+          return res.status(422).json({
+            success: false,
+            message: "Unsupported file type: " + safeName,
+          });
         }
       }
 
@@ -1427,14 +1425,64 @@ class UserController {
           e
         );
       }
-      const existingImages =
+
+      // Normalize stored paths to internal relative form (e.g., 'companyprofile/x.jpg') so we can dedupe and avoid double-prefixing
+      const normalizeStored = (val) => {
+        if (!val) return null;
+        if (Array.isArray(val)) return val.map(normalizeStored).filter(Boolean);
+        const s = String(val);
+        const assetsIndex = s.indexOf("/assets/");
+        if (assetsIndex !== -1) {
+          return s.substring(assetsIndex + "/assets/".length);
+        }
+        if (s.startsWith("/assets/")) return s.replace(/^\/assets\//, "");
+        if (s.startsWith("assets/")) return s.replace(/^assets\//, "");
+        // already relative or doesn't match known patterns - return as-is
+        return s;
+      };
+
+      const existingImagesRaw =
         (existing &&
-          (existing.images || (existing.image ? [existing.image] : []))) ||
+          (existing.images && Array.isArray(existing.images)
+            ? existing.images
+            : existing.image
+            ? [existing.image]
+            : [])) ||
         [];
-      const existingVideos =
+      const existingVideosRaw =
         (existing &&
-          (existing.videos || (existing.video ? [existing.video] : []))) ||
+          (existing.videos && Array.isArray(existing.videos)
+            ? existing.videos
+            : existing.video
+            ? [existing.video]
+            : [])) ||
         [];
+
+      const existingImages = existingImagesRaw
+        .map(normalizeStored)
+        .filter(Boolean);
+      const existingVideos = existingVideosRaw
+        .map(normalizeStored)
+        .filter(Boolean);
+
+      // Check for textual references in form fields (e.g., client may send file1 as an existing URL to indicate keeping it)
+      const keptFromBody = [];
+      for (let i = 1; i <= 3; i++) {
+        const b = body[`file${i}`];
+        if (b && typeof b === "string") {
+          const n = normalizeStored(b);
+          if (n && !keptFromBody.includes(n)) keptFromBody.push(n);
+        }
+      }
+      const explicitKeep = keptFromBody.length > 0;
+      // If client explicitly listed kept files, use that as the baseline; otherwise keep all existing attachments
+      const baselineImages = explicitKeep
+        ? keptFromBody.slice()
+        : existingImages.slice();
+      const baselineVideos =
+        explicitKeep && body.video
+          ? [normalizeStored(body.video)].filter(Boolean)
+          : existingVideos.slice();
 
       const incomingFiles = [];
       for (let i = 1; i <= 3; i++) {
@@ -1472,35 +1520,30 @@ class UserController {
         else if (String(mtype).startsWith("video"))
           newVideos.push("companyprofile/" + imname);
         else
-          return res
-            .status(422)
-            .json({
-              success: false,
-              message: "Unsupported file type: " + safeName,
-            });
-      }
-
-      // enforce max 3 attachments total
-      if (
-        existingImages.length +
-          existingVideos.length +
-          newImages.length +
-          newVideos.length >
-        3
-      ) {
-        return res
-          .status(422)
-          .json({
+          return res.status(422).json({
             success: false,
-            message: "Maximum 3 total attachments allowed (images + videos)",
+            message: "Unsupported file type: " + safeName,
           });
       }
 
-      if (newImages.length) doc.images = existingImages.concat(newImages);
-      if (newVideos.length) doc.videos = existingVideos.concat(newVideos);
+      // build final sets (deduplicated). If client provided explicit kept list, treat it as canonical baseline.
+      const finalImagesSet = new Set([...baselineImages, ...newImages]);
+      const finalVideosSet = new Set([...baselineVideos, ...newVideos]);
+
+      // enforce max 3 attachments total
+      if (finalImagesSet.size + finalVideosSet.size > 3) {
+        return res.status(422).json({
+          success: false,
+          message: "Maximum 3 total attachments allowed (images + videos)",
+        });
+      }
+
+      const finalImages = Array.from(finalImagesSet);
+      const finalVideos = Array.from(finalVideosSet);
+
+      if (finalImages.length) doc.images = finalImages;
+      if (finalVideos.length) doc.videos = finalVideos;
       // keep legacy single `image` / `video` fields pointing at first items for backward compatibility
-      const finalImages = doc.images || existingImages || [];
-      const finalVideos = doc.videos || existingVideos || [];
       if (finalImages.length) doc.image = finalImages[0];
       if (finalVideos.length) doc.video = finalVideos[0];
 
@@ -1579,9 +1622,56 @@ class UserController {
     console.log("req.user._id", req.user._id);
     let company = await CompanyModel.find({ user_id: req.user._id });
     console.log("company", company);
+
+    // Normalize all image/video URLs to prevent double-prefixing
+    const normalizeUrl = (val) => {
+      if (!val) return val;
+      const str = String(val);
+      // If it already starts with http/https, it's likely a full URL that may have double prefixes
+      if (str.startsWith("http")) {
+        // Extract the path after /assets/ if it exists, handling double prefix cases
+        const match = str.match(/\/assets\/(.+)$/);
+        if (match) {
+          // Get the last occurrence of /assets/ to handle double-prefixing
+          const parts = str.split("/assets/");
+          const relativePath = parts[parts.length - 1]; // Take the last part after /assets/
+          return baseUrl + "assets/" + relativePath;
+        }
+        return str; // Already a full URL, return as-is
+      }
+      // Relative path (e.g., 'companyprofile/xyz.jpg')
+      if (str.startsWith("/")) {
+        if (!str.startsWith("/assets/")) {
+          return baseUrl.replace(/\/$/, "") + str;
+        }
+        return baseUrl + str.replace(/^\//, "");
+      }
+      // Assume relative path like 'companyprofile/xyz.jpg'
+      return baseUrl + "assets/" + str;
+    };
+
+    // Normalize each company's attachments
+    const normalizedCompanies = company.map((c) => {
+      const companyObj = c.toObject ? c.toObject() : { ...c };
+
+      // Normalize single image/video fields
+      if (companyObj.image) companyObj.image = normalizeUrl(companyObj.image);
+      if (companyObj.video) companyObj.video = normalizeUrl(companyObj.video);
+
+      // Normalize image/video arrays
+      if (Array.isArray(companyObj.images)) {
+        companyObj.images = companyObj.images.map(normalizeUrl);
+      }
+      if (Array.isArray(companyObj.videos)) {
+        companyObj.videos = companyObj.videos.map(normalizeUrl);
+      }
+
+      return companyObj;
+    });
+
     return res.status(200).json({
       success: true,
-      data: company,
+      data: normalizedCompanies,
     });
   };
 
