@@ -1767,7 +1767,6 @@ class UserController {
   // ................CHAMBER......................
   static Chamber = async (req, res) => {
     var data = req.body;
-    data.video = req.files?.video;
     let validator = new Validator(data, {
       chamber_name_english: "required",
       chamber_name_chinese: "required",
@@ -1818,45 +1817,77 @@ class UserController {
         chamberwebsite: req.body.chamberwebsite,
         chamber_order: chamberOrder,
         user_id: req.user._id,
-        // video: imagename
       };
-      if (req.files?.image != undefined) {
-        let photo = path + "/" + req.files?.image;
-        if (fs.existsSync(photo)) fs.unlinkSync(photo);
 
-        let image = req.files?.image;
-        var d = new Date();
-        photo = image.name;
-        photo = photo.replace(/\s/g, "");
-        let r = (Math.random() + 1).toString(36).substring(7);
-        var imname = d.getSeconds() + "." + r + "." + photo;
-        let uploadPath = path + "/" + imname;
-        image.mv(uploadPath, function (err) {
-          if (err) return res.status(500).send(err);
-        });
-        doc["image"] = "chamber/" + imname;
-        image = baseUrl + "assets/chamber/" + imname;
+      // Handle up to 3 files: file1 is required, file2/file3 optional.
+      // Backwards-compatible: if file1 is omitted, accept legacy `image` or `video` as file1.
+      const incomingFiles = [];
+      for (let i = 1; i <= 3; i++) {
+        let f = req.files?.[`file${i}`];
+        if (!f && i === 1) {
+          // fall back to legacy single-file fields
+          if (req.files?.image) f = req.files.image;
+          else if (req.files?.video) f = req.files.video;
+        }
+        if (!f) continue;
+        // If middleware returned array for a single field, take first file
+        if (Array.isArray(f)) f = f[0];
+        incomingFiles.push(f);
       }
 
-      if (req.files?.video != undefined) {
-        let photo = path + "/" + req.files?.video;
-        if (fs.existsSync(photo)) fs.unlinkSync(photo);
-
-        let video = req.files?.video;
-        var d = new Date();
-        photo = video.name;
-        photo = photo.replace(/\s/g, "");
-        let r = (Math.random() + 1).toString(36).substring(7);
-        var imname = d.getSeconds() + "." + r + "." + photo;
-        let uploadPath = path + "/" + imname;
-        video.mv(uploadPath, function (err) {
-          if (err) return res.status(500).send(err);
+      if (incomingFiles.length === 0) {
+        return res.status(422).json({
+          success: false,
+          message: "Please upload at least one file (file1 is required).",
         });
-        doc["video"] = "chamber/" + imname;
-        video = baseUrl + "assets/chamber/" + imname;
       }
 
-      let result = await ChamberModel.create(doc); // Send notification to all users who have added this user to their contacts
+      const images = [];
+      const videos = [];
+      for (const file of incomingFiles) {
+        const d = new Date();
+        const safeName = file.name.replace(/\s/g, "");
+        const r = (Math.random() + 1).toString(36).substring(7);
+        const imname = d.getSeconds() + "." + r + "." + safeName;
+        const uploadPath = path + "/" + imname;
+        try {
+          await new Promise((resolve, reject) =>
+            file.mv(uploadPath, (err) => (err ? reject(err) : resolve()))
+          );
+        } catch (err) {
+          console.error("Failed to save uploaded chamber file:", err);
+          return res
+            .status(500)
+            .json({ success: false, message: "Failed to save uploaded file" });
+        }
+        const mtype = file.mimetype || mime.getType(safeName) || "";
+        if (String(mtype).startsWith("image")) {
+          images.push("chamber/" + imname);
+        } else if (String(mtype).startsWith("video")) {
+          videos.push("chamber/" + imname);
+        } else {
+          return res.status(422).json({
+            success: false,
+            message: "Unsupported file type: " + safeName,
+          });
+        }
+      }
+
+      // Ensure total attachments (images + videos) does not exceed 3
+      if (images.length + videos.length > 3) {
+        return res
+          .status(422)
+          .json({ success: false, message: "Maximum 3 files allowed" });
+      }
+
+      if (images.length) doc.images = images;
+      if (videos.length) doc.videos = videos;
+      // keep legacy single `image` / `video` fields for compatibility
+      if (images.length) doc.image = images[0];
+      if (videos.length) doc.video = videos[0];
+
+      let result = await ChamberModel.create(doc);
+      // Send notification to all users who have added this user to their contacts
       try {
         const currentUser = await UserModel.findById(req.user._id);
         // Find all contacts where contact_id is the current user (people who added me)
@@ -1959,42 +1990,138 @@ class UserController {
         });
       }
 
-      // Handle uploaded files
-      if (req.files && req.files.image) {
-        const image = req.files.image;
-        const d = new Date();
-        const safeName = image.name.replace(/\s/g, "");
-        const r = (Math.random() + 1).toString(36).substring(7);
-        const imname = d.getSeconds() + "." + r + "." + safeName;
-        const uploadPath = "./assets/chamber/" + imname;
-        try {
-          await image.mv(uploadPath);
-          doc.image = "chamber/" + imname;
-        } catch (e) {
-          console.error("Failed to save uploaded chamber image:", e);
-          return res
-            .status(500)
-            .json({ success: false, message: "Failed to save uploaded image" });
-        }
+      // Handle up to 3 files: file1, file2, file3 (all optional here). Fall back to legacy fields if provided.
+      // Load existing attachments so we can enforce a maximum of 3 total attachments
+      let existing = null;
+      try {
+        existing = await ChamberModel.findById(chamberId).lean();
+      } catch (e) {
+        console.error(
+          "Failed to load existing chamber for attachments check:",
+          e
+        );
       }
 
-      if (req.files && req.files.video) {
-        const video = req.files.video;
+      // Normalize stored paths to internal relative form (e.g., 'chamber/x.jpg') so we can dedupe and avoid double-prefixing
+      const normalizeStored = (val) => {
+        if (!val) return null;
+        if (Array.isArray(val)) return val.map(normalizeStored).filter(Boolean);
+        const s = String(val);
+        const assetsIndex = s.indexOf("/assets/");
+        if (assetsIndex !== -1) {
+          return s.substring(assetsIndex + "/assets/".length);
+        }
+        if (s.startsWith("/assets/")) return s.replace(/^\/assets\//, "");
+        if (s.startsWith("assets/")) return s.replace(/^assets\//, "");
+        // already relative or doesn't match known patterns - return as-is
+        return s;
+      };
+
+      const existingImagesRaw =
+        (existing &&
+          (existing.images && Array.isArray(existing.images)
+            ? existing.images
+            : existing.image
+            ? [existing.image]
+            : [])) ||
+        [];
+      const existingVideosRaw =
+        (existing &&
+          (existing.videos && Array.isArray(existing.videos)
+            ? existing.videos
+            : existing.video
+            ? [existing.video]
+            : [])) ||
+        [];
+
+      const existingImages = existingImagesRaw
+        .map(normalizeStored)
+        .filter(Boolean);
+      const existingVideos = existingVideosRaw
+        .map(normalizeStored)
+        .filter(Boolean);
+
+      // Check for textual references in form fields (e.g., client may send file1 as an existing URL to indicate keeping it)
+      const keptFromBody = [];
+      for (let i = 1; i <= 3; i++) {
+        const b = body[`file${i}`];
+        if (b && typeof b === "string") {
+          const n = normalizeStored(b);
+          if (n && !keptFromBody.includes(n)) keptFromBody.push(n);
+        }
+      }
+      const explicitKeep = keptFromBody.length > 0;
+      // If client explicitly listed kept files, use that as the baseline; otherwise keep all existing attachments
+      const baselineImages = explicitKeep
+        ? keptFromBody.slice()
+        : existingImages.slice();
+      const baselineVideos =
+        explicitKeep && body.video
+          ? [normalizeStored(body.video)].filter(Boolean)
+          : existingVideos.slice();
+
+      const incomingFiles = [];
+      for (let i = 1; i <= 3; i++) {
+        let f = req.files?.[`file${i}`];
+        if (!f && i === 1) {
+          if (req.files?.image) f = req.files.image;
+          else if (req.files?.video) f = req.files.video;
+        }
+        if (!f) continue;
+        if (Array.isArray(f)) f = f[0];
+        incomingFiles.push(f);
+      }
+
+      const newImages = [];
+      const newVideos = [];
+      for (const file of incomingFiles) {
         const d = new Date();
-        const safeName = video.name.replace(/\s/g, "");
+        const safeName = file.name.replace(/\s/g, "");
         const r = (Math.random() + 1).toString(36).substring(7);
         const imname = d.getSeconds() + "." + r + "." + safeName;
         const uploadPath = "./assets/chamber/" + imname;
         try {
-          await video.mv(uploadPath);
-          doc.video = "chamber/" + imname;
+          await new Promise((resolve, reject) =>
+            file.mv(uploadPath, (err) => (err ? reject(err) : resolve()))
+          );
         } catch (e) {
-          console.error("Failed to save uploaded chamber video:", e);
+          console.error("Failed to save uploaded chamber file:", e);
           return res
             .status(500)
-            .json({ success: false, message: "Failed to save uploaded video" });
+            .json({ success: false, message: "Failed to save uploaded file" });
         }
+        const mtype = file.mimetype || mime.getType(safeName) || "";
+        if (String(mtype).startsWith("image"))
+          newImages.push("chamber/" + imname);
+        else if (String(mtype).startsWith("video"))
+          newVideos.push("chamber/" + imname);
+        else
+          return res.status(422).json({
+            success: false,
+            message: "Unsupported file type: " + safeName,
+          });
       }
+
+      // build final sets (deduplicated). If client provided explicit kept list, treat it as canonical baseline.
+      const finalImagesSet = new Set([...baselineImages, ...newImages]);
+      const finalVideosSet = new Set([...baselineVideos, ...newVideos]);
+
+      // enforce max 3 attachments total
+      if (finalImagesSet.size + finalVideosSet.size > 3) {
+        return res.status(422).json({
+          success: false,
+          message: "Maximum 3 total attachments allowed (images + videos)",
+        });
+      }
+
+      const finalImages = Array.from(finalImagesSet);
+      const finalVideos = Array.from(finalVideosSet);
+
+      if (finalImages.length) doc.images = finalImages;
+      if (finalVideos.length) doc.videos = finalVideos;
+      // keep legacy single `image` / `video` fields pointing at first items for backward compatibility
+      if (finalImages.length) doc.image = finalImages[0];
+      if (finalVideos.length) doc.video = finalVideos[0];
 
       // Update existing chamber
       try {
@@ -2069,9 +2196,56 @@ class UserController {
 
   static chamber = async (req, res) => {
     let chamber = await ChamberModel.find({ user_id: req.user._id });
+
+    // Normalize all image/video URLs to prevent double-prefixing
+    const normalizeUrl = (val) => {
+      if (!val) return val;
+      const str = String(val);
+      // If it already starts with http/https, it's likely a full URL that may have double prefixes
+      if (str.startsWith("http")) {
+        // Extract the path after /assets/ if it exists, handling double prefix cases
+        const match = str.match(/\/assets\/(.+)$/);
+        if (match) {
+          // Get the last occurrence of /assets/ to handle double-prefixing
+          const parts = str.split("/assets/");
+          const relativePath = parts[parts.length - 1]; // Take the last part after /assets/
+          return baseUrl + "assets/" + relativePath;
+        }
+        return str; // Already a full URL, return as-is
+      }
+      // Relative path (e.g., 'chamber/xyz.jpg')
+      if (str.startsWith("/")) {
+        if (!str.startsWith("/assets/")) {
+          return baseUrl.replace(/\/$/, "") + str;
+        }
+        return baseUrl + str.replace(/^\//, "");
+      }
+      // Assume relative path like 'chamber/xyz.jpg'
+      return baseUrl + "assets/" + str;
+    };
+
+    // Normalize each chamber's attachments
+    const normalizedChambers = chamber.map((c) => {
+      const chamberObj = c.toObject ? c.toObject() : { ...c };
+
+      // Normalize single image/video fields
+      if (chamberObj.image) chamberObj.image = normalizeUrl(chamberObj.image);
+      if (chamberObj.video) chamberObj.video = normalizeUrl(chamberObj.video);
+
+      // Normalize image/video arrays
+      if (Array.isArray(chamberObj.images)) {
+        chamberObj.images = chamberObj.images.map(normalizeUrl);
+      }
+      if (Array.isArray(chamberObj.videos)) {
+        chamberObj.videos = chamberObj.videos.map(normalizeUrl);
+      }
+
+      return chamberObj;
+    });
+
     return res.status(200).json({
       success: true,
-      data: chamber,
+      data: normalizedChambers,
     });
   };
 
