@@ -1,0 +1,260 @@
+<%- include('../../Layout/Header') %> <%- include('../../Layout/Sidebar') %>
+<div id="main">
+  <div class="page-heading">
+    <div class="page-title mb-3">
+      <div class="row">
+        <div class="col-12 col-md-6 order-md-1 order-last">
+          <h3>
+            <a
+              href="<%= baseUrl %>admin/advertisements/packages"
+              class="text-primary"
+              ><i class="fas fa-arrow-left me-2"></i></a
+            >Create Advertisement Package
+          </h3>
+        </div>
+        <div class="col-12 col-md-6 order-md-2 order-first">
+          <nav
+            aria-label="breadcrumb"
+            class="breadcrumb-header float-start float-lg-end"
+          >
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item">
+                <a href="<%= baseUrl %>admin/dashboard">Dashboard</a>
+              </li>
+              <li class="breadcrumb-item">
+                <a href="<%= baseUrl %>admin/advertisements">Advertisements</a>
+              </li>
+              <li class="breadcrumb-item">
+                <a href="<%= baseUrl %>admin/advertisements/packages"
+                  >Packages</a
+                >
+              </li>
+              <li class="breadcrumb-item active">Create</li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Package Details</h4>
+        </div>
+        <div class="card-body">
+          <form id="packageForm">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="positionType"
+                    >Display Position <span class="text-danger">*</span></label
+                  >
+                  <select
+                    class="form-control"
+                    id="positionType"
+                    name="positionType"
+                    required
+                  >
+                    <option value="">Select Banner Position</option>
+                    <option value="HOME_BANNER">Start Page</option>
+                    <option value="BOTTOM_CIRCLE">Bottom Circle</option>
+                  </select>
+                  <small class="form-text text-muted"
+                    >Select a position type</small
+                  >
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="name"
+                    >Package Name <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="name"
+                    name="name"
+                    required
+                    placeholder="e.g., Premium Display Package"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="displayCredits"
+                    >Display Coupons <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="displayCredits"
+                    name="displayCredits"
+                    min="1"
+                    required
+                    placeholder="e.g., 1000"
+                  />
+                  <small class="form-text text-muted">
+                    Number of display coupons in this package
+                  </small>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="calculatedCredits">Calculated Display Credits</label>
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="calculatedCredits"
+                    readonly
+                    placeholder="Select position and enter coupons"
+                    style="background-color: #f8f9fa; font-weight: bold;"
+                  />
+                  <small class="form-text text-muted">
+                    Display Coupons × Rate = <span id="rateDisplay">-</span>
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group">
+                  <label for="priceUSDT"
+                    >Price (USDT) <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="priceUSDT"
+                    name="priceUSDT"
+                    min="0"
+                    step="0.01"
+                    required
+                    placeholder="e.g., 99.99"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label for="status">Status</label>
+                  <select class="form-control" id="status" name="status">
+                    <option value="1">Active</option>
+                    <option value="0">Inactive</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-3">
+              <div class="col-md-12">
+                <button type="submit" class="btn btn-primary">
+                  Create Package
+                </button>
+                <a
+                  href="<%= baseUrl %>admin/advertisements/packages"
+                  class="btn btn-secondary"
+                  >Cancel</a
+                >
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  const baseUrl = "<%= baseUrl %>";
+
+  // Store rates
+  let rates = {};
+
+  // Fetch rates on page load
+  $(document).ready(function () {
+    $.ajax({
+      url: `${baseUrl}api/v1/advertisement/rates`,
+      method: "GET",
+      success: function (response) {
+        if (response.success && response.data) {
+          rates = response.data;
+        }
+      },
+      error: function (err) {
+        console.error("Failed to fetch rates:", err);
+      },
+    });
+  });
+
+  // Calculate display credits when position or coupons change
+  function calculateDisplayCredits() {
+    const position = $("#positionType").val();
+    const coupons = parseInt($("#displayCredits").val());
+
+    if (position && coupons && rates[position]) {
+      const rate = rates[position];
+      const calculatedCredits = coupons * rate;
+      $("#calculatedCredits").val(calculatedCredits.toLocaleString());
+      $("#rateDisplay").text(`1 coupon = ${rate} credits`);
+    } else {
+      $("#calculatedCredits").val("");
+      $("#rateDisplay").text("-");
+    }
+  }
+
+  // Add event listeners
+  $("#positionType").on("change", calculateDisplayCredits);
+  $("#displayCredits").on("input", calculateDisplayCredits);
+
+  // Handle form submission
+  $("#packageForm").on("submit", function (e) {
+    e.preventDefault();
+
+    // Get selected position
+    const pos = $("#positionType").val();
+    if (!pos) {
+      Swal.fire("Error!", "Please select a position type.", "error");
+      return;
+    }
+    const positions = [pos];
+
+    const formData = {
+      name: $("#name").val(),
+      displayCredits: parseInt($("#displayCredits").val()),
+      positions: positions,
+      priceUSDT: parseFloat($("#priceUSDT").val()),
+      isActive: $("#status").val() === "1",
+    };
+
+    $.ajax({
+      url: `${baseUrl}api/v1/admin/advertisement/packages`,
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify(formData),
+      success: function (response) {
+        Swal.fire("Success!", "Package created successfully.", "success").then(
+          () => {
+            window.location.href = `${baseUrl}admin/advertisements/packages`;
+          }
+        );
+      },
+      error: function (err) {
+        Swal.fire(
+          "Error!",
+          err.responseJSON?.message || "Failed to create package.",
+          "error"
+        );
+      },
+    });
+  });
+</script>
+<%- include('../../Layout/Footer') %>

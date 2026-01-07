@@ -4,6 +4,7 @@ import connectDB from "./Db/Connectdb.js";
 import admin from "./Routes/Admin.js";
 import user from "./Routes/User.js";
 import partner from "./Routes/Partner.js";
+import advertisement from "./Routes/Advertisement.js";
 import fileUpload from "express-fileupload";
 import session from "express-session";
 import mongoose from "mongoose";
@@ -13,6 +14,7 @@ import http from "http";
 import { swaggerUi, swaggerDocument } from "./swagger.js";
 import { start as startTelegramBot } from "./Utils/telegramBot.js";
 import { startMembershipExpiryCheck } from "./Utils/membershipCron.js";
+import { initializeDefaultRates } from "./Utils/initializeRates.js";
 
 mongoose.set("strictQuery", false);
 const app = express();
@@ -45,6 +47,9 @@ startTelegramBot();
 // Start membership expiry cron job
 startMembershipExpiryCheck();
 
+// Initialize default advertisement rates
+initializeDefaultRates();
+
 //custom logger
 app.use((req, res, next) => {
   const now = new Date();
@@ -73,6 +78,7 @@ app.use(express.json({ extended: false }));
 app.use("/admin", admin);
 app.use("/partner", partner);
 app.use("/", user);
+app.use("/", advertisement);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.get("/", function (req, res) {

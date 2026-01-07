@@ -281,4 +281,34 @@ admin.get(
   AdminController.CheckExpiredMemberships
 );
 
+// ........................ADVERTISEMENT...................................
+admin.get("/advertisements", isAdmin, AdminController.advertisementDashboard);
+admin.get(
+  "/advertisements/manage",
+  isAdmin,
+  AdminController.manageAdvertisements
+);
+admin.get("/advertisements/packages", isAdmin, AdminController.managePackages);
+admin.get(
+  "/advertisements/packages/create",
+  isAdmin,
+  AdminController.createPackagePage
+);
+admin.get("/advertisements/rates", isAdmin, AdminController.manageCouponRates);
+admin.post(
+  "/advertisements/rates/update",
+  isAdmin,
+  AdminController.updateCouponRate
+);
+admin.get(
+  "/advertisements/credit-payments",
+  isAdmin,
+  AdminController.manageCreditPayments
+);
+admin.get(
+  "/advertisement/sponsor/:sponsorId",
+  isAdmin,
+  AdminController.sponsorDetails
+);
+
 export default admin;

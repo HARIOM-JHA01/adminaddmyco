@@ -1,0 +1,261 @@
+<%- include('../../Layout/Header') %> <%- include('../../Layout/Sidebar') %>
+<div id="main">
+  <div class="page-heading">
+    <div class="page-title mb-3">
+      <div class="row">
+        <div class="col-12 col-md-6 order-md-1 order-last">
+          <h3>
+            <a href="<%= baseUrl %>admin/advertisements" class="text-primary"
+              ><i class="fas fa-arrow-left me-2"></i></a
+            >Manage Coupon Rates
+          </h3>
+        </div>
+        <div class="col-12 col-md-6 order-md-2 order-first">
+          <nav
+            aria-label="breadcrumb"
+            class="breadcrumb-header float-start float-lg-end"
+          >
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item">
+                <a href="<%= baseUrl %>admin/dashboard">Dashboard</a>
+              </li>
+              <li class="breadcrumb-item">
+                <a href="<%= baseUrl %>admin/advertisements">Advertisements</a>
+              </li>
+              <li class="breadcrumb-item active">Coupon Rates</li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">
+            Advertisement Display Credit Conversion Rates
+          </h4>
+          <p class="text-muted">
+            Configure how many display credits equal 1 package credit for each
+            advertisement position
+          </p>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover table-striped">
+              <thead class="table-light">
+                <tr>
+                  <th>Position</th>
+                  <th>Display Credit Rate</th>
+                  <th>Description</th>
+                  <th>Status</th>
+                  <th>Last Updated</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% rates.forEach(rate => { %>
+                <tr>
+                  <td>
+                    <strong>
+                      <% if (rate.position === 'HOME_BANNER') { %>
+                      <i class="fas fa-home me-2"></i>Start Page <% } else { %>
+                      <i class="fas fa-circle me-2"></i>Bottom Circle <% } %>
+                    </strong>
+                  </td>
+                  <td>
+                    <span class="badge bg-info">
+                      1 credit = <%= rate.displayCreditRate %> display
+                    </span>
+                  </td>
+                  <td><%= rate.description || '-' %></td>
+                  <td>
+                    <% if (rate.isActive) { %>
+                    <span class="badge bg-success">Active</span>
+                    <% } else { %>
+                    <span class="badge bg-danger">Inactive</span>
+                    <% } %>
+                  </td>
+                  <td><%= moment(rate.updatedAt).format('DD/MM/YYYY') %></td>
+                  <td>
+                    <button
+                      class="btn btn-sm btn-warning edit-rate"
+                      data-rate-id="<%= rate._id %>"
+                      data-position="<%= rate.position %>"
+                      data-rate="<%= rate.displayCreditRate %>"
+                      data-description="<%= rate.description || '' %>"
+                    >
+                      <i class="fas fa-edit"></i> Edit
+                    </button>
+                  </td>
+                </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Edit Rate Modal -->
+<div
+  class="modal fade"
+  id="editRateModal"
+  tabindex="-1"
+  aria-labelledby="editRateModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editRateModalLabel">Edit Coupon Rate</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form id="editRateForm">
+          <input type="hidden" id="rateId" name="rateId" />
+          <div class="form-group mb-3">
+            <label for="positionLabel" class="form-label">Position</label>
+            <input
+              type="text"
+              class="form-control"
+              id="positionLabel"
+              readonly
+            />
+          </div>
+          <div class="form-group mb-3">
+            <label for="displayCreditRate" class="form-label"
+              >Display Credit Rate <span class="text-danger">*</span></label
+            >
+            <div class="input-group">
+              <input
+                type="number"
+                class="form-control"
+                id="displayCreditRate"
+                name="displayCreditRate"
+                min="1"
+                required
+              />
+              <span class="input-group-text">credits per 1 package credit</span>
+            </div>
+            <small class="form-text text-muted d-block mt-2">
+              Example: If you set this to 1000, then 1 package credit = 1000
+              display credits
+            </small>
+          </div>
+          <div class="form-group mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea
+              class="form-control"
+              id="description"
+              name="description"
+              rows="3"
+              placeholder="Optional description for this rate"
+            ></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="saveRateBtn"
+          onclick="saveRate()"
+        >
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  const baseUrl = "<%= baseUrl %>";
+
+  // Edit rate button click handler
+  $(".edit-rate").on("click", function () {
+    const rateId = $(this).data("rate-id");
+    const position = $(this).data("position");
+    const rate = $(this).data("rate");
+    const description = $(this).data("description");
+
+    // Populate modal
+    $("#rateId").val(rateId);
+    const positionLabel =
+      position === "HOME_BANNER" ? "Start Page" : "Bottom Circle";
+    $("#positionLabel").val(positionLabel);
+    $("#displayCreditRate").val(rate);
+    $("#description").val(description);
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById("editRateModal"));
+    modal.show();
+  });
+
+  function saveRate() {
+    const rateId = $("#rateId").val();
+    const displayCreditRate = $("#displayCreditRate").val();
+    const description = $("#description").val();
+
+    // Validation
+    if (!displayCreditRate || displayCreditRate < 1) {
+      Swal.fire("Error!", "Display credit rate must be at least 1", "error");
+      return;
+    }
+
+    // Show loading
+    Swal.fire({
+      title: "Updating...",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    $.ajax({
+      url: `${baseUrl}admin/advertisements/rates/update`,
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify({
+        rateId,
+        displayCreditRate: parseInt(displayCreditRate),
+        description,
+      }),
+      success: function (response) {
+        if (response.success) {
+          Swal.fire("Success!", response.message, "success").then(() => {
+            location.reload();
+          });
+        } else {
+          Swal.fire(
+            "Error!",
+            response.message || "Failed to update rate",
+            "error"
+          );
+        }
+      },
+      error: function (err) {
+        Swal.fire(
+          "Error!",
+          err.responseJSON?.message || "Failed to update rate",
+          "error"
+        );
+      },
+    });
+  }
+</script>
+<%- include('../../Layout/Footer') %>

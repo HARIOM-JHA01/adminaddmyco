@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sponsor Details</title>
+    <link rel="stylesheet" href="<%=baseUrl%>/assets/css/style.css" />
+    <style>
+      .sponsor-container {
+        padding: 20px;
+      }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #3498db;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      .info-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+      }
+      .info-item {
+        display: flex;
+        flex-direction: column;
+      }
+      .info-label {
+        color: #666;
+        font-size: 12px;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 5px;
+      }
+      .info-value {
+        color: #333;
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .credit-highlight {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+      }
+      .credit-highlight .label {
+        font-size: 12px;
+        opacity: 0.9;
+        margin-bottom: 5px;
+      }
+      .credit-highlight .value {
+        font-size: 32px;
+        font-weight: bold;
+      }
+      .table-container {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+      .table-container h3 {
+        margin-top: 0;
+        color: #333;
+      }
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .data-table th {
+        background: #f5f5f5;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        color: #333;
+        border-bottom: 2px solid #ddd;
+        font-size: 13px;
+      }
+      .data-table td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+      }
+      .data-table tr:hover {
+        background: #f9f9f9;
+      }
+      .status-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .status-completed {
+        background: #d4edda;
+        color: #155724;
+      }
+      .status-pending {
+        background: #fff3cd;
+        color: #856404;
+      }
+      .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+      }
+    </style>
+  </head>
+  <body>
+    <%- include('../../Layout/Header') %> <%- include('../../Layout/Sidebar') %>
+    <div id="main">
+      <div class="sponsor-container">
+        <a href="/admin/advertisements/manage" class="back-link"
+          >← Back to Advertisements</a
+        >
+
+        <h1>Sponsor Details</h1>
+
+        <!-- Sponsor Info -->
+        <div class="info-card">
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Full Name</span>
+              <span class="info-value"
+                ><%=sponsor.firstname%> <%=sponsor.lastname%></span
+              >
+            </div>
+            <div class="info-item">
+              <span class="info-label">Email</span>
+              <span class="info-value"><%=sponsor.email%></span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Telegram ID</span>
+              <span class="info-value"><%=sponsor.tgid%></span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Member Type</span>
+              <span class="info-value"
+                ><%=sponsor.membertype || 'Standard'%></span
+              >
+            </div>
+            <div class="info-item">
+              <span class="info-label">Member Since</span>
+              <span class="info-value"><%=sponsor.joindate%></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Credit Information -->
+        <div class="info-card">
+          <h3>Advertisement Credits</h3>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+              gap: 15px;
+            "
+          >
+            <div class="credit-highlight">
+              <div class="label">Total Credits</div>
+              <div class="value">
+                <%=creditInfo.totalCredits.toLocaleString()%>
+              </div>
+            </div>
+            <div
+              class="credit-highlight"
+              style="
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+              "
+            >
+              <div class="label">Used Credits</div>
+              <div class="value">
+                <%=creditInfo.usedCredits.toLocaleString()%>
+              </div>
+            </div>
+            <div
+              class="credit-highlight"
+              style="
+                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+              "
+            >
+              <div class="label">Balance Credits</div>
+              <div class="value">
+                <%=creditInfo.balanceCredits.toLocaleString()%>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="table-container">
+          <h3>Transaction History</h3>
+          <%if(creditInfo.transactions && creditInfo.transactions.length > 0)
+          {%>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Transaction ID</th>
+                <th>Credits</th>
+                <th>Amount (USDT)</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <%creditInfo.transactions.forEach(trans => {%>
+              <tr>
+                <td><%=trans.transactionId%></td>
+                <td><%=trans.creditsAdded.toLocaleString()%></td>
+                <td>$<%=parseFloat(trans.amountUSDT).toFixed(2)%></td>
+                <td>
+                  <span
+                    class="status-badge status-<%=trans.status.toLowerCase()%>"
+                  >
+                    <%=trans.status%>
+                  </span>
+                </td>
+                <td>
+                  <%=new Date(trans.transactionDate).toLocaleDateString()%>
+                </td>
+              </tr>
+              <%});%>
+            </tbody>
+          </table>
+          <%} else {%>
+          <div class="no-data">No transactions found</div>
+          <%}%>
+        </div>
+
+        <!-- Advertisements Posted -->
+        <div class="table-container">
+          <h3>Advertisements Posted (<%=advertisements.length%>)</h3>
+          <%if(advertisements.length > 0) {%>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Position</th>
+                <th>Country</th>
+                <th>Status</th>
+                <th>Displays</th>
+                <th>Views</th>
+                <th>Clicks / CTR</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              <%advertisements.forEach(ad => {%>
+              <tr>
+                <td><%=ad.position.replace('_', ' ')%></td>
+                <td><%=ad.country%></td>
+                <td>
+                  <span
+                    class="status-badge status-<%=ad.status.toLowerCase()%>"
+                  >
+                    <%=ad.status%>
+                  </span>
+                </td>
+                <td><%=ad.displayUsed.toLocaleString()%></td>
+                <td><%=ad.viewCount.toLocaleString()%></td>
+                <td>
+                  <%=ad.clickCount.toLocaleString()%> / <%=ad.ctrPercentage%>%
+                </td>
+                <td><%= moment(ad.createdAt).format('DD/MM/YYYY') %></td>
+              </tr>
+              <%});%>
+            </tbody>
+          </table>
+          <%} else {%>
+          <div class="no-data">No advertisements found</div>
+          <%}%>
+        </div>
+      </div>
+    </div>
+
+    <%- include('../../Layout/Footer') %>
+  </body>
+</html>

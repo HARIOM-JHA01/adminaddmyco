@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manage Advertisement Credit Payments</title>
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="//cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+      .payment-container {
+        padding: 20px;
+      }
+      .status-badge {
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .status-pending {
+        background: #fff3cd;
+        color: #856404;
+      }
+      .status-approved {
+        background: #d4edda;
+        color: #155724;
+      }
+      .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .action-buttons {
+        display: flex;
+        gap: 5px;
+      }
+      .btn-small {
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .btn-approve {
+        background: #28a745;
+        color: white;
+      }
+      .btn-approve:hover {
+        background: #218838;
+      }
+      .btn-reject {
+        background: #dc3545;
+        color: white;
+      }
+      .btn-reject:hover {
+        background: #c82333;
+      }
+    </style>
+  </head>
+  <body>
+    <%- include('../../Layout/Header') %> <%- include('../../Layout/Sidebar') %>
+    <div id="main">
+      <div class="payment-container">
+        <div class="header-with-btn">
+          <h1>Advertisement Credit Payments</h1>
+          <div>
+            <span style="font-size: 14px; color: #666">
+              Total Pending:
+              <strong style="color: #f39c12">
+                <%= payments.filter(p => p.status === 0).length %>
+              </strong>
+            </span>
+          </div>
+        </div>
+
+        <% if (payments.length > 0) { %>
+        <div class="table-responsive">
+          <table class="table table-striped mb-0" id="payments_table">
+            <thead>
+              <tr>
+                <th>No.</th>
+                <th>User</th>
+                <th>Transaction ID</th>
+                <th>Wallet Address</th>
+                <th>Amount (USDT)</th>
+                <th>Credits</th>
+                <th>Package</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% var i = 1; payments.forEach(function(payment) { %>
+              <tr data-id="<%= payment._id %>">
+                <td><%= i %></td>
+                <td>
+                  <strong
+                    ><%= payment.user.firstname %> <%= payment.user.lastname
+                    %></strong
+                  >
+                  <br />
+                  <small><%= payment.user.email %></small>
+                </td>
+                <td>
+                  <code style="background: #f5f5f5; padding: 2px 5px">
+                    <%= payment.transactionId %>
+                  </code>
+                </td>
+                <td>
+                  <code
+                    style="
+                      background: #f5f5f5;
+                      padding: 2px 5px;
+                      font-size: 11px;
+                    "
+                  >
+                    <%= payment.walletAddress %>
+                  </code>
+                </td>
+                <td><strong>$<%= payment.amount %></strong></td>
+                <td><strong><%= payment.credits %></strong></td>
+                <td><%= payment.package.name %></td>
+                <td><%= moment(payment.createdAt).format('DD/MM/YYYY') %></td>
+                <td>
+                  <span
+                    class="status-badge status-<%= payment.status === 0 ? 'pending' : payment.status === 1 ? 'approved' : 'rejected' %>"
+                  >
+                    <%= payment.statusLabel %>
+                  </span>
+                </td>
+                <td>
+                  <% if (payment.status === 0) { %>
+                  <div class="action-buttons">
+                    <button
+                      class="btn-small btn-approve"
+                      onclick="approvePayment('<%= payment._id %>')"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      class="btn-small btn-reject"
+                      onclick="rejectPayment('<%= payment._id %>')"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                  <% } else if (payment.status === 1) { %>
+                  <span style="color: #28a745; font-weight: 600"
+                    >✓ Approved</span
+                  >
+                  <% } else { %>
+                  <span style="color: #dc3545; font-weight: 600"
+                    >✗ Rejected</span
+                  >
+                  <% } %>
+                </td>
+              </tr>
+              <% i++; }) %>
+            </tbody>
+          </table>
+        </div>
+        <% } else { %>
+        <div style="padding: 40px; text-align: center; color: #999">
+          <p>No payment requests found</p>
+        </div>
+        <% } %>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="//cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+    <script>
+      $(document).ready(function () {
+        if ($("#payments_table").length) {
+          $("#payments_table").DataTable({ order: [[7, "desc"]] });
+        }
+      });
+
+      function approvePayment(paymentId) {
+        Swal.fire({
+          title: "Approve Payment?",
+          text: "Credits will be added to user's account",
+          icon: "question",
+          showCancelButton: true,
+          confirmButtonColor: "#28a745",
+          cancelButtonColor: "#6c757d",
+          confirmButtonText: "Yes, approve!",
+          input: "textarea",
+          inputPlaceholder: "Optional approval notes...",
+          inputAttributes: {
+            "aria-label": "Approval notes",
+          },
+        }).then((result) => {
+          if (result.isConfirmed) {
+            const notes = result.value || "";
+            fetch(
+              `/api/v1/admin/advertisement/credit-payments/${paymentId}/approve`,
+              {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ notes }),
+              }
+            )
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.success) {
+                  Swal.fire(
+                    "Approved!",
+                    "Payment has been approved.",
+                    "success"
+                  ).then(() => {
+                    location.reload();
+                  });
+                } else {
+                  Swal.fire(
+                    "Error!",
+                    data.message || "Failed to approve payment",
+                    "error"
+                  );
+                }
+              })
+              .catch((err) => {
+                console.error("Error approving payment:", err);
+                Swal.fire("Error!", "Error approving payment", "error");
+              });
+          }
+        });
+      }
+
+      function rejectPayment(paymentId) {
+        Swal.fire({
+          title: "Reject Payment?",
+          text: "User will be notified of rejection",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#dc3545",
+          cancelButtonColor: "#6c757d",
+          confirmButtonText: "Yes, reject!",
+          input: "textarea",
+          inputPlaceholder: "Rejection reason (required)",
+          inputAttributes: {
+            "aria-label": "Rejection reason",
+          },
+          inputValidator: (value) => {
+            if (!value) {
+              return "Please provide a rejection reason";
+            }
+          },
+        }).then((result) => {
+          if (result.isConfirmed) {
+            const reason = result.value;
+            fetch(
+              `/api/v1/admin/advertisement/credit-payments/${paymentId}/reject`,
+              {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ reason }),
+              }
+            )
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.success) {
+                  Swal.fire(
+                    "Rejected!",
+                    "Payment has been rejected.",
+                    "success"
+                  ).then(() => {
+                    location.reload();
+                  });
+                } else {
+                  Swal.fire(
+                    "Error!",
+                    data.message || "Failed to reject payment",
+                    "error"
+                  );
+                }
+              })
+              .catch((err) => {
+                console.error("Error rejecting payment:", err);
+                Swal.fire("Error!", "Error rejecting payment", "error");
+              });
+          }
+        });
+      }
+    </script>
+
+    <%- include('../../Layout/Footer') %>
+  </body>
+</html>

@@ -66,6 +66,30 @@
             <span>Banners</span>
           </a>
         </li>
+
+        <li class="sidebar-item has-sub <%= (path == 'advertisements') || (path == 'advertisements/manage') || (path == 'advertisements/packages') || (path == 'advertisements/rates') || (path == 'advertisements/credit-payments') || (path == 'advertisements/sponsor') ? 'active' : '' %>">
+          <a href="#" class='sidebar-link'>
+            <i class="bi bi-megaphone"></i>
+            <span>Advertisements</span>
+          </a>
+          <ul class="submenu <%= (path == 'advertisements') || (path == 'advertisements/manage') || (path == 'advertisements/packages') || (path == 'advertisements/rates') || (path == 'advertisements/credit-payments') || (path == 'advertisements/sponsor') ? 'active' : '' %>">
+            <li class="submenu-item <%= (path == 'advertisements') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/advertisements">Dashboard</a>
+            </li>
+            <li class="submenu-item <%= (path == 'advertisements/credit-payments') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/advertisements/credit-payments">Adds Payment</a>
+            </li>
+            <li class="submenu-item <%= (path == 'advertisements/rates') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/advertisements/rates">Manage Coupon Rates</a>
+            </li>
+            <li class="submenu-item <%= (path == 'advertisements/packages') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/advertisements/packages">Manage Packages</a>
+            </li>
+            <li class="submenu-item <%= (path == 'advertisements/manage') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/advertisements/manage">Manage Adds</a>
+            </li>
+          </ul>
+        </li>
         <li
           class="sidebar-item has-sub <%= (path == 'membership') || (path == 'logo') ||(path == 'system') || (path == 'folder') || (path == 'configuration') || (path == 'categories') || (path == 'paymentconfiguration') ? 'active' : '' %> ">
           <a href="#" class='sidebar-link'>

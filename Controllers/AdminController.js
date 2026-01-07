@@ -2149,6 +2149,506 @@ class AdminController {
       });
     }
   };
+
+  // ============================= ADVERTISEMENT ADMIN VIEWS =============================
+
+  /**
+   * GET /admin/advertisements
+   * Render advertisement dashboard
+   */
+  static advertisementDashboard = async (req, res) => {
+    try {
+      const AdvertisementModel = (await import("../Models/Advertisement.js"))
+        .default;
+      const SponsorCreditsModel = (await import("../Models/SponsorCredits.js"))
+        .default;
+
+      // Get dashboard data
+      const filter = {};
+      const totalAds = await AdvertisementModel.countDocuments(filter);
+      const activeAds = await AdvertisementModel.countDocuments({
+        status: "ACTIVE",
+      });
+      const completedAds = await AdvertisementModel.countDocuments({
+        status: "COMPLETED",
+      });
+
+      const ads = await AdvertisementModel.find(filter);
+      let totalDisplays = 0;
+      let totalClicks = 0;
+
+      ads.forEach((ad) => {
+        totalDisplays += ad.viewCount;
+        totalClicks += ad.clickCount;
+      });
+
+      const completedTransactions = await SponsorCreditsModel.aggregate([
+        { $unwind: "$transactions" },
+        { $match: { "transactions.status": "COMPLETED" } },
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: "$transactions.amountUSDT" },
+          },
+        },
+      ]);
+
+      const totalRevenueUSDT =
+        completedTransactions.length > 0
+          ? completedTransactions[0].totalRevenue
+          : 0;
+
+      // Top sponsors
+      const topSponsors = await AdvertisementModel.aggregate([
+        {
+          $group: {
+            _id: "$sponsorId",
+            activeAds: {
+              $sum: { $cond: [{ $eq: ["$status", "ACTIVE"] }, 1, 0] },
+            },
+            totalDisplays: { $sum: "$viewCount" },
+            totalClicks: { $sum: "$clickCount" },
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "_id",
+            foreignField: "_id",
+            as: "sponsor",
+          },
+        },
+        { $sort: { totalDisplays: -1 } },
+        { $limit: 5 },
+      ]);
+
+      // Ads by position
+      const adsByPosition = await AdvertisementModel.aggregate([
+        {
+          $group: {
+            _id: "$position",
+            count: { $sum: 1 },
+            displays: { $sum: "$viewCount" },
+            clicks: { $sum: "$clickCount" },
+          },
+        },
+      ]);
+
+      const positionData = {};
+      adsByPosition.forEach((item) => {
+        positionData[item._id] = {
+          count: item.count,
+          displays: item.displays,
+          clicks: item.clicks,
+        };
+      });
+
+      return res.render("Admin/Advertisement/Dashboard", {
+        baseUrl,
+        path: "advertisements",
+        data: {
+          totalAds,
+          activeAds,
+          completedAds,
+          totalDisplays,
+          totalClicks,
+          overallCTR:
+            totalDisplays > 0
+              ? ((totalClicks / totalDisplays) * 100).toFixed(2)
+              : 0,
+          totalRevenueUSDT: totalRevenueUSDT.toFixed(2),
+          topSponsors: topSponsors.map((sponsor) => ({
+            _id: sponsor._id,
+            name:
+              sponsor.sponsor.length > 0
+                ? `${sponsor.sponsor[0].firstname} ${sponsor.sponsor[0].lastname}`
+                : "Unknown",
+            activeAds: sponsor.activeAds,
+            totalDisplays: sponsor.totalDisplays,
+            totalClicks: sponsor.totalClicks,
+          })),
+          adsByPosition: positionData,
+        },
+      });
+    } catch (error) {
+      console.error("Error loading advertisement dashboard:", error);
+      return res.status(500).render("error", {
+        baseUrl,
+        message: "Error loading dashboard",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
+   * GET /admin/advertisements/manage
+   * Render manage advertisements view
+   */
+  static manageAdvertisements = async (req, res) => {
+    try {
+      const AdvertisementModel = (await import("../Models/Advertisement.js"))
+        .default;
+      const { status, approvalStatus, position, country, page = 1 } = req.query;
+
+      let filter = { deletedAt: null };
+      if (status) filter.status = status;
+      if (approvalStatus) filter.approvalStatus = approvalStatus;
+      if (position) filter.position = position;
+      if (country) filter.country = country;
+
+      const limit = 20;
+      const skip = (page - 1) * limit;
+
+      const ads = await AdvertisementModel.find(filter)
+        .populate("sponsorId", "firstname lastname email tgid")
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 });
+
+      const total = await AdvertisementModel.countDocuments(filter);
+      const totalPages = Math.ceil(total / limit);
+
+      const adsForDisplay = ads.map((ad) => ({
+        _id: ad._id,
+        sponsor: {
+          name: `${ad.sponsorId.firstname} ${ad.sponsorId.lastname}`,
+          email: ad.sponsorId.email,
+          tgid: ad.sponsorId.tgid,
+        },
+        position: ad.position,
+        country: ad.country,
+        imageUrl: ad.imageUrl,
+        redirectUrl: ad.redirectUrl,
+        displayCount: ad.displayCount,
+        displayUsed: ad.displayUsed,
+        displayRemaining: ad.displayRemaining,
+        status: ad.status,
+        approvalStatus: ad.approvalStatus,
+        viewCount: ad.viewCount,
+        clickCount: ad.clickCount,
+        ctrPercentage:
+          ad.viewCount > 0
+            ? ((ad.clickCount / ad.viewCount) * 100).toFixed(2)
+            : 0,
+        createdAt: moment(ad.createdAt).format("YYYY-MM-DD HH:mm"),
+      }));
+
+      return res.render("Admin/Advertisement/ManageAds", {
+        baseUrl,
+        path: "advertisements/manage",
+        ads: adsForDisplay.map((ad) => ({
+          ...ad,
+          createdAt: ad.createdAt, // Keep raw date
+        })),
+        filters: {
+          status,
+          approvalStatus,
+          position,
+          country,
+        },
+        pagination: {
+          page: parseInt(page),
+          totalPages,
+          total,
+        },
+        moment,
+      });
+    } catch (error) {
+      console.error("Error loading manage advertisements:", error);
+      return res.status(500).render("error", {
+        baseUrl,
+        message: "Error loading advertisements",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
+   * GET /admin/advertisements/packages
+   * Render manage packages view
+   */
+  static managePackages = async (req, res) => {
+    try {
+      const AdvertisementPackageModel = (
+        await import("../Models/AdvertisementPackage.js")
+      ).default;
+      const AdvertisementRateModel = (
+        await import("../Models/AdvertisementRate.js")
+      ).default;
+
+      const packages = await AdvertisementPackageModel.find().sort({
+        createdAt: -1,
+      });
+
+      // Fetch rates for calculating display credits
+      const rates = await AdvertisementRateModel.find().lean();
+      const ratesMap = {};
+      rates.forEach((rate) => {
+        ratesMap[rate.position] = rate.displayCreditRate;
+      });
+
+      // Calculate display credits for each package based on position rates
+      const packagesWithDisplayCredits = packages.map((pkg) => {
+        const pkgObj = pkg.toObject();
+        // Get the first position's rate (packages can have multiple positions)
+        const position = Array.isArray(pkgObj.positions)
+          ? pkgObj.positions[0]
+          : pkgObj.positions;
+        const rate = ratesMap[position] || 1000; // Default to 1000 if rate not found
+        pkgObj.calculatedDisplayCredits = pkgObj.displayCredits * rate;
+        return pkgObj;
+      });
+
+      return res.render("Admin/Advertisement/ManagePackages", {
+        baseUrl,
+        path: "advertisements/packages",
+        packages: packagesWithDisplayCredits,
+        moment,
+      });
+    } catch (error) {
+      console.error("Error loading packages:", error);
+      return res.status(500).render("error", {
+        baseUrl,
+        message: "Error loading packages",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
+   * GET /admin/advertisements/packages/create
+   * Render create package page
+   */
+  static createPackagePage = async (req, res) => {
+    try {
+      return res.render("Admin/Advertisement/PackageCreate", {
+        baseUrl,
+        path: "advertisements/packages",
+      });
+    } catch (error) {
+      console.error("Error rendering create package page:", error);
+      return res.status(500).render("error", {
+        baseUrl,
+        message: "Error loading page",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
+   * GET /admin/advertisement/sponsor/:sponsorId
+   * Render sponsor details view
+   */
+  static sponsorDetails = async (req, res) => {
+    try {
+      const UserModel = (await import("../Models/User.js")).default;
+      const AdvertisementModel = (await import("../Models/Advertisement.js"))
+        .default;
+      const SponsorCreditsModel = (await import("../Models/SponsorCredits.js"))
+        .default;
+
+      const { sponsorId } = req.params;
+
+      const sponsor = await UserModel.findById(sponsorId);
+      if (!sponsor) {
+        return res.status(404).render("error", {
+          baseUrl,
+          message: "Sponsor not found",
+        });
+      }
+
+      const creditInfo = await SponsorCreditsModel.findOne({ sponsorId });
+      const advertisements = await AdvertisementModel.find({
+        sponsorId,
+        deletedAt: null,
+      }).sort({ createdAt: -1 });
+
+      return res.render("Admin/Advertisement/SponsorDetails", {
+        baseUrl,
+        path: "advertisements/sponsor",
+        sponsor: {
+          _id: sponsor._id,
+          firstname: sponsor.firstname,
+          lastname: sponsor.lastname,
+          email: sponsor.email,
+          tgid: sponsor.tgid,
+          membertype: sponsor.membertype,
+          joindate: moment(sponsor.joindate).format("YYYY-MM-DD"),
+        },
+        creditInfo: {
+          totalCredits: creditInfo ? creditInfo.totalCredits : 0,
+          usedCredits: creditInfo ? creditInfo.usedCredits : 0,
+          balanceCredits: creditInfo ? creditInfo.balanceCredits : 0,
+          transactions: creditInfo ? creditInfo.transactions : [],
+        },
+        advertisements: advertisements.map((ad) => ({
+          _id: ad._id,
+          position: ad.position,
+          country: ad.country,
+          status: ad.status,
+          displayCount: ad.displayCount,
+          displayUsed: ad.displayUsed,
+          viewCount: ad.viewCount,
+          clickCount: ad.clickCount,
+          ctrPercentage:
+            ad.viewCount > 0
+              ? ((ad.clickCount / ad.viewCount) * 100).toFixed(2)
+              : 0,
+          createdAt: moment(ad.createdAt).format("YYYY-MM-DD HH:mm"),
+        })),
+      });
+    } catch (error) {
+      console.error("Error loading sponsor details:", error);
+      return res.status(500).render("error", {
+        baseUrl,
+        message: "Error loading sponsor details",
+        error: error.message,
+      });
+    }
+  };
+
+  static manageCreditPayments = async (req, res) => {
+    try {
+      const AdvertisementCreditPaymentModel = (
+        await import("../Models/AdvertisementCreditPayment.js")
+      ).default;
+
+      const payments = await AdvertisementCreditPaymentModel.find()
+        .sort({ createdAt: -1 })
+        .populate("user", "firstname lastname email tgid")
+        .populate("package", "name displayCredits priceUSDT");
+
+      const formattedPayments = payments.map((payment) => ({
+        _id: payment._id,
+        user: payment.user,
+        package: payment.package,
+        transactionId: payment.transactionId,
+        walletAddress: payment.walletAddress,
+        amount: payment.amount,
+        credits: payment.credits,
+        status: payment.status,
+        statusLabel:
+          payment.status === 0
+            ? "Pending"
+            : payment.status === 1
+            ? "Approved"
+            : "Rejected",
+        approvalNotes: payment.approvalNotes,
+        rejectionReason: payment.rejectionReason,
+        createdAt: moment(payment.createdAt).format("YYYY-MM-DD HH:mm"),
+      }));
+
+      return res.render("Admin/Advertisement/ManageCreditPayments", {
+        baseUrl,
+        path: "advertisements/credit-payments",
+        payments: formattedPayments,
+      });
+    } catch (error) {
+      console.error("Error loading credit payments:", error);
+      return res.status(500).render("error", {
+        baseUrl,
+        message: "Error loading credit payments",
+        error: error.message,
+      });
+    }
+  };
+
+  // ==================== ADVERTISEMENT RATES/COUPONS ====================
+
+  static manageCouponRates = async (req, res) => {
+    try {
+      const AdvertisementRateModel = (
+        await import("../Models/AdvertisementRate.js")
+      ).default;
+
+      // Get all rates
+      let rates = await AdvertisementRateModel.find().lean();
+
+      // Ensure both positions exist
+      const positions = ["HOME_BANNER", "BOTTOM_CIRCLE"];
+      for (const position of positions) {
+        const existingRate = rates.find((r) => r.position === position);
+        if (!existingRate) {
+          const newRate = await AdvertisementRateModel.create({
+            position,
+            displayCreditRate: 1000,
+            description: `Display credit rate for ${position}`,
+            isActive: true,
+          });
+          rates.push(newRate.toObject());
+        }
+      }
+
+      return res.render("Admin/Advertisement/ManageCouponRates", {
+        baseUrl,
+        path: "advertisements/rates",
+        rates: rates.sort((a, b) => a.position.localeCompare(b.position)),
+        moment,
+        loginUser: req.user,
+      });
+    } catch (error) {
+      console.error("Error loading coupon rates:", error);
+      return res.status(500).render("error", {
+        baseUrl,
+        message: "Error loading coupon rates",
+        error: error.message,
+      });
+    }
+  };
+
+  static updateCouponRate = async (req, res) => {
+    try {
+      const AdvertisementRateModel = (
+        await import("../Models/AdvertisementRate.js")
+      ).default;
+
+      const { rateId, displayCreditRate, description } = req.body;
+
+      // Validate input
+      if (!rateId || displayCreditRate === undefined) {
+        return res.status(400).json({
+          success: false,
+          message: "Missing required fields",
+        });
+      }
+
+      if (displayCreditRate < 1) {
+        return res.status(400).json({
+          success: false,
+          message: "Display credit rate must be at least 1",
+        });
+      }
+
+      const updatedRate = await AdvertisementRateModel.findByIdAndUpdate(
+        rateId,
+        {
+          displayCreditRate: parseInt(displayCreditRate),
+          description: description || "",
+        },
+        { new: true, runValidators: true }
+      );
+
+      if (!updatedRate) {
+        return res.status(404).json({
+          success: false,
+          message: "Rate not found",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Coupon rate updated successfully",
+        data: updatedRate,
+      });
+    } catch (error) {
+      console.error("Error updating coupon rate:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error updating coupon rate",
+        error: error.message,
+      });
+    }
+  };
 }
 
 export default AdminController;

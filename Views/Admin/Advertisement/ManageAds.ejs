@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Advertisements</title>
+    <link rel="stylesheet" href="<%=baseUrl%>/assets/css/style.css">
+    <style>
+        .manage-container {
+            padding: 20px;
+        }
+        .filters {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .filter-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .filter-group select, .filter-group input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .ads-table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .ads-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .ads-table th {
+            background: #f5f5f5;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #ddd;
+            font-size: 13px;
+        }
+        .ads-table td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .ads-table tr:hover {
+            background: #f9f9f9;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-paused {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-completed {
+            background: #cfe2ff;
+            color: #084298;
+        }
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .approval-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .approval-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+        .approval-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .approval-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #3498db;
+            color: white;
+        }
+        .btn-small:hover {
+            background: #2980b9;
+        }
+        .btn-approve {
+            background: #27ae60;
+        }
+        .btn-approve:hover {
+            background: #229954;
+        }
+        .btn-reject {
+            background: #e74c3c;
+        }
+        .btn-reject:hover {
+            background: #c0392b;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .pagination a, .pagination span {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+        }
+        .pagination a:hover {
+            background: #f5f5f5;
+        }
+        .pagination .active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        .image-preview {
+            max-width: 50px;
+            max-height: 50px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../../Layout/Header') %>
+    <%- include('../../Layout/Sidebar') %>
+    <div id="main">
+    <div class="manage-container">
+        <h1>Manage Advertisements</h1>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label>Status</label>
+                <select name="status" onchange="updateFilters()">
+                    <option value="">All Status</option>
+                    <option value="ACTIVE" <%=filters.status === 'ACTIVE' ? 'selected' : ''%>>Active</option>
+                    <option value="PAUSED" <%=filters.status === 'PAUSED' ? 'selected' : ''%>>Paused</option>
+                    <option value="COMPLETED" <%=filters.status === 'COMPLETED' ? 'selected' : ''%>>Completed</option>
+                    <option value="REJECTED" <%=filters.status === 'REJECTED' ? 'selected' : ''%>>Rejected</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Approval Status</label>
+                <select name="approvalStatus" onchange="updateFilters()">
+                    <option value="">All</option>
+                    <option value="APPROVED" <%=filters.approvalStatus === 'APPROVED' ? 'selected' : ''%>>Approved</option>
+                    <option value="PENDING" <%=filters.approvalStatus === 'PENDING' ? 'selected' : ''%>>Pending</option>
+                    <option value="REJECTED" <%=filters.approvalStatus === 'REJECTED' ? 'selected' : ''%>>Rejected</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Position</label>
+                <select name="position" onchange="updateFilters()">
+                    <option value="">All</option>
+                    <option value="HOME_BANNER" <%=filters.position === 'HOME_BANNER' ? 'selected' : ''%>>Start Page</option>
+                    <option value="BOTTOM_CIRCLE" <%=filters.position === 'BOTTOM_CIRCLE' ? 'selected' : ''%>>Bottom Circle</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Country</label>
+                <input type="text" name="country" placeholder="ISO code or GLOBAL" value="<%=filters.country || ''%>" onchange="updateFilters()">
+            </div>
+        </div>
+
+        <!-- Ads Table -->
+        <div class="ads-table-container">
+            <table class="ads-table">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Sponsor</th>
+                        <th>Position</th>
+                        <th>Country</th>
+                        <th>Status</th>
+                        <th>Approval</th>
+                        <th>Displays</th>
+                        <th>Views</th>
+                        <th>Clicks / CTR</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <%ads.forEach(ad => {%>
+                        <tr>
+                            <td>
+                                <img src="<%=ad.imageUrl%>" alt="Ad" class="image-preview">
+                            </td>
+                            <td>
+                                <div style="font-weight: 600;"><%=ad.sponsor.name%></div>
+                                <div style="font-size: 12px; color: #666;"><%=ad.sponsor.email%></div>
+                            </td>
+                            <td><%=ad.position.replace('_', ' ')%></td>
+                            <td><%=ad.country%></td>
+                            <td>
+                                <span class="status-badge status-<%=ad.status.toLowerCase()%>">
+                                    <%=ad.status%>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="approval-badge approval-<%=ad.approvalStatus.toLowerCase()%>">
+                                    <%=ad.approvalStatus%>
+                                </span>
+                            </td>
+                            <td><%=ad.displayUsed%>/<%=ad.displayCount%></td>
+                            <td><%=ad.viewCount%></td>
+                            <td><%=ad.clickCount%> / <%=ad.ctrPercentage%>%</td>
+                            <td><%= moment(ad.createdAt).format('DD/MM/YYYY') %></td>
+                            <td>
+                                <div class="actions">
+                                    <button class="btn-small" onclick="viewAdDetails('<%=ad._id%>')">View</button>
+                                    <%if(ad.approvalStatus === 'PENDING') {%>
+                                        <button class="btn-small btn-approve" onclick="approveAd('<%=ad._id%>')">Approve</button>
+                                        <button class="btn-small btn-reject" onclick="rejectAd('<%=ad._id%>')">Reject</button>
+                                    <%}%>
+                                </div>
+                            </td>
+                        </tr>
+                    <%});%>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <%if(pagination.page > 1) {%>
+                <a href="?page=1">First</a>
+                <a href="?page=<%=pagination.page - 1%>">Previous</a>
+            <%}%>
+
+            <%for(let i = Math.max(1, pagination.page - 2); i <= Math.min(pagination.totalPages, pagination.page + 2); i++) {%>
+                <%if(i === pagination.page) {%>
+                    <span class="active"><%=i%></span>
+                <%} else {%>
+                    <a href="?page=<%=i%>"><%=i%></a>
+                <%}%>
+            <%}%>
+
+            <%if(pagination.page < pagination.totalPages) {%>
+                <a href="?page=<%=pagination.page + 1%>">Next</a>
+                <a href="?page=<%=pagination.totalPages%>">Last</a>
+            <%}%>
+        </div>
+    </div>
+
+    <script>
+        function updateFilters() {
+            const status = document.querySelector('select[name="status"]').value;
+            const approvalStatus = document.querySelector('select[name="approvalStatus"]').value;
+            const position = document.querySelector('select[name="position"]').value;
+            const country = document.querySelector('input[name="country"]').value;
+
+            let url = '?';
+            if (status) url += `status=${status}&`;
+            if (approvalStatus) url += `approvalStatus=${approvalStatus}&`;
+            if (position) url += `position=${position}&`;
+            if (country) url += `country=${country}&`;
+
+            window.location.href = url;
+        }
+
+        function viewAdDetails(adId) {
+            alert('Ad Details for ' + adId); // TODO: Implement modal view
+        }
+
+        function approveAd(adId) {
+            if (confirm('Are you sure you want to approve this ad?')) {
+                // TODO: Call API to approve
+                alert('Ad approved');
+            }
+        }
+
+        function rejectAd(adId) {
+            const reason = prompt('Enter rejection reason:');
+            if (reason) {
+                // TODO: Call API to reject
+                alert('Ad rejected');
+            }
+        }
+    </script>
+    </div>
+
+    <%- include('../../Layout/Footer') %>
+</body>
+</html>

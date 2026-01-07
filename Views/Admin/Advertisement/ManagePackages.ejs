@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manage Advertisement Packages</title>
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="//cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+      .packages-container {
+        padding: 20px;
+      }
+      .header-with-btn {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .btn-primary {
+        background: #3498db;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .btn-primary:hover {
+        background: #2980b9;
+      }
+      .packages-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+      }
+      .package-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border-top: 4px solid #3498db;
+      }
+      .package-card.inactive {
+        opacity: 0.7;
+        border-top-color: #999;
+      }
+      .package-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 10px;
+      }
+      .package-description {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 15px;
+      }
+      .package-details {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 15px;
+        font-size: 14px;
+      }
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+      }
+      .detail-label {
+        color: #666;
+        font-weight: 500;
+      }
+      .detail-value {
+        color: #333;
+        font-weight: 600;
+      }
+      .price-highlight {
+        font-size: 24px;
+        font-weight: bold;
+        color: #27ae60;
+        text-align: center;
+        margin: 15px 0;
+        padding: 10px;
+        background: #f0f9f0;
+        border-radius: 4px;
+      }
+      .package-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
+      .btn-small {
+        flex: 1;
+        padding: 8px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .btn-edit {
+        background: #3498db;
+        color: white;
+      }
+      .btn-edit:hover {
+        background: #2980b9;
+      }
+      .btn-delete {
+        background: #e74c3c;
+        color: white;
+      }
+      .btn-delete:hover {
+        background: #c0392b;
+      }
+      .btn-toggle {
+        background: #f39c12;
+        color: white;
+      }
+      .btn-toggle:hover {
+        background: #d68910;
+      }
+      .status-inactive {
+        display: inline-block;
+        background: #f8d7da;
+        color: #721c24;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <%- include('../../Layout/Header') %> <%- include('../../Layout/Sidebar') %>
+    <div id="main">
+      <div class="packages-container">
+        <div class="header-with-btn">
+          <h1>Advertisement Packages</h1>
+          <a
+            href="<%=baseUrl%>admin/advertisements/packages/create"
+            class="btn-primary"
+            style="text-decoration: none; display: inline-block"
+          >
+            + New Package
+          </a>
+        </div>
+
+        <% if (packages.length > 0) { %>
+        <div class="table-responsive">
+          <table class="table table-striped mb-0" id="packages_table">
+            <thead>
+              <tr>
+                <th>No.</th>
+                <th>Name</th>
+                <th>Position</th>
+                <th>Display Coupons</th>
+                <th>Display Credits</th>
+                <th>Price (USDT)</th>
+                <th>Created</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% var i = 1; packages.forEach(function(pkg) { %>
+              <tr data-id="<%= pkg._id %>">
+                <td><%= i %></td>
+                <td><%= pkg.name %></td>
+                <td>
+                  <% const positionMap = { 'HOME_BANNER': 'Start Page',
+                  'BOTTOM_CIRCLE': 'Bottom Circle', 'SIDEBAR': 'Sidebar',
+                  'FOOTER': 'Footer' }; if (Array.isArray(pkg.positions)) {
+                  const formatted = pkg.positions.map(p => positionMap[p] ||
+                  p).join(', '); %> <%= formatted %> <% } else { %> <%=
+                  positionMap[pkg.positions] || pkg.positions %> <% } %>
+                </td>
+                <td>
+                  <strong><%= pkg.displayCredits.toLocaleString() %></strong>
+                </td>
+                <td><%= pkg.calculatedDisplayCredits.toLocaleString() %></td>
+                <td>$<%= pkg.priceUSDT.toFixed(2) %></td>
+                <td><%= moment(pkg.createdAt).format('DD/MM/YYYY') %></td>
+                <td>
+                  <% if (pkg.isActive) { %>
+                  <span class="badge bg-success">Active</span>
+                  <% } else { %>
+                  <span class="badge bg-danger">Inactive</span>
+                  <% } %>
+                </td>
+                <td>
+                  <button
+                    class="btn btn-primary btn-sm"
+                    onclick="editPackage('<%= pkg._id %>')"
+                  >
+                    <span class="bi">Edit</span>
+                  </button>
+                  <button
+                    class="btn btn-warning btn-sm"
+                    onclick="togglePackage('<%= pkg._id %>')"
+                  >
+                    <%= pkg.isActive ? 'Disable' : 'Enable' %>
+                  </button>
+                  <button
+                    class="btn btn-danger btn-sm"
+                    onclick="deletePackage('<%= pkg._id %>')"
+                  >
+                    <span class="bi">Delete</span>
+                  </button>
+                </td>
+              </tr>
+              <% i++; }); %>
+            </tbody>
+          </table>
+        </div>
+        <% } else { %>
+        <div style="text-align: center; padding: 40px; color: #666">
+          <p>No packages found. Create your first package to get started!</p>
+        </div>
+        <% } %>
+      </div>
+
+      <!-- Create/Edit Modal -->
+      <div
+        id="packageModal"
+        style="
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 1000;
+          overflow-y: auto;
+        "
+      >
+        <div
+          style="
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            margin: 50px auto;
+          "
+        >
+          <h2 id="modalTitle" style="margin-bottom: 20px">Create Package</h2>
+          <form
+            id="packageForm"
+            style="display: flex; flex-direction: column; gap: 15px"
+          >
+            <div>
+              <label
+                style="display: block; margin-bottom: 5px; font-weight: 600"
+                >Package Name *</label
+              >
+              <input
+                type="text"
+                id="packageName"
+                name="name"
+                required
+                style="
+                  width: 100%;
+                  padding: 10px;
+                  border: 1px solid #ddd;
+                  border-radius: 4px;
+                  box-sizing: border-box;
+                  font-size: 14px;
+                "
+                placeholder="e.g., Premium Display Package"
+              />
+            </div>
+
+            <div>
+              <label
+                style="display: block; margin-bottom: 5px; font-weight: 600"
+                >Display Position *</label
+              >
+              <select
+                id="positionType"
+                name="positionType"
+                required
+                style="
+                  width: 100%;
+                  padding: 10px;
+                  border: 1px solid #ddd;
+                  border-radius: 4px;
+                  box-sizing: border-box;
+                  font-size: 14px;
+                "
+              >
+                <option value="">Select Banner Position</option>
+                <option value="HOME_BANNER">Start Page</option>
+                <option value="BOTTOM_CIRCLE">Bottom Circle</option>
+              </select>
+              <small style="color: #999; margin-top: 5px; display: block"
+                >Select a position type</small
+              >
+            </div>
+
+            <div
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px"
+            >
+              <div>
+                <label
+                  style="display: block; margin-bottom: 5px; font-weight: 600"
+                  >Display Credits *</label
+                >
+                <input
+                  type="number"
+                  id="displayCredits"
+                  name="displayCredits"
+                  required
+                  min="1"
+                  style="
+                    width: 100%;
+                    padding: 10px;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    box-sizing: border-box;
+                    font-size: 14px;
+                  "
+                  placeholder="e.g., 1000"
+                />
+              </div>
+              <div></div>
+            </div>
+
+            <div
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px"
+            >
+              <div>
+                <label
+                  style="display: block; margin-bottom: 5px; font-weight: 600"
+                  >Number of Positions *</label
+                >
+                <input
+                  type="number"
+                  id="positions"
+                  name="positions"
+                  required
+                  min="1"
+                  style="
+                    width: 100%;
+                    padding: 10px;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    box-sizing: border-box;
+                    font-size: 14px;
+                  "
+                  placeholder="e.g., 5"
+                />
+              </div>
+
+              <div>
+                <label
+                  style="display: block; margin-bottom: 5px; font-weight: 600"
+                  >Price (USDT) *</label
+                >
+                <input
+                  type="number"
+                  id="priceUSDT"
+                  name="priceUSDT"
+                  required
+                  min="0"
+                  step="0.01"
+                  style="
+                    width: 100%;
+                    padding: 10px;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    box-sizing: border-box;
+                    font-size: 14px;
+                  "
+                  placeholder="e.g., 99.99"
+                />
+              </div>
+            </div>
+
+            <!-- Description removed per request -->
+
+            <div>
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  cursor: pointer;
+                "
+              >
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  name="isActive"
+                  style="cursor: pointer; width: 16px; height: 16px"
+                />
+                <span style="font-weight: 500">Active Package</span>
+              </label>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 15px">
+              <button
+                type="submit"
+                style="
+                  flex: 1;
+                  padding: 12px;
+                  background: #3498db;
+                  color: white;
+                  border: none;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  font-weight: 600;
+                  font-size: 14px;
+                "
+              >
+                Save Package
+              </button>
+              <button
+                type="button"
+                onclick="closeModal()"
+                style="
+                  flex: 1;
+                  padding: 12px;
+                  background: #95a5a6;
+                  color: white;
+                  border: none;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  font-weight: 600;
+                  font-size: 14px;
+                "
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <script src="//cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+      <script>
+        $(document).ready(function () {
+          if ($("#packages_table").length) {
+            $("#packages_table").DataTable({ order: [[5, "desc"]] });
+          }
+        });
+
+        // Helper function to format position names
+        function formatPosition(position) {
+          const positionMap = {
+            HOME_BANNER: "Start Page",
+            BOTTOM_CIRCLE: "Bottom Circle",
+            SIDEBAR: "Sidebar",
+            FOOTER: "Footer",
+          };
+          return positionMap[position] || position;
+        }
+
+        let currentPackageId = null;
+
+        function openCreatePackageModal() {
+          currentPackageId = null;
+          document.getElementById("modalTitle").textContent = "Create Package";
+          document.getElementById("packageForm").reset();
+          document.getElementById("isActive").checked = true;
+          document.getElementById("positionType").value = "HOME_BANNER";
+          document.getElementById("packageModal").style.display = "block";
+        }
+
+        function editPackage(packageId) {
+          currentPackageId = packageId;
+          document.getElementById("modalTitle").textContent = "Edit Package";
+
+          // Fetch package details
+          fetch(`/api/v1/admin/advertisement/packages/${packageId}`)
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success && data.data) {
+                const pkg = data.data;
+                document.getElementById("packageName").value = pkg.name;
+                document.getElementById("displayCredits").value =
+                  pkg.displayCredits;
+                // Set number of positions to the count if positions is an array
+                document.getElementById("positions").value = Array.isArray(
+                  pkg.positions
+                )
+                  ? pkg.positions.length
+                  : pkg.positions;
+                document.getElementById("priceUSDT").value = pkg.priceUSDT;
+                document.getElementById("isActive").checked = pkg.isActive;
+
+                // Set selected position (use first available)
+                document.getElementById("positionType").value =
+                  Array.isArray(pkg.positions) && pkg.positions.length > 0
+                    ? pkg.positions[0]
+                    : "";
+
+                document.getElementById("packageModal").style.display = "block";
+              } else {
+                Swal.fire("Error!", "Failed to load package details.", "error");
+              }
+            })
+            .catch((err) => {
+              console.error("Error loading package:", err);
+              Swal.fire("Error!", "Error loading package details.", "error");
+            });
+        }
+
+        function togglePackage(packageId) {
+          Swal.fire({
+            title: "Are you sure?",
+            text: "This will change the package status.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3498db",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Yes, change it!",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              fetch(
+                `/api/v1/admin/advertisement/packages/${packageId}/toggle`,
+                {
+                  method: "PATCH",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                }
+              )
+                .then((response) => response.json())
+                .then((data) => {
+                  if (data.success) {
+                    Swal.fire(
+                      "Success!",
+                      "Package status updated.",
+                      "success"
+                    ).then(() => {
+                      location.reload();
+                    });
+                  } else {
+                    Swal.fire(
+                      "Error!",
+                      "Failed to update package: " +
+                        (data.message || "Unknown error"),
+                      "error"
+                    );
+                  }
+                })
+                .catch((err) => {
+                  console.error("Error toggling package:", err);
+                  Swal.fire(
+                    "Error!",
+                    "Error updating package status.",
+                    "error"
+                  );
+                });
+            }
+          });
+        }
+
+        function deletePackage(packageId) {
+          Swal.fire({
+            title: "Are you sure?",
+            text: "You will not be able to recover this package!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#e74c3c",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Yes, delete it!",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              fetch(`/api/v1/admin/advertisement/packages/${packageId}`, {
+                method: "DELETE",
+              })
+                .then((response) => response.json())
+                .then((data) => {
+                  if (data.success) {
+                    Swal.fire(
+                      "Deleted!",
+                      "Package has been deleted.",
+                      "success"
+                    ).then(() => {
+                      location.reload();
+                    });
+                  } else {
+                    Swal.fire(
+                      "Error!",
+                      "Failed to delete package: " +
+                        (data.message || "Unknown error"),
+                      "error"
+                    );
+                  }
+                })
+                .catch((err) => {
+                  console.error("Error deleting package:", err);
+                  Swal.fire("Error!", "Error deleting package.", "error");
+                });
+            }
+          });
+        }
+
+        function closeModal() {
+          document.getElementById("packageModal").style.display = "none";
+          currentPackageId = null;
+        }
+
+        // Handle form submission
+        document
+          .getElementById("packageForm")
+          .addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            // Get selected position
+            const pos = document.getElementById("positionType").value;
+            if (!pos) {
+              Swal.fire("Error!", "Please select a position type.", "error");
+              return;
+            }
+            const positions = [pos];
+
+            const formData = {
+              name: document.getElementById("packageName").value,
+              displayCredits: parseInt(
+                document.getElementById("displayCredits").value
+              ),
+              positions: positions,
+              priceUSDT: parseFloat(document.getElementById("priceUSDT").value),
+              isActive: document.getElementById("isActive").checked,
+            };
+
+            const url = currentPackageId
+              ? `/api/v1/admin/advertisement/packages/${currentPackageId}`
+              : "/api/v1/admin/advertisement/packages";
+
+            const method = currentPackageId ? "PATCH" : "POST";
+
+            fetch(url, {
+              method: method,
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(formData),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.success) {
+                  Swal.fire(
+                    "Success!",
+                    currentPackageId
+                      ? "Package updated successfully."
+                      : "Package created successfully.",
+                    "success"
+                  ).then(() => {
+                    location.reload();
+                  });
+                } else {
+                  Swal.fire(
+                    "Error!",
+                    "Failed to save package: " +
+                      (data.message || "Unknown error"),
+                    "error"
+                  );
+                }
+              })
+              .catch((err) => {
+                console.error("Error saving package:", err);
+                Swal.fire("Error!", "Error saving package.", "error");
+              });
+          });
+
+        // Close modal when clicking outside of it
+        document
+          .getElementById("packageModal")
+          .addEventListener("click", function (e) {
+            if (e.target === this) {
+              closeModal();
+            }
+          });
+      </script>
+    </div>
+
+    <%- include('../../Layout/Footer') %>
+  </body>
+</html>
