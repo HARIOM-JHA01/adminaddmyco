@@ -15,6 +15,7 @@ import { swaggerUi, swaggerDocument } from "./swagger.js";
 import { start as startTelegramBot } from "./Utils/telegramBot.js";
 import { startMembershipExpiryCheck } from "./Utils/membershipCron.js";
 import { initializeDefaultRates } from "./Utils/initializeRates.js";
+import moment from "moment";
 
 mongoose.set("strictQuery", false);
 const app = express();
@@ -30,6 +31,7 @@ connectDB(DATABASE_URL);
 app.use(fileUpload());
 app.set("views", "./Views");
 app.set("view engine", "ejs");
+app.locals.moment = moment;
 app.use(
   session({
     secret: "keyboard cat",

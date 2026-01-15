@@ -11,52 +11,174 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+      /* Payment container card */
       .payment-container {
-        padding: 20px;
+        padding: 24px;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 6px 20px rgba(16, 24, 40, 0.08);
+        margin: 20px;
+        max-width: 1200px;
       }
-      .status-badge {
-        padding: 5px 10px;
-        border-radius: 4px;
-        font-size: 12px;
+
+      .header-with-btn {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .header-with-btn h1 {
+        margin: 0;
+        font-size: 32px;
+        color: #1f2a44;
+      }
+
+      .header-with-btn .total-pending {
+        font-size: 14px;
+        color: #6b7280;
+      }
+
+      .table-responsive {
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .table.table-striped {
+        margin-bottom: 0;
+      }
+
+      .table th,
+      .table td {
+        vertical-align: middle;
+        padding: 14px 18px;
+        color: #374151;
+      }
+
+      /* User column: constrain long names and show full name on hover */
+      .user-col {
+        max-width: 240px;
+        min-width: 140px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .user-name {
+        font-weight: 700;
+        color: #111827;
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .user-meta {
+        margin-top: 6px;
+        color: #6b7280;
+        font-size: 13px;
+      }
+
+      .tg-handle {
+        color: #db2777;
+        font-weight: 700;
+      }
+
+      .table thead th {
         font-weight: 600;
+        color: #4b5563;
+        background: transparent;
       }
+
+      code {
+        font-size: 13px;
+        background: #f6f8fb;
+        padding: 3px 6px;
+        border-radius: 4px;
+      }
+
+      .status-badge {
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        display: inline-block;
+        min-width: 76px;
+        text-align: center;
+      }
+
       .status-pending {
-        background: #fff3cd;
-        color: #856404;
+        background: #fff7ed;
+        color: #92400e;
       }
+
       .status-approved {
-        background: #d4edda;
-        color: #155724;
+        background: #effaf1;
+        color: #065f46;
       }
+
       .status-rejected {
-        background: #f8d7da;
-        color: #721c24;
+        background: #fff1f2;
+        color: #7f1d1d;
       }
+
       .action-buttons {
         display: flex;
-        gap: 5px;
+        gap: 8px;
+        align-items: center;
       }
+
       .btn-small {
-        padding: 5px 10px;
+        padding: 7px 12px;
         border: none;
-        border-radius: 4px;
+        border-radius: 6px;
         cursor: pointer;
-        font-size: 11px;
-        font-weight: 600;
+        font-size: 13px;
+        font-weight: 700;
+        transition: transform 0.08s ease, box-shadow 0.08s ease;
       }
+
+      .btn-small:active {
+        transform: translateY(1px);
+      }
+
       .btn-approve {
-        background: #28a745;
+        background: #10b981;
         color: white;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.12);
       }
       .btn-approve:hover {
-        background: #218838;
+        background: #0ea46f;
       }
+
       .btn-reject {
-        background: #dc3545;
+        background: #ef4444;
         color: white;
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.12);
       }
       .btn-reject:hover {
-        background: #c82333;
+        background: #e11d48;
+      }
+
+      /* Responsive tweaks */
+      @media (max-width: 768px) {
+        .payment-container {
+          padding: 16px;
+          margin: 12px;
+        }
+        .header-with-btn h1 {
+          font-size: 22px;
+        }
+        .table th,
+        .table td {
+          padding: 10px 8px;
+          font-size: 14px;
+        }
+        .btn-small {
+          padding: 6px 10px;
+          font-size: 12px;
+        }
       }
     </style>
   </head>
@@ -97,13 +219,24 @@
               <% var i = 1; payments.forEach(function(payment) { %>
               <tr data-id="<%= payment._id %>">
                 <td><%= i %></td>
-                <td>
-                  <strong
-                    ><%= payment.user.firstname %> <%= payment.user.lastname
-                    %></strong
+                <td class="user-col">
+                  <div
+                    class="user-name"
+                    title="<%= ((payment.user.firstname || '') + ' ' + (payment.user.lastname || '')).trim() %>"
                   >
-                  <br />
-                  <small><%= payment.user.email %></small>
+                    <%= (payment.user.firstname || '') %> <%=
+                    (payment.user.lastname || '') %>
+                  </div>
+                  <div class="user-meta">
+                    <div class="user-email"><%= payment.user.email %></div>
+                    <% if (payment.user.username || payment.user.tgid) { %>
+                    <div class="user-tg">
+                      <span class="tg-handle"
+                        ><%= payment.user.tgid || payment.user.username %></span
+                      >
+                    </div>
+                    <% } %>
+                  </div>
                 </td>
                 <td>
                   <code style="background: #f5f5f5; padding: 2px 5px">
@@ -194,41 +327,71 @@
           inputAttributes: {
             "aria-label": "Approval notes",
           },
-        }).then((result) => {
-          if (result.isConfirmed) {
-            const notes = result.value || "";
-            fetch(
+        }).then(async (result) => {
+          if (!result.isConfirmed) return;
+          const notes = result.value || "";
+
+          const row = document.querySelector(`tr[data-id="${paymentId}"]`);
+          const approveBtn = row ? row.querySelector(".btn-approve") : null;
+          const rejectBtn = row ? row.querySelector(".btn-reject") : null;
+          const origApproveText = approveBtn ? approveBtn.innerHTML : "";
+
+          if (approveBtn) {
+            approveBtn.disabled = true;
+            approveBtn.innerHTML = "Approving...";
+          }
+          if (rejectBtn) {
+            rejectBtn.disabled = true;
+          }
+
+          try {
+            const response = await fetch(
               `/api/v1/admin/advertisement/credit-payments/${paymentId}/approve`,
               {
                 method: "PATCH",
-                headers: {
-                  "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ notes }),
               }
-            )
-              .then((response) => response.json())
-              .then((data) => {
-                if (data.success) {
-                  Swal.fire(
-                    "Approved!",
-                    "Payment has been approved.",
-                    "success"
-                  ).then(() => {
-                    location.reload();
-                  });
-                } else {
-                  Swal.fire(
-                    "Error!",
-                    data.message || "Failed to approve payment",
-                    "error"
-                  );
-                }
-              })
-              .catch((err) => {
-                console.error("Error approving payment:", err);
-                Swal.fire("Error!", "Error approving payment", "error");
-              });
+            );
+
+            let data = null;
+            try {
+              data = await response.json();
+            } catch (e) {
+              /* non-json response */
+            }
+
+            if (!response.ok) {
+              const msg =
+                (data && data.message) || `Server returned ${response.status}`;
+              Swal.fire("Error!", msg, "error");
+              return;
+            }
+
+            if (data && data.success) {
+              Swal.fire(
+                "Approved!",
+                "Payment has been approved.",
+                "success"
+              ).then(() => location.reload());
+            } else {
+              Swal.fire(
+                "Error!",
+                (data && data.message) || "Failed to approve payment",
+                "error"
+              );
+            }
+          } catch (err) {
+            console.error("Error approving payment:", err);
+            Swal.fire("Error!", "Error approving payment", "error");
+          } finally {
+            if (approveBtn) {
+              approveBtn.disabled = false;
+              approveBtn.innerHTML = origApproveText;
+            }
+            if (rejectBtn) {
+              rejectBtn.disabled = false;
+            }
           }
         });
       }
@@ -252,41 +415,65 @@
               return "Please provide a rejection reason";
             }
           },
-        }).then((result) => {
-          if (result.isConfirmed) {
-            const reason = result.value;
-            fetch(
+        }).then(async (result) => {
+          if (!result.isConfirmed) return;
+          const reason = result.value;
+
+          const row = document.querySelector(`tr[data-id="${paymentId}"]`);
+          const approveBtn = row ? row.querySelector(".btn-approve") : null;
+          const rejectBtn = row ? row.querySelector(".btn-reject") : null;
+          const origRejectText = rejectBtn ? rejectBtn.innerHTML : "";
+
+          if (approveBtn) approveBtn.disabled = true;
+          if (rejectBtn) {
+            rejectBtn.disabled = true;
+            rejectBtn.innerHTML = "Rejecting...";
+          }
+
+          try {
+            const response = await fetch(
               `/api/v1/admin/advertisement/credit-payments/${paymentId}/reject`,
               {
                 method: "PATCH",
-                headers: {
-                  "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ reason }),
               }
-            )
-              .then((response) => response.json())
-              .then((data) => {
-                if (data.success) {
-                  Swal.fire(
-                    "Rejected!",
-                    "Payment has been rejected.",
-                    "success"
-                  ).then(() => {
-                    location.reload();
-                  });
-                } else {
-                  Swal.fire(
-                    "Error!",
-                    data.message || "Failed to reject payment",
-                    "error"
-                  );
-                }
-              })
-              .catch((err) => {
-                console.error("Error rejecting payment:", err);
-                Swal.fire("Error!", "Error rejecting payment", "error");
-              });
+            );
+
+            let data = null;
+            try {
+              data = await response.json();
+            } catch (e) {}
+
+            if (!response.ok) {
+              const msg =
+                (data && data.message) || `Server returned ${response.status}`;
+              Swal.fire("Error!", msg, "error");
+              return;
+            }
+
+            if (data && data.success) {
+              Swal.fire(
+                "Rejected!",
+                "Payment has been rejected.",
+                "success"
+              ).then(() => location.reload());
+            } else {
+              Swal.fire(
+                "Error!",
+                (data && data.message) || "Failed to reject payment",
+                "error"
+              );
+            }
+          } catch (err) {
+            console.error("Error rejecting payment:", err);
+            Swal.fire("Error!", "Error rejecting payment", "error");
+          } finally {
+            if (approveBtn) approveBtn.disabled = false;
+            if (rejectBtn) {
+              rejectBtn.disabled = false;
+              rejectBtn.innerHTML = origRejectText;
+            }
           }
         });
       }

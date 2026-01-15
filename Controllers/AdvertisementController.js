@@ -325,13 +325,26 @@ class AdvertisementController {
         });
       }
 
+      // Ensure displayCount is a number
+      const displayCountNum = Number(displayCount);
+      if (!Number.isFinite(displayCountNum) || displayCountNum <= 0) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid displayCount" });
+      }
+
       // Check credits
       let sponsorCredits = await SponsorCreditsModel.findOne({ sponsorId });
-      if (!sponsorCredits || sponsorCredits.balanceCredits < displayCount) {
-        return res.status(400).json({
+      const available = sponsorCredits ? sponsorCredits.balanceCredits : 0;
+      if (!sponsorCredits || available < displayCountNum) {
+        console.warn(
+          `CreateAd: sponsor ${sponsorId} tried to create ad with ${displayCountNum} displays but has ${available} credits`
+        );
+        return res.status(403).json({
           success: false,
           message: "Insufficient credits. Please purchase more credits.",
-          availableCredits: sponsorCredits ? sponsorCredits.balanceCredits : 0,
+          availableCredits: available,
+          requestedCredits: displayCountNum,
         });
       }
 
@@ -363,11 +376,15 @@ class AdvertisementController {
 
       await image.mv(filePath);
 
-      const imageUrl = `${baseUrl}/assets/advertisement/${fileName}`;
+      // Construct imageUrl, avoiding double slashes (baseUrl may or may not end with /)
+      const cleanBaseUrl = baseUrl.endsWith("/")
+        ? baseUrl.slice(0, -1)
+        : baseUrl;
+      const imageUrl = `${cleanBaseUrl}/assets/advertisement/${fileName}`;
 
       // Deduct credits
-      sponsorCredits.usedCredits += displayCount;
-      sponsorCredits.balanceCredits -= displayCount;
+      sponsorCredits.usedCredits += displayCountNum;
+      sponsorCredits.balanceCredits -= displayCountNum;
       await sponsorCredits.save();
 
       // Create advertisement
@@ -375,9 +392,9 @@ class AdvertisementController {
         sponsorId,
         position,
         country,
-        displayCount,
+        displayCount: displayCountNum,
         displayUsed: 0,
-        displayRemaining: displayCount,
+        displayRemaining: displayCountNum,
         redirectUrl,
         imageUrl,
         status: "ACTIVE",
@@ -626,6 +643,199 @@ class AdvertisementController {
     }
   };
 
+  /**
+   * GET /api/v1/advertisement/my-stats
+   * Get comprehensive advertisement credit and display statistics for user
+   */
+  static getMyStats = async (req, res) => {
+    try {
+      const sponsorId = req.user._id;
+
+      // Get credit information
+      const credits = (await SponsorCreditsModel.findOne({ sponsorId })) || {
+        totalCredits: 0,
+        usedCredits: 0,
+        balanceCredits: 0,
+        transactions: [],
+      };
+
+      // Get advertisement rates
+      const AdvertisementRateModel = (
+        await import("../Models/AdvertisementRate.js")
+      ).default;
+      const rates = await AdvertisementRateModel.find({
+        isActive: true,
+      }).lean();
+      const rateMap = {};
+      rates.forEach((rate) => {
+        rateMap[rate.position] = rate.displayCreditRate;
+      });
+
+      // Get all advertisements for this user
+      const advertisements = await AdvertisementModel.find({
+        sponsorId,
+        deletedAt: null,
+      });
+
+      // Calculate display stats by position
+      const positionStats = {
+        HOME_BANNER: {
+          displayTotal: 0,
+          displayUsed: 0,
+          displayRemaining: 0,
+          activeAds: 0,
+          totalAds: 0,
+        },
+        BOTTOM_CIRCLE: {
+          displayTotal: 0,
+          displayUsed: 0,
+          displayRemaining: 0,
+          activeAds: 0,
+          totalAds: 0,
+        },
+      };
+
+      advertisements.forEach((ad) => {
+        const position = ad.position;
+        if (positionStats[position]) {
+          positionStats[position].displayTotal += ad.displayCount;
+          positionStats[position].displayUsed += ad.displayUsed;
+          positionStats[position].displayRemaining += ad.displayRemaining;
+          positionStats[position].totalAds += 1;
+
+          if (ad.status === "ACTIVE") {
+            positionStats[position].activeAds += 1;
+          }
+        }
+      });
+
+      // Calculate credit allocation and display capacity by position
+      const creditAllocationByPosition = {
+        HOME_BANNER: {
+          creditsAllocated: 0,
+          displayCapacity: 0,
+        },
+        BOTTOM_CIRCLE: {
+          creditsAllocated: 0,
+          displayCapacity: 0,
+        },
+      };
+
+      // Get packages to map positions to credits
+      const packages = await AdvertisementPackageModel.find({ isActive: true });
+
+      // Calculate credits allocated to each position based on completed transactions
+      credits.transactions.forEach((transaction) => {
+        if (transaction.status === "COMPLETED") {
+          // Find the package
+          const pkg = packages.find(
+            (p) => p._id.toString() === transaction.packageId?.toString()
+          );
+          if (pkg) {
+            const positions = pkg.positions;
+            const creditsPerPosition =
+              transaction.creditsAdded / positions.length;
+
+            positions.forEach((pos) => {
+              if (creditAllocationByPosition[pos]) {
+                creditAllocationByPosition[pos].creditsAllocated +=
+                  creditsPerPosition;
+                // Calculate display capacity using rates
+                const rate = rateMap[pos] || 1000; // Default to 1000 if no rate found
+                creditAllocationByPosition[pos].displayCapacity +=
+                  creditsPerPosition * rate;
+              }
+            });
+          }
+        }
+      });
+
+      // Calculate used credits based on actual display usage
+      const creditUsageByPosition = {
+        HOME_BANNER: {
+          creditsUsed: 0,
+        },
+        BOTTOM_CIRCLE: {
+          creditsUsed: 0,
+        },
+      };
+
+      // Calculate credits used based on display usage and rates
+      Object.keys(positionStats).forEach((position) => {
+        const rate = rateMap[position] || 1000;
+        const displaysUsed = positionStats[position].displayUsed;
+        creditUsageByPosition[position].creditsUsed = displaysUsed / rate;
+      });
+
+      const response = {
+        credits: {
+          total: credits.totalCredits,
+          used: credits.usedCredits,
+          balance: credits.balanceCredits,
+          transactions: credits.transactions,
+        },
+        rates: rateMap, // Include rates for reference
+        positions: {
+          startPage: {
+            // HOME_BANNER
+            creditAllocated:
+              creditAllocationByPosition.HOME_BANNER.creditsAllocated,
+            creditUsed: creditUsageByPosition.HOME_BANNER.creditsUsed,
+            displayCapacity:
+              creditAllocationByPosition.HOME_BANNER.displayCapacity,
+            displayTotal: positionStats.HOME_BANNER.displayTotal,
+            displayUsed: positionStats.HOME_BANNER.displayUsed,
+            displayRemaining: positionStats.HOME_BANNER.displayRemaining,
+            activeAds: positionStats.HOME_BANNER.activeAds,
+            totalAds: positionStats.HOME_BANNER.totalAds,
+          },
+          bottomCircle: {
+            // BOTTOM_CIRCLE
+            creditAllocated:
+              creditAllocationByPosition.BOTTOM_CIRCLE.creditsAllocated,
+            creditUsed: creditUsageByPosition.BOTTOM_CIRCLE.creditsUsed,
+            displayCapacity:
+              creditAllocationByPosition.BOTTOM_CIRCLE.displayCapacity,
+            displayTotal: positionStats.BOTTOM_CIRCLE.displayTotal,
+            displayUsed: positionStats.BOTTOM_CIRCLE.displayUsed,
+            displayRemaining: positionStats.BOTTOM_CIRCLE.displayRemaining,
+            activeAds: positionStats.BOTTOM_CIRCLE.activeAds,
+            totalAds: positionStats.BOTTOM_CIRCLE.totalAds,
+          },
+        },
+        summary: {
+          totalDisplaysCapacity:
+            creditAllocationByPosition.HOME_BANNER.displayCapacity +
+            creditAllocationByPosition.BOTTOM_CIRCLE.displayCapacity,
+          totalDisplaysPurchased:
+            positionStats.HOME_BANNER.displayTotal +
+            positionStats.BOTTOM_CIRCLE.displayTotal,
+          totalDisplaysUsed:
+            positionStats.HOME_BANNER.displayUsed +
+            positionStats.BOTTOM_CIRCLE.displayUsed,
+          totalDisplaysRemaining:
+            positionStats.HOME_BANNER.displayRemaining +
+            positionStats.BOTTOM_CIRCLE.displayRemaining,
+          totalActiveAds:
+            positionStats.HOME_BANNER.activeAds +
+            positionStats.BOTTOM_CIRCLE.activeAds,
+        },
+      };
+
+      return res.status(200).json({
+        success: true,
+        data: response,
+      });
+    } catch (error) {
+      console.error("Error fetching advertisement stats:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error fetching advertisement statistics",
+        error: error.message,
+      });
+    }
+  };
+
   // ============================= PUBLIC ENDPOINTS =============================
 
   /**
@@ -657,10 +867,39 @@ class AdvertisementController {
         deletedAt: null,
       });
 
+      // Country/Global configuration check
+      const requestedCountry = (country || "GLOBAL").toUpperCase();
+      let AdvertisementCountryConfigModel = null;
+      try {
+        AdvertisementCountryConfigModel = (
+          await import("../Models/AdvertisementCountryConfig.js")
+        ).default;
+      } catch (e) {
+        // Model may not exist yet; continue
+      }
+
+      // If requested country is disabled explicitly, treat as no country ads
+      let countryConfig = null;
+      if (AdvertisementCountryConfigModel) {
+        countryConfig = await AdvertisementCountryConfigModel.findOne({
+          countryCode: requestedCountry,
+        });
+        if (countryConfig && countryConfig.enabled === false) {
+          // If it's GLOBAL and disabled, stop returning ads
+          if (requestedCountry === "GLOBAL") {
+            return res.status(200).json({ success: true, data: [], sessionId });
+          }
+          // Otherwise fall back to GLOBAL ads
+          country = "GLOBAL";
+        }
+      }
+
       // Filter by country: first try user's country, then GLOBAL
-      let filteredAds = ads.filter((ad) => ad.country === country);
+      let filteredAds = ads.filter(
+        (ad) => (ad.country || "GLOBAL") === country
+      );
       if (filteredAds.length === 0) {
-        filteredAds = ads.filter((ad) => ad.country === "GLOBAL");
+        filteredAds = ads.filter((ad) => (ad.country || "GLOBAL") === "GLOBAL");
       }
 
       // Return one random ad
@@ -692,6 +931,37 @@ class AdvertisementController {
       return res.status(500).json({
         success: false,
         message: "Error fetching advertisements",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
+   * GET /api/v1/advertisement/country-configs
+   * Public: list all country configs (optional ?active=true to filter only enabled)
+   */
+  static getCountryConfigs = async (req, res) => {
+    try {
+      const { active } = req.query;
+      const AdvertisementCountryConfigModel = (
+        await import("../Models/AdvertisementCountryConfig.js")
+      ).default;
+
+      const filter = {};
+      if (active === "true" || active === "1") {
+        filter.enabled = true;
+      }
+
+      const configs = await AdvertisementCountryConfigModel.find(filter)
+        .sort({ countryCode: 1 })
+        .lean();
+
+      return res.status(200).json({ success: true, data: configs });
+    } catch (error) {
+      console.error("Error fetching country configs:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error fetching country configs",
         error: error.message,
       });
     }
@@ -1531,16 +1801,28 @@ class AdvertisementController {
         });
       }
 
-      if (payment.status !== 0) {
-        return res.status(400).json({
+      // Idempotent handling: if already approved, return success; if rejected, return conflict
+      if (payment.status === 1) {
+        return res.status(200).json({
+          success: true,
+          message: "Payment already approved",
+          data: payment,
+        });
+      }
+
+      if (payment.status === 2) {
+        console.warn(`Attempt to approve already rejected payment ${id}`);
+        return res.status(409).json({
           success: false,
-          message: "Payment already processed",
+          message: "Payment already rejected",
+          status: payment.status,
         });
       }
 
       // Update payment status
       payment.status = 1; // Approved
-      payment.approvalNotes = notes || "";
+      // Clear approval notes as per config: do not retain admin notes on approval
+      payment.approvalNotes = "";
       payment.approvedBy = adminId;
       payment.approvedAt = new Date();
       await payment.save();
@@ -1566,12 +1848,33 @@ class AdvertisementController {
         packageId: payment.package,
         creditsAdded: payment.credits,
         amountUSDT: payment.amount,
-        status: "APPROVED",
+        // use allowed enum value
+        status: "COMPLETED",
         walletAddress: payment.walletAddress,
-        approvedAt: new Date(),
+        transactionDate: payment.approvedAt || new Date(),
+        txHash: payment.txHash || null,
       });
 
-      await sponsorCredits.save();
+      try {
+        await sponsorCredits.save();
+      } catch (err) {
+        // Roll back payment approval if credits update fails
+        console.error(
+          "Error updating sponsor credits, reverting payment approval:",
+          err
+        );
+        payment.status = 0;
+        payment.approvalNotes = "";
+        payment.approvedBy = null;
+        payment.approvedAt = null;
+        await payment.save();
+
+        return res.status(500).json({
+          success: false,
+          message: "Error updating sponsor credits",
+          error: err.message,
+        });
+      }
 
       return res.status(200).json({
         success: true,
@@ -1613,16 +1916,29 @@ class AdvertisementController {
         });
       }
 
-      if (payment.status !== 0) {
-        return res.status(400).json({
+      // Idempotent handling: if already rejected, return success; if already approved, return conflict
+      if (payment.status === 2) {
+        return res.status(200).json({
+          success: true,
+          message: "Payment already rejected",
+          data: payment,
+        });
+      }
+
+      if (payment.status === 1) {
+        console.warn(`Attempt to reject already approved payment ${id}`);
+        return res.status(409).json({
           success: false,
-          message: "Payment already processed",
+          message: "Payment already approved",
+          status: payment.status,
         });
       }
 
       // Update payment status
       payment.status = 2; // Rejected
       payment.rejectionReason = reason;
+      // Ensure approval notes are cleared on rejection
+      payment.approvalNotes = "";
       payment.approvedBy = adminId;
       payment.approvedAt = new Date();
       await payment.save();

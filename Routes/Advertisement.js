@@ -55,6 +55,13 @@ advertisement.get(
   AdvertisementController.getMyAds
 );
 
+// Get user's advertisement statistics (credits and displays)
+advertisement.get(
+  "/api/v1/advertisement/my-stats",
+  isUser,
+  AdvertisementController.getMyStats
+);
+
 // Pause advertisement
 advertisement.patch(
   "/api/v1/advertisement/:id/pause",
@@ -82,6 +89,12 @@ advertisement.delete(
 advertisement.get(
   "/api/v1/advertisement/active",
   AdvertisementController.getActiveAds
+);
+
+// Get country advertisement configurations (public) - optional query param: active=true
+advertisement.get(
+  "/api/v1/advertisement/country-configs",
+  AdvertisementController.getCountryConfigs
 );
 
 // Track display/impression
