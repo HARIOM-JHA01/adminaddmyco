@@ -15,6 +15,7 @@ import { swaggerUi, swaggerDocument } from "./swagger.js";
 import { start as startTelegramBot } from "./Utils/telegramBot.js";
 import { startMembershipExpiryCheck } from "./Utils/membershipCron.js";
 import { initializeDefaultRates } from "./Utils/initializeRates.js";
+import { initializeAdvertisementConfig } from "./Utils/initializeAdConfig.js";
 import moment from "moment";
 
 mongoose.set("strictQuery", false);
@@ -51,6 +52,8 @@ startMembershipExpiryCheck();
 
 // Initialize default advertisement rates
 initializeDefaultRates();
+// Ensure advertisement system config exists (ADVERTISEMENTS_COUNTRY_FILTER = 1 by default)
+initializeAdvertisementConfig();
 
 //custom logger
 app.use((req, res, next) => {

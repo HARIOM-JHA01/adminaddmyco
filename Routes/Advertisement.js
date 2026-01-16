@@ -91,11 +91,7 @@ advertisement.get(
   AdvertisementController.getActiveAds
 );
 
-// Get country advertisement configurations (public) - optional query param: active=true
-advertisement.get(
-  "/api/v1/advertisement/country-configs",
-  AdvertisementController.getCountryConfigs
-);
+// Country-level advertisement configs removed; use Admin -> Configuration to set ConfigKey = ADVERTISEMENTS_COUNTRY_FILTER (value 0 or 1).
 
 // Track display/impression
 advertisement.post(

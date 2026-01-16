@@ -306,37 +306,7 @@ admin.get(
   AdminController.manageCreditPayments
 );
 
-// Advertisement country-level configurations
-admin.get(
-  "/advertisements/country-config",
-  isAdmin,
-  AdminController.manageAdCountryConfigs
-);
-admin.get(
-  "/advertisements/country-config/create",
-  isAdmin,
-  AdminController.addAdCountryConfig
-);
-admin.post(
-  "/advertisements/country-config/create",
-  isAdmin,
-  AdminController.createAdCountryConfig
-);
-admin.get(
-  "/advertisements/country-config/edit",
-  isAdmin,
-  AdminController.editAdCountryConfig
-);
-admin.post(
-  "/advertisements/country-config/edit",
-  isAdmin,
-  AdminController.updateAdCountryConfig
-);
-admin.get(
-  "/advertisements/country-config/delete",
-  isAdmin,
-  AdminController.deleteAdCountryConfig
-);
+// Advertisement country-level configurations removed; manage system-wide setting at /admin/configuration (ConfigKey = ADVERTISEMENTS_COUNTRY_FILTER).
 admin.get(
   "/advertisement/sponsor/:sponsorId",
   isAdmin,

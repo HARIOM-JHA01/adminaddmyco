@@ -2596,172 +2596,54 @@ class AdminController {
     }
   };
 
-  // ================= Advertisement Country Configs (Admin UI) ========
+  // ================= Advertisement Country Configs (Deprecated) ========
   static manageAdCountryConfigs = async (req, res) => {
-    try {
-      const AdvertisementCountryConfigModel = (
-        await import("../Models/AdvertisementCountryConfig.js")
-      ).default;
-
-      const configs = await AdvertisementCountryConfigModel.find({})
-        .sort({ countryCode: 1 })
-        .lean();
-      res.render("Advertisement/CountryConfigs", {
-        baseUrl,
-        configs,
-        path: "advertisements",
-        session: req.session,
-        loginUser: req.user,
-      });
-    } catch (error) {
-      console.error("Error loading country configs:", error);
-      return res.status(500).render("error", {
-        baseUrl,
-        message: "Error loading country configurations",
-        error: error.message,
-      });
-    }
+    req.session.isTost = true;
+    req.session.tostMsg =
+      "Country configs have been removed. Please use System Configuration (ConfigKey = ADVERTISEMENTS_COUNTRY_FILTER).";
+    req.session.tostBackground = "#ff9f00";
+    return res.redirect(`${baseUrl}admin/configuration`);
   };
 
   static addAdCountryConfig = async (req, res) => {
-    res.render("Advertisement/AddCountryConfig", {
-      baseUrl,
-      data: {},
-      path: "advertisements",
-      loginUser: req.user,
-      message: null,
-    });
+    req.session.isTost = true;
+    req.session.tostMsg =
+      "Country configs have been removed. Please use System Configuration (ConfigKey = ADVERTISEMENTS_COUNTRY_FILTER).";
+    req.session.tostBackground = "#ff9f00";
+    return res.redirect(`${baseUrl}admin/configuration`);
   };
 
   static createAdCountryConfig = async (req, res) => {
-    try {
-      const AdvertisementCountryConfigModel = (
-        await import("../Models/AdvertisementCountryConfig.js")
-      ).default;
-
-      const { countryCode, countryName, enabled } = req.body;
-      if (!countryCode) {
-        return res.render("Advertisement/AddCountryConfig", {
-          baseUrl,
-          message: "Country code is required",
-          data: req.body,
-        });
-      }
-
-      const existing = await AdvertisementCountryConfigModel.findOne({
-        countryCode: countryCode.toUpperCase(),
-      });
-      if (existing) {
-        return res.render("Advertisement/AddCountryConfig", {
-          baseUrl,
-          message: "Configuration for this country already exists",
-          data: req.body,
-        });
-      }
-
-      const doc = new AdvertisementCountryConfigModel({
-        countryCode: countryCode.toUpperCase(),
-        countryName,
-        enabled: enabled === "on" || enabled === true || enabled === "true",
-      });
-
-      await doc.save();
-      req.session.isTost = true;
-      req.session.tostMsg = "Country configuration added";
-      req.session.tostBackground = "#0b6a3c";
-      res.redirect(`${baseUrl}admin/advertisements/country-config`);
-    } catch (error) {
-      console.error("Error creating country config:", error);
-      return res.status(500).render("error", {
-        baseUrl,
-        message: "Error creating country config",
-        error: error.message,
-      });
-    }
+    req.session.isTost = true;
+    req.session.tostMsg =
+      "Country configs have been removed. Please use System Configuration (ConfigKey = ADVERTISEMENTS_COUNTRY_FILTER).";
+    req.session.tostBackground = "#ff9f00";
+    return res.redirect(`${baseUrl}admin/configuration`);
   };
 
   static editAdCountryConfig = async (req, res) => {
-    try {
-      const AdvertisementCountryConfigModel = (
-        await import("../Models/AdvertisementCountryConfig.js")
-      ).default;
-
-      const config = await AdvertisementCountryConfigModel.findById(
-        req.query.id
-      ).lean();
-      if (!config) {
-        req.session.isTost = true;
-        req.session.tostMsg = "Configuration not found";
-        req.session.tostBackground = "#ff2c2c";
-        return res.redirect(`${baseUrl}admin/advertisements/country-config`);
-      }
-
-      res.render("Advertisement/EditCountryConfig", {
-        baseUrl,
-        config,
-        path: "advertisements",
-        loginUser: req.user,
-        message: null,
-      });
-    } catch (error) {
-      console.error("Error editing country config:", error);
-      return res.status(500).render("error", {
-        baseUrl,
-        message: "Error loading configuration",
-        error: error.message,
-      });
-    }
+    req.session.isTost = true;
+    req.session.tostMsg =
+      "Country configs have been removed. Please use System Configuration (ConfigKey = ADVERTISEMENTS_COUNTRY_FILTER).";
+    req.session.tostBackground = "#ff9f00";
+    return res.redirect(`${baseUrl}admin/configuration`);
   };
 
   static updateAdCountryConfig = async (req, res) => {
-    try {
-      const AdvertisementCountryConfigModel = (
-        await import("../Models/AdvertisementCountryConfig.js")
-      ).default;
-
-      const { id, countryCode, countryName, enabled } = req.body;
-      const doc = await AdvertisementCountryConfigModel.findByIdAndUpdate(id, {
-        countryCode: countryCode.toUpperCase(),
-        countryName,
-        enabled: enabled === "on" || enabled === true || enabled === "true",
-      });
-
-      req.session.isTost = true;
-      req.session.tostMsg = "Country configuration updated";
-      req.session.tostBackground = "#0b6a3c";
-      res.redirect(`${baseUrl}admin/advertisements/country-config`);
-    } catch (error) {
-      console.error("Error updating country config:", error);
-      return res.status(500).render("error", {
-        baseUrl,
-        message: "Error updating configuration",
-        error: error.message,
-      });
-    }
+    req.session.isTost = true;
+    req.session.tostMsg =
+      "Country configs have been removed. Please use System Configuration (ConfigKey = ADVERTISEMENTS_COUNTRY_FILTER).";
+    req.session.tostBackground = "#ff9f00";
+    return res.redirect(`${baseUrl}admin/configuration`);
   };
 
   static deleteAdCountryConfig = async (req, res) => {
-    try {
-      const AdvertisementCountryConfigModel = (
-        await import("../Models/AdvertisementCountryConfig.js")
-      ).default;
-
-      await AdvertisementCountryConfigModel.findByIdAndDelete(req.query.id);
-      return res.status(200).json({
-        status: true,
-        message: "deleted successfully.",
-        Url: `${baseUrl}admin/advertisements/country-config`,
-      });
-    } catch (error) {
-      console.error("Error deleting country config:", error);
-      return res.status(500).json({
-        status: false,
-        message: "Error deleting",
-        error: error.message,
-      });
-    }
+    req.session.isTost = true;
+    req.session.tostMsg =
+      "Country configs have been removed. Please use System Configuration (ConfigKey = ADVERTISEMENTS_COUNTRY_FILTER).";
+    req.session.tostBackground = "#ff9f00";
+    return res.redirect(`${baseUrl}admin/configuration`);
   };
-
   static updateCouponRate = async (req, res) => {
     try {
       const AdvertisementRateModel = (

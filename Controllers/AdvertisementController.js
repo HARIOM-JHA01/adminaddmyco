@@ -867,31 +867,26 @@ class AdvertisementController {
         deletedAt: null,
       });
 
-      // Country/Global configuration check
+      // Country filtering configuration (system-wide)
       const requestedCountry = (country || "GLOBAL").toUpperCase();
-      let AdvertisementCountryConfigModel = null;
+      // Read system config to determine whether country-based ads should be used.
+      let countryFilteringEnabled = true;
       try {
-        AdvertisementCountryConfigModel = (
-          await import("../Models/AdvertisementCountryConfig.js")
-        ).default;
+        const ConfigurationModel = (await import("../Models/Configuration.js"))
+          .default;
+        const cfg = await ConfigurationModel.findOne({
+          ConfigKey: "ADVERTISEMENTS_COUNTRY_FILTER",
+        });
+        if (cfg && (cfg.ConfigValue === "0" || cfg.ConfigValue === 0)) {
+          countryFilteringEnabled = false;
+        }
       } catch (e) {
-        // Model may not exist yet; continue
+        // ignore and default to enabled
       }
 
-      // If requested country is disabled explicitly, treat as no country ads
-      let countryConfig = null;
-      if (AdvertisementCountryConfigModel) {
-        countryConfig = await AdvertisementCountryConfigModel.findOne({
-          countryCode: requestedCountry,
-        });
-        if (countryConfig && countryConfig.enabled === false) {
-          // If it's GLOBAL and disabled, stop returning ads
-          if (requestedCountry === "GLOBAL") {
-            return res.status(200).json({ success: true, data: [], sessionId });
-          }
-          // Otherwise fall back to GLOBAL ads
-          country = "GLOBAL";
-        }
+      // If country filtering disabled, force GLOBAL
+      if (!countryFilteringEnabled) {
+        country = "GLOBAL";
       }
 
       // Filter by country: first try user's country, then GLOBAL
@@ -938,33 +933,14 @@ class AdvertisementController {
 
   /**
    * GET /api/v1/advertisement/country-configs
-   * Public: list all country configs (optional ?active=true to filter only enabled)
+   * Deprecated: country configs removed. Use System Configuration (ConfigKey=ADVERTISEMENTS_COUNTRY_FILTER).
    */
   static getCountryConfigs = async (req, res) => {
-    try {
-      const { active } = req.query;
-      const AdvertisementCountryConfigModel = (
-        await import("../Models/AdvertisementCountryConfig.js")
-      ).default;
-
-      const filter = {};
-      if (active === "true" || active === "1") {
-        filter.enabled = true;
-      }
-
-      const configs = await AdvertisementCountryConfigModel.find(filter)
-        .sort({ countryCode: 1 })
-        .lean();
-
-      return res.status(200).json({ success: true, data: configs });
-    } catch (error) {
-      console.error("Error fetching country configs:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Error fetching country configs",
-        error: error.message,
-      });
-    }
+    return res.status(410).json({
+      success: false,
+      message:
+        "Country configs have been removed. Use system configuration (ConfigKey=ADVERTISEMENTS_COUNTRY_FILTER) to toggle country-based ad filtering.",
+    });
   };
 
   /**
