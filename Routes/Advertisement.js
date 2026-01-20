@@ -10,77 +10,84 @@ const advertisement = express.Router();
 // Get all active packages
 advertisement.get(
   "/api/v1/advertisement/packages",
-  AdvertisementController.getPackages
+  AdvertisementController.getPackages,
 );
 
 // Get user's credit balance
 advertisement.get(
   "/api/v1/advertisement/my-credits",
   isUser,
-  AdvertisementController.getMyCredits
+  AdvertisementController.getMyCredits,
 );
 
 // Buy credits (initiate payment)
 advertisement.post(
   "/api/v1/advertisement/buy-credits",
   isUser,
-  AdvertisementController.buyCredits
+  AdvertisementController.buyCredits,
 );
 
 // Get payment history
 advertisement.get(
   "/api/v1/advertisement/payment-history",
   isUser,
-  AdvertisementController.getPaymentHistory
+  AdvertisementController.getPaymentHistory,
 );
 
 // Verify payment and add credits
 advertisement.post(
   "/api/v1/advertisement/verify-payment",
   isUser,
-  AdvertisementController.verifyPayment
+  AdvertisementController.verifyPayment,
 );
 
 // Create new advertisement
 advertisement.post(
   "/api/v1/advertisement/create",
   isUser,
-  AdvertisementController.createAdvertisement
+  AdvertisementController.createAdvertisement,
 );
 
 // Get user's advertisements
 advertisement.get(
   "/api/v1/advertisement/my-ads",
   isUser,
-  AdvertisementController.getMyAds
+  AdvertisementController.getMyAds,
 );
 
 // Get user's advertisement statistics (credits and displays)
 advertisement.get(
   "/api/v1/advertisement/my-stats",
   isUser,
-  AdvertisementController.getMyStats
+  AdvertisementController.getMyStats,
+);
+
+// Get detailed statistics for a specific advertisement (views by country, date, time)
+advertisement.get(
+  "/api/v1/advertisement/:id/stats",
+  isUser,
+  AdvertisementController.getAdStats,
 );
 
 // Pause advertisement
 advertisement.patch(
   "/api/v1/advertisement/:id/pause",
   isUser,
-  AdvertisementController.pauseAd
+  AdvertisementController.pauseAd,
 );
 
 // Resume advertisement
 advertisement.patch(
   "/api/v1/advertisement/:id/resume",
   isUser,
-  AdvertisementController.resumeAd
+  AdvertisementController.resumeAd,
 );
 
 // Delete advertisement
 advertisement.delete(
   "/api/v1/advertisement/:id",
   isUser,
-  AdvertisementController.deleteAd
+  AdvertisementController.deleteAd,
 );
 
 // ======================== PUBLIC ENDPOINTS (NO AUTH) ========================
@@ -88,7 +95,13 @@ advertisement.delete(
 // Get active ads for display
 advertisement.get(
   "/api/v1/advertisement/active",
-  AdvertisementController.getActiveAds
+  AdvertisementController.getActiveAds,
+);
+
+// Get current advertisement country filter config (0 = disabled, 1 = enabled)
+advertisement.get(
+  "/api/v1/advertisement/config/ad-country-filter",
+  AdvertisementController.getAdCountryFilterConfig,
 );
 
 // Country-level advertisement configs removed; use Admin -> Configuration to set ConfigKey = ADVERTISEMENTS_COUNTRY_FILTER (value 0 or 1).
@@ -96,13 +109,13 @@ advertisement.get(
 // Track display/impression
 advertisement.post(
   "/api/v1/advertisement/:id/track-display",
-  AdvertisementController.trackDisplay
+  AdvertisementController.trackDisplay,
 );
 
 // Track click
 advertisement.post(
   "/api/v1/advertisement/:id/track-click",
-  AdvertisementController.trackClick
+  AdvertisementController.trackClick,
 );
 
 // ======================== ADMIN ENDPOINTS ========================
@@ -111,98 +124,98 @@ advertisement.post(
 advertisement.get(
   "/api/v1/admin/advertisement/packages",
   isAdmin,
-  AdvertisementController.adminGetPackages
+  AdvertisementController.adminGetPackages,
 );
 
 // Get single package
 advertisement.get(
   "/api/v1/admin/advertisement/packages/:id",
   isAdmin,
-  AdvertisementController.adminGetPackage
+  AdvertisementController.adminGetPackage,
 );
 
 // Create package
 advertisement.post(
   "/api/v1/admin/advertisement/packages",
   isAdmin,
-  AdvertisementController.adminCreatePackage
+  AdvertisementController.adminCreatePackage,
 );
 
 // Update package
 advertisement.patch(
   "/api/v1/admin/advertisement/packages/:id",
   isAdmin,
-  AdvertisementController.adminUpdatePackage
+  AdvertisementController.adminUpdatePackage,
 );
 
 // Toggle package active status
 advertisement.patch(
   "/api/v1/admin/advertisement/packages/:id/toggle",
   isAdmin,
-  AdvertisementController.adminTogglePackage
+  AdvertisementController.adminTogglePackage,
 );
 
 // Delete package
 advertisement.delete(
   "/api/v1/admin/advertisement/packages/:id",
   isAdmin,
-  AdvertisementController.adminDeletePackage
+  AdvertisementController.adminDeletePackage,
 );
 
 // Get all advertisements
 advertisement.get(
   "/api/v1/admin/advertisement/all",
   isAdmin,
-  AdvertisementController.adminGetAllAds
+  AdvertisementController.adminGetAllAds,
 );
 
 // Approve advertisement
 advertisement.patch(
   "/api/v1/admin/advertisement/:id/approve",
   isAdmin,
-  AdvertisementController.adminApproveAd
+  AdvertisementController.adminApproveAd,
 );
 
 // Reject advertisement
 advertisement.patch(
   "/api/v1/admin/advertisement/:id/reject",
   isAdmin,
-  AdvertisementController.adminRejectAd
+  AdvertisementController.adminRejectAd,
 );
 
 // Get analytics
 advertisement.get(
   "/api/v1/admin/advertisement/analytics",
   isAdmin,
-  AdvertisementController.adminGetAnalytics
+  AdvertisementController.adminGetAnalytics,
 );
 
 // Get sponsor details
 advertisement.get(
   "/api/v1/admin/sponsor/:sponsorId/details",
   isAdmin,
-  AdvertisementController.adminGetSponsorDetails
+  AdvertisementController.adminGetSponsorDetails,
 );
 
 // Get credit payment requests
 advertisement.get(
   "/api/v1/admin/advertisement/credit-payments",
   isAdmin,
-  AdvertisementController.adminGetCreditPayments
+  AdvertisementController.adminGetCreditPayments,
 );
 
 // Approve credit payment
 advertisement.patch(
   "/api/v1/admin/advertisement/credit-payments/:id/approve",
   isAdmin,
-  AdvertisementController.adminApproveCreditPayment
+  AdvertisementController.adminApproveCreditPayment,
 );
 
 // Reject credit payment
 advertisement.patch(
   "/api/v1/admin/advertisement/credit-payments/:id/reject",
   isAdmin,
-  AdvertisementController.adminRejectCreditPayment
+  AdvertisementController.adminRejectCreditPayment,
 );
 
 // ======================== COUPON RATES ENDPOINTS (ADMIN) ========================
@@ -211,21 +224,21 @@ advertisement.patch(
 advertisement.get(
   "/api/v1/admin/advertisement/rates",
   isAdmin,
-  AdvertisementController.adminGetRates
+  AdvertisementController.adminGetRates,
 );
 
 // Get specific coupon rate
 advertisement.get(
   "/api/v1/admin/advertisement/rates/:position",
   isAdmin,
-  AdvertisementController.adminGetRate
+  AdvertisementController.adminGetRate,
 );
 
 // Update coupon rate
 advertisement.patch(
   "/api/v1/admin/advertisement/rates/:position",
   isAdmin,
-  AdvertisementController.adminUpdateRate
+  AdvertisementController.adminUpdateRate,
 );
 
 // ======================== USER ENDPOINTS (PUBLIC) ========================
@@ -233,7 +246,7 @@ advertisement.patch(
 // Get coupon rates (public - for users to see conversion rates)
 advertisement.get(
   "/api/v1/advertisement/rates",
-  AdvertisementController.getUserRates
+  AdvertisementController.getUserRates,
 );
 
 export default advertisement;

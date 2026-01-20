@@ -185,9 +185,8 @@ class AdvertisementController {
         .limit(limit)
         .populate("package", "name displayCredits priceUSDT");
 
-      const total = await AdvertisementCreditPaymentModel.countDocuments(
-        filter
-      );
+      const total =
+        await AdvertisementCreditPaymentModel.countDocuments(filter);
 
       return res.status(200).json({
         success: true,
@@ -240,7 +239,7 @@ class AdvertisementController {
       }
 
       const transaction = sponsorCredits.transactions.find(
-        (t) => t.transactionId === transactionId
+        (t) => t.transactionId === transactionId,
       );
       if (!transaction) {
         return res.status(404).json({
@@ -338,7 +337,7 @@ class AdvertisementController {
       const available = sponsorCredits ? sponsorCredits.balanceCredits : 0;
       if (!sponsorCredits || available < displayCountNum) {
         console.warn(
-          `CreateAd: sponsor ${sponsorId} tried to create ad with ${displayCountNum} displays but has ${available} credits`
+          `CreateAd: sponsor ${sponsorId} tried to create ad with ${displayCountNum} displays but has ${available} credits`,
         );
         return res.status(403).json({
           success: false,
@@ -459,7 +458,9 @@ class AdvertisementController {
   static getMyAds = async (req, res) => {
     try {
       const sponsorId = req.user._id;
-      const { status, position, page = 1, limit = 10 } = req.query;
+      const { status, position } = req.query;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
 
       let filter = { sponsorId, deletedAt: null };
       if (status) filter.status = status;
@@ -469,36 +470,55 @@ class AdvertisementController {
 
       const ads = await AdvertisementModel.find(filter)
         .skip(skip)
-        .limit(parseInt(limit))
+        .limit(limit)
         .sort({ createdAt: -1 });
 
       const total = await AdvertisementModel.countDocuments(filter);
 
-      // Calculate CTR for each ad
-      const adsWithStats = ads.map((ad) => ({
-        _id: ad._id,
-        position: ad.position,
-        country: ad.country,
-        imageUrl: ad.imageUrl,
-        redirectUrl: ad.redirectUrl,
-        displayCount: ad.displayCount,
-        displayUsed: ad.displayUsed,
-        displayRemaining: ad.displayRemaining,
-        status: ad.status,
-        viewCount: ad.viewCount,
-        clickCount: ad.clickCount,
-        ctrPercentage:
-          ad.viewCount > 0 ? (ad.clickCount / ad.viewCount) * 100 : 0,
-        createdAt: ad.createdAt,
-        lastDisplayedAt: ad.statistics.lastDisplayedAt,
-      }));
+      // Fetch view statistics for each ad
+      const adsWithStats = await Promise.all(
+        ads.map(async (ad) => {
+          const displayLogs = await AdvertisementDisplayLogModel.find({
+            advertisementId: ad._id,
+          }).lean();
+
+          const viewsByCountry = {};
+          displayLogs.forEach((log) => {
+            const country = log.country || "Unknown";
+            viewsByCountry[country] = (viewsByCountry[country] || 0) + 1;
+          });
+
+          return {
+            _id: ad._id,
+            position: ad.position,
+            country: ad.country,
+            imageUrl: ad.imageUrl,
+            redirectUrl: ad.redirectUrl,
+            displayCount: ad.displayCount,
+            displayUsed: ad.displayUsed,
+            displayRemaining: ad.displayRemaining,
+            status: ad.status,
+            viewCount: displayLogs.length,
+            clickCount: displayLogs.filter((log) => log.userClicked).length,
+            ctrPercentage:
+              displayLogs.length > 0
+                ? (displayLogs.filter((log) => log.userClicked).length /
+                    displayLogs.length) *
+                  100
+                : 0,
+            viewsByCountry,
+            createdAt: ad.createdAt,
+            lastDisplayedAt: ad.statistics.lastDisplayedAt,
+          };
+        }),
+      );
 
       return res.status(200).json({
         success: true,
         data: adsWithStats,
         pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
+          page,
+          limit,
           total,
         },
       });
@@ -644,6 +664,114 @@ class AdvertisementController {
   };
 
   /**
+   * GET /api/v1/advertisement/:id/stats
+   * Get detailed statistics for a specific advertisement including views by country and time
+   */
+  static getAdStats = async (req, res) => {
+    try {
+      const sponsorId = req.user._id;
+      const { id } = req.params;
+
+      // Verify the ad belongs to the user
+      const ad = await AdvertisementModel.findById(id);
+      if (!ad) {
+        return res.status(404).json({
+          success: false,
+          message: "Advertisement not found",
+        });
+      }
+
+      if (ad.sponsorId.toString() !== sponsorId.toString()) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "You do not have permission to view this advertisement's statistics",
+        });
+      }
+
+      // Get all display logs for this ad
+      const displayLogs = await AdvertisementDisplayLogModel.find({
+        advertisementId: id,
+      }).lean();
+
+      // Get click logs
+      const clickLogs = displayLogs.filter((log) => log.userClicked);
+
+      // Group views by country
+      const viewsByCountry = {};
+      displayLogs.forEach((log) => {
+        const country = log.country || "Unknown";
+        if (!viewsByCountry[country]) {
+          viewsByCountry[country] = 0;
+        }
+        viewsByCountry[country]++;
+      });
+
+      // Group views by date
+      const viewsByDate = {};
+      displayLogs.forEach((log) => {
+        const date = moment(log.displayedAt).format("YYYY-MM-DD");
+        if (!viewsByDate[date]) {
+          viewsByDate[date] = 0;
+        }
+        viewsByDate[date]++;
+      });
+
+      // Group views by time (hour)
+      const viewsByTime = {};
+      displayLogs.forEach((log) => {
+        const time = moment(log.displayedAt).format("HH:00");
+        if (!viewsByTime[time]) {
+          viewsByTime[time] = 0;
+        }
+        viewsByTime[time]++;
+      });
+
+      // Detailed view list with all metadata
+      const detailedViews = displayLogs.map((log) => ({
+        displayId: log._id,
+        country: log.country || "Unknown",
+        date: moment(log.displayedAt).format("YYYY-MM-DD"),
+        time: moment(log.displayedAt).format("HH:mm:ss"),
+        hour: moment(log.displayedAt).format("HH:00"),
+        position: log.position,
+        userClicked: log.userClicked,
+        clickedAt: log.clickedAt || null,
+        displayedAt: log.displayedAt,
+      }));
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          advertisementId: ad._id,
+          position: ad.position,
+          country: ad.country,
+          status: ad.status,
+          totalViews: displayLogs.length,
+          totalClicks: clickLogs.length,
+          ctrPercentage:
+            displayLogs.length > 0
+              ? (clickLogs.length / displayLogs.length) * 100
+              : 0,
+          summary: {
+            viewsByCountry,
+            viewsByDate,
+            viewsByTime,
+          },
+          detailedViews,
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching ad statistics:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error fetching advertisement statistics",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
    * GET /api/v1/advertisement/my-stats
    * Get comprehensive advertisement credit and display statistics for user
    */
@@ -729,7 +857,7 @@ class AdvertisementController {
         if (transaction.status === "COMPLETED") {
           // Find the package
           const pkg = packages.find(
-            (p) => p._id.toString() === transaction.packageId?.toString()
+            (p) => p._id.toString() === transaction.packageId?.toString(),
           );
           if (pkg) {
             const positions = pkg.positions;
@@ -844,7 +972,7 @@ class AdvertisementController {
    */
   static getActiveAds = async (req, res) => {
     try {
-      const { position, country = "GLOBAL" } = req.query;
+      let { position, country = "GLOBAL" } = req.query;
 
       if (!position) {
         return res.status(400).json({
@@ -891,7 +1019,7 @@ class AdvertisementController {
 
       // Filter by country: first try user's country, then GLOBAL
       let filteredAds = ads.filter(
-        (ad) => (ad.country || "GLOBAL") === country
+        (ad) => (ad.country || "GLOBAL") === country,
       );
       if (filteredAds.length === 0) {
         filteredAds = ads.filter((ad) => (ad.country || "GLOBAL") === "GLOBAL");
@@ -941,6 +1069,36 @@ class AdvertisementController {
       message:
         "Country configs have been removed. Use system configuration (ConfigKey=ADVERTISEMENTS_COUNTRY_FILTER) to toggle country-based ad filtering.",
     });
+  };
+
+  /**
+   * GET /api/v1/advertisement/config/ad-country-filter
+   * Public: returns current system value for ADVERTISEMENTS_COUNTRY_FILTER (0/1)
+   */
+  static getAdCountryFilterConfig = async (req, res) => {
+    try {
+      const ConfigurationModel = (await import("../Models/Configuration.js"))
+        .default;
+      const cfg = await ConfigurationModel.findOne({
+        ConfigKey: "ADVERTISEMENTS_COUNTRY_FILTER",
+      });
+      const value =
+        cfg && cfg.ConfigValue !== undefined && cfg.ConfigValue !== null
+          ? String(cfg.ConfigValue)
+          : "1";
+      return res.status(200).json({
+        success: true,
+        ConfigKey: "ADVERTISEMENTS_COUNTRY_FILTER",
+        ConfigValue: value,
+      });
+    } catch (error) {
+      console.error("Error fetching advertisement config:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error fetching configuration",
+        error: error.message,
+      });
+    }
   };
 
   /**
@@ -1031,7 +1189,7 @@ class AdvertisementController {
         {
           userClicked: true,
           clickedAt: new Date(),
-        }
+        },
       );
 
       return res.status(200).json({
@@ -1180,7 +1338,7 @@ class AdvertisementController {
       const package_ = await AdvertisementPackageModel.findByIdAndUpdate(
         id,
         updates,
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
 
       if (!package_) {
@@ -1717,9 +1875,8 @@ class AdvertisementController {
         .populate("user", "firstname lastname email tgid")
         .populate("package", "name displayCredits priceUSDT");
 
-      const total = await AdvertisementCreditPaymentModel.countDocuments(
-        filter
-      );
+      const total =
+        await AdvertisementCreditPaymentModel.countDocuments(filter);
 
       return res.status(200).json({
         success: true,
@@ -1736,8 +1893,8 @@ class AdvertisementController {
             payment.status === 0
               ? "Pending"
               : payment.status === 1
-              ? "Approved"
-              : "Rejected",
+                ? "Approved"
+                : "Rejected",
           approvalNotes: payment.approvalNotes,
           rejectionReason: payment.rejectionReason,
           createdAt: payment.createdAt,
@@ -1766,7 +1923,6 @@ class AdvertisementController {
   static adminApproveCreditPayment = async (req, res) => {
     try {
       const { id } = req.params;
-      const { notes } = req.body;
       const adminId = req.user._id;
 
       const payment = await AdvertisementCreditPaymentModel.findById(id);
@@ -1837,7 +1993,7 @@ class AdvertisementController {
         // Roll back payment approval if credits update fails
         console.error(
           "Error updating sponsor credits, reverting payment approval:",
-          err
+          err,
         );
         payment.status = 0;
         payment.approvalNotes = "";
@@ -2024,7 +2180,7 @@ class AdvertisementController {
           displayCreditRate: parseInt(displayCreditRate),
           description: description || "",
         },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
 
       if (!rate) {

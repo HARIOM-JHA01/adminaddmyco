@@ -322,14 +322,8 @@
           confirmButtonColor: "#28a745",
           cancelButtonColor: "#6c757d",
           confirmButtonText: "Yes, approve!",
-          input: "textarea",
-          inputPlaceholder: "Optional approval notes...",
-          inputAttributes: {
-            "aria-label": "Approval notes",
-          },
         }).then(async (result) => {
           if (!result.isConfirmed) return;
-          const notes = result.value || "";
 
           const row = document.querySelector(`tr[data-id="${paymentId}"]`);
           const approveBtn = row ? row.querySelector(".btn-approve") : null;
@@ -350,7 +344,7 @@
               {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ notes }),
+                body: JSON.stringify({}),
               }
             );
 
