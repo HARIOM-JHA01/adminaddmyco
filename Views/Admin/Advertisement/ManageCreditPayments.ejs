@@ -210,14 +210,15 @@
         <div class="table-responsive">
           <table class="table table-striped mb-0" id="payments_table">
             <thead>
-              <tr>
+                <tr>
                 <th>No.</th>
                 <th>TGUser</th>
+                <th>Package</th>
+                <th>Position</th>
+                <th>Amount (USDT)</th>
                 <th>Transaction ID</th>
                 <th>Wallet Address</th>
-                <th>Amount (USDT)</th>
                 <th>Credits</th>
-                <th>Package</th>
                 <th>Date</th>
                 <th>Status</th>
                 <th>Action</th>
@@ -238,6 +239,18 @@
                     <% } %>
                   </div>
                 </td>
+                <td><%= payment.package ? payment.package.name : '-' %></td>
+                <td>
+                  <% let posDisplay = '-';
+                     if (payment.package && payment.package.positions) {
+                       const positions = Array.isArray(payment.package.positions) ? payment.package.positions : [payment.package.positions];
+                       const labels = positions.map(p => p === 'HOME_BANNER' ? 'Landing Page' : p === 'BOTTOM_CIRCLE' ? 'Bottom Circle' : p);
+                       posDisplay = labels.join(', ');
+                     }
+                  %>
+                  <%= posDisplay %>
+                </td>
+                <td><strong>$<%= payment.amount %></strong></td>
                 <td>
                   <code style="background: #f5f5f5; padding: 2px 5px">
                     <%= payment.transactionId %>
@@ -254,9 +267,7 @@
                     <%= payment.walletAddress %>
                   </code>
                 </td>
-                <td><strong>$<%= payment.amount %></strong></td>
                 <td><strong><%= payment.credits %></strong></td>
-                <td><%= payment.package.name %></td>
                 <td><%= moment(payment.createdAt).format('DD/MM/YYYY') %></td>
                 <td>
                   <span
@@ -309,7 +320,8 @@
     <script>
       $(document).ready(function () {
         if ($("#payments_table").length) {
-          $("#payments_table").DataTable({ order: [[7, "desc"]] });
+          // Date is now at column index 8 (0-based)
+          $("#payments_table").DataTable({ order: [[8, "desc"]] });
         }
       });
 

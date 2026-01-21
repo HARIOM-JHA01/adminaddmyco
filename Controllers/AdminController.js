@@ -2378,16 +2378,24 @@ class AdminController {
 
       let packages = await AdvertisementPackageModel.find();
 
-      // Sort packages by their primary position (first element of `positions`) and then by name
+      // Sort packages by explicit position priority (Landing Page first), then by name.
+      const positionOrder = { HOME_BANNER: 0, BOTTOM_CIRCLE: 1 };
+      function packagePositionPriority(pkg) {
+        const posArray = Array.isArray(pkg.positions)
+          ? pkg.positions
+          : [pkg.positions];
+        const orders = (posArray || [])
+          .filter(Boolean)
+          .map((p) =>
+            positionOrder[p] !== undefined ? positionOrder[p] : 999,
+          );
+        return orders.length ? Math.min(...orders) : 999;
+      }
+
       packages.sort((a, b) => {
-        const pa = Array.isArray(a.positions)
-          ? a.positions[0] || ""
-          : a.positions || "";
-        const pb = Array.isArray(b.positions)
-          ? b.positions[0] || ""
-          : b.positions || "";
-        if (pa < pb) return -1;
-        if (pa > pb) return 1;
+        const oa = packagePositionPriority(a);
+        const ob = packagePositionPriority(b);
+        if (oa !== ob) return oa - ob;
         return (a.name || "").localeCompare(b.name || "");
       });
 
@@ -2527,7 +2535,7 @@ class AdminController {
       const payments = await AdvertisementCreditPaymentModel.find()
         .sort({ createdAt: -1 })
         .populate("user", "firstname lastname email tgid username")
-        .populate("package", "name displayCredits priceUSDT");
+        .populate("package", "name positions displayCredits priceUSDT");
 
       const formattedPayments = payments.map((payment) => ({
         _id: payment._id,
