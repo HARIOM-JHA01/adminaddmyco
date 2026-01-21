@@ -59,7 +59,7 @@
                   <td>
                     <strong>
                       <% if (rate.position === 'HOME_BANNER') { %>
-                      <i class="fas fa-home me-2"></i>Start Page <% } else { %>
+                      <i class="fas fa-home me-2"></i>Landing Page <% } else { %>
                       <i class="fas fa-circle me-2"></i>Bottom Circle <% } %>
                     </strong>
                   </td>
@@ -196,7 +196,7 @@
     // Populate modal
     $("#rateId").val(rateId);
     const positionLabel =
-      position === "HOME_BANNER" ? "Start Page" : "Bottom Circle";
+      position === "HOME_BANNER" ? "Landing Page" : "Bottom Circle";
     $("#positionLabel").val(positionLabel);
     $("#displayCreditRate").val(rate);
     $("#description").val(description);

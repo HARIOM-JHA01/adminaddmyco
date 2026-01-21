@@ -204,7 +204,7 @@
             <thead>
               <tr>
                 <th>No.</th>
-                <th>User</th>
+                <th>TGUser</th>
                 <th>Transaction ID</th>
                 <th>Wallet Address</th>
                 <th>Amount (USDT)</th>
@@ -220,21 +220,13 @@
               <tr data-id="<%= payment._id %>">
                 <td><%= i %></td>
                 <td class="user-col">
-                  <div
-                    class="user-name"
-                    title="<%= ((payment.user.firstname || '') + ' ' + (payment.user.lastname || '')).trim() %>"
-                  >
-                    <%= (payment.user.firstname || '') %> <%=
-                    (payment.user.lastname || '') %>
-                  </div>
-                  <div class="user-meta">
-                    <div class="user-email"><%= payment.user.email %></div>
-                    <% if (payment.user.username || payment.user.tgid) { %>
-                    <div class="user-tg">
-                      <span class="tg-handle"
-                        ><%= payment.user.tgid || payment.user.username %></span
-                      >
-                    </div>
+                  <% const handle = payment.user && (payment.user.tgid || payment.user.username) ? (payment.user.tgid || payment.user.username) : null; %>
+                  <% const displayName = handle || (((payment.user && (payment.user.firstname || '')) + ' ' + (payment.user && (payment.user.lastname || ''))).trim()); %>
+                  <div class="user-name" title="<%= displayName %>">
+                    <% if (handle) { %>
+                      <a href="https://t.me/<%= encodeURIComponent(handle) %>" target="_blank" rel="noopener noreferrer" class="tg-handle"><%= handle %></a>
+                    <% } else { %>
+                      <%= displayName %>
                     <% } %>
                   </div>
                 </td>

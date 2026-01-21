@@ -4,7 +4,8 @@
   "main": "app.js",
   "scripts": {
     "dev": "nodemon App.js",
-    "start": "node App.js"
+    "start": "node App.js",
+    "migrate-package-index": "node scripts/migrate-package-index.js"
   },
   "keywords": [],
   "author": "",

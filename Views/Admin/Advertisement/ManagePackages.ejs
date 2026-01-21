@@ -172,7 +172,7 @@
                 <td><%= i %></td>
                 <td><%= pkg.name %></td>
                 <td>
-                  <% const positionMap = { 'HOME_BANNER': 'Start Page',
+                  <% const positionMap = { 'HOME_BANNER': 'Landing Page',
                   'BOTTOM_CIRCLE': 'Bottom Circle', 'SIDEBAR': 'Sidebar',
                   'FOOTER': 'Footer' }; if (Array.isArray(pkg.positions)) {
                   const formatted = pkg.positions.map(p => positionMap[p] ||
@@ -295,7 +295,7 @@
                 "
               >
                 <option value="">Select Banner Position</option>
-                <option value="HOME_BANNER">Start Page</option>
+                <option value="HOME_BANNER">Landing Page</option>
                 <option value="BOTTOM_CIRCLE">Bottom Circle</option>
               </select>
               <small style="color: #999; margin-top: 5px; display: block"
@@ -454,7 +454,7 @@
         // Helper function to format position names
         function formatPosition(position) {
           const positionMap = {
-            HOME_BANNER: "Start Page",
+            HOME_BANNER: "Landing Page",
             BOTTOM_CIRCLE: "Bottom Circle",
             SIDEBAR: "Sidebar",
             FOOTER: "Footer",

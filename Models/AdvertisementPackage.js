@@ -5,7 +5,6 @@ const advertisementPackageSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
       minlength: 3,
       maxlength: 50,
@@ -44,12 +43,17 @@ const advertisementPackageSchema = new mongoose.Schema(
       default: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
+
+// Ensure uniqueness for the combination of name and individual positions.
+// This allows the same package name to be used for different positions but
+// prevents duplicate packages with the same name and overlapping positions.
+advertisementPackageSchema.index({ name: 1, positions: 1 }, { unique: true });
 
 const AdvertisementPackageModel = mongoose.model(
   "AdvertisementPackage",
-  advertisementPackageSchema
+  advertisementPackageSchema,
 );
 
 export default AdvertisementPackageModel;

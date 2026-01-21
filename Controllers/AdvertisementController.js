@@ -1291,12 +1291,15 @@ class AdvertisementController {
         });
       }
 
-      // Check if name already exists
-      const existingPackage = await AdvertisementPackageModel.findOne({ name });
+      // Check if a package with the same name and overlapping positions already exists
+      const existingPackage = await AdvertisementPackageModel.findOne({
+        name,
+        positions: { $in: positions },
+      });
       if (existingPackage) {
         return res.status(400).json({
           success: false,
-          message: "Package name already exists",
+          message: "Package with same name and display position already exists",
         });
       }
 
@@ -1318,6 +1321,12 @@ class AdvertisementController {
       });
     } catch (error) {
       console.error("Error creating package:", error);
+      if (error && error.code === 11000) {
+        return res.status(400).json({
+          success: false,
+          message: "Package with same name and display position already exists",
+        });
+      }
       return res.status(500).json({
         success: false,
         message: "Error creating package",
@@ -1334,6 +1343,33 @@ class AdvertisementController {
     try {
       const { id } = req.params;
       const updates = req.body;
+
+      // If name or positions are being changed, ensure no other package has the same name
+      // and an overlapping position (exclude the current package id)
+      if (updates.name || updates.positions) {
+        const currentPackage = await AdvertisementPackageModel.findById(id);
+        if (!currentPackage) {
+          return res
+            .status(404)
+            .json({ success: false, message: "Package not found" });
+        }
+        const newName = updates.name || currentPackage.name;
+        const newPositions = updates.positions || currentPackage.positions;
+
+        const conflict = await AdvertisementPackageModel.findOne({
+          _id: { $ne: id },
+          name: newName,
+          positions: { $in: newPositions },
+        });
+
+        if (conflict) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Package with same name and display position already exists",
+          });
+        }
+      }
 
       const package_ = await AdvertisementPackageModel.findByIdAndUpdate(
         id,
@@ -1354,6 +1390,12 @@ class AdvertisementController {
       });
     } catch (error) {
       console.error("Error updating package:", error);
+      if (error && error.code === 11000) {
+        return res.status(400).json({
+          success: false,
+          message: "Package with same name and display position already exists",
+        });
+      }
       return res.status(500).json({
         success: false,
         message: "Error updating package",
