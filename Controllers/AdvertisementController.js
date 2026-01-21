@@ -298,13 +298,13 @@ class AdvertisementController {
   static createAdvertisement = async (req, res) => {
     try {
       const sponsorId = req.user._id;
-      const { position, country, displayCount, redirectUrl } = req.body;
+      const { position, country, credits, redirectUrl } = req.body;
 
       // Validate input
       let validator = new Validator(req.body, {
         position: "required|in:HOME_BANNER,BOTTOM_CIRCLE",
         country: "required",
-        displayCount: "required|numeric|min:100",
+        credits: "required|numeric|min:1",
         redirectUrl: "required|url",
       });
 
@@ -324,26 +324,51 @@ class AdvertisementController {
         });
       }
 
-      // Ensure displayCount is a number
-      const displayCountNum = Number(displayCount);
+      // Ensure credits is a number
+      const creditsNum = Number(credits);
+      if (!Number.isFinite(creditsNum) || creditsNum <= 0) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid credits" });
+      }
+
+      // Get display credit rate for the selected position
+      const AdvertisementRateModel = (
+        await import("../Models/AdvertisementRate.js")
+      ).default;
+      const rateDoc = await AdvertisementRateModel.findOne({ position }).lean();
+      const rate = rateDoc ? rateDoc.displayCreditRate : 1000;
+
+      // Compute display count from credits
+      const displayCountNum = creditsNum * rate;
+
       if (!Number.isFinite(displayCountNum) || displayCountNum <= 0) {
         return res
           .status(400)
-          .json({ success: false, message: "Invalid displayCount" });
+          .json({ success: false, message: "Invalid computed display count" });
       }
 
-      // Check credits
+      // Enforce minimum display count (schema requirement)
+      if (displayCountNum < 100) {
+        return res.status(400).json({
+          success: false,
+          message: "Minimum display count is 100 for an advertisement",
+          computedDisplayCount: displayCountNum,
+        });
+      }
+
+      // Check sponsor credits (credits are spent, not displayCount)
       let sponsorCredits = await SponsorCreditsModel.findOne({ sponsorId });
       const available = sponsorCredits ? sponsorCredits.balanceCredits : 0;
-      if (!sponsorCredits || available < displayCountNum) {
+      if (!sponsorCredits || available < creditsNum) {
         console.warn(
-          `CreateAd: sponsor ${sponsorId} tried to create ad with ${displayCountNum} displays but has ${available} credits`,
+          `CreateAd: sponsor ${sponsorId} tried to create ad with ${creditsNum} credits (computed displays: ${displayCountNum}) but has ${available} credits`,
         );
         return res.status(403).json({
           success: false,
           message: "Insufficient credits. Please purchase more credits.",
           availableCredits: available,
-          requestedCredits: displayCountNum,
+          requestedCredits: creditsNum,
         });
       }
 
@@ -381,9 +406,9 @@ class AdvertisementController {
         : baseUrl;
       const imageUrl = `${cleanBaseUrl}/assets/advertisement/${fileName}`;
 
-      // Deduct credits
-      sponsorCredits.usedCredits += displayCountNum;
-      sponsorCredits.balanceCredits -= displayCountNum;
+      // Deduct credits (user pays in credits, displays are computed from rates)
+      sponsorCredits.usedCredits += creditsNum;
+      sponsorCredits.balanceCredits -= creditsNum;
       await sponsorCredits.save();
 
       // Create advertisement
@@ -391,6 +416,7 @@ class AdvertisementController {
         sponsorId,
         position,
         country,
+        credits: creditsNum,
         displayCount: displayCountNum,
         displayUsed: 0,
         displayRemaining: displayCountNum,
@@ -419,7 +445,8 @@ class AdvertisementController {
           html: `<p>Dear ${user.firstname},</p>
                  <p>Your advertisement has been created successfully!</p>
                  <p>Position: ${position}</p>
-                 <p>Displays: ${displayCount}</p>
+                 <p>Credits: ${creditsNum}</p>
+                 <p>Displays: ${displayCountNum}</p>
                  <p>New Balance: ${sponsorCredits.balanceCredits} credits</p>`,
         });
       }
@@ -431,6 +458,7 @@ class AdvertisementController {
           sponsorId: advertisement.sponsorId,
           position: advertisement.position,
           country: advertisement.country,
+          credits: advertisement.credits,
           displayCount: advertisement.displayCount,
           displayUsed: advertisement.displayUsed,
           displayRemaining: advertisement.displayRemaining,
@@ -1630,8 +1658,21 @@ class AdvertisementController {
           sponsorId: ad.sponsorId,
         });
         if (sponsorCredits) {
-          sponsorCredits.usedCredits -= ad.displayCount;
-          sponsorCredits.balanceCredits += ad.displayCount;
+          // If this ad was created before 'credits' field existed, derive credits from displayCount and position rate
+          let creditsToRefund = ad.credits;
+          if (!creditsToRefund) {
+            const AdvertisementRateModel = (
+              await import("../Models/AdvertisementRate.js")
+            ).default;
+            const rateDoc = await AdvertisementRateModel.findOne({
+              position: ad.position,
+            }).lean();
+            const rate = rateDoc ? rateDoc.displayCreditRate : 1000;
+            creditsToRefund = Math.ceil(ad.displayCount / rate);
+          }
+
+          sponsorCredits.usedCredits -= creditsToRefund;
+          sponsorCredits.balanceCredits += creditsToRefund;
           await sponsorCredits.save();
         }
       }

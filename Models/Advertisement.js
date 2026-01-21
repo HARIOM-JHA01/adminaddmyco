@@ -32,6 +32,12 @@ const advertisementSchema = new mongoose.Schema(
         message: "Redirect URL must start with https://t.me/",
       },
     },
+    // Number of credits spent on this advertisement (used for refunds and accounting)
+    credits: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
     displayCount: {
       type: Number,
       required: true,
@@ -101,7 +107,7 @@ const advertisementSchema = new mongoose.Schema(
       default: null,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Indexes

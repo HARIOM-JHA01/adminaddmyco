@@ -66,8 +66,8 @@
       }
 
       .user-name {
-        font-weight: 700;
-        color: #111827;
+        font-weight: 400; /* use normal weight */
+        color: inherit; /* inherit table text color */
         font-size: 14px;
         white-space: nowrap;
         overflow: hidden;
@@ -80,9 +80,17 @@
         font-size: 13px;
       }
 
+      /* TG handle should be visible with a blue color */
       .tg-handle {
-        color: #db2777;
-        font-weight: 700;
+        color: #1d4ed8; /* blue */
+        font-weight: 500;
+        text-decoration: none;
+      }
+
+      /* Ensure transaction ID and wallet address code snippets don't use a special color or bold */
+      .table td code {
+        color: inherit;
+        font-weight: 400;
       }
 
       .table thead th {
