@@ -87,7 +87,7 @@ class AdminController {
       {
         email: "Email Is Necessary",
         password: "Password Is Necessary",
-      }
+      },
     );
     await validator.check();
     let error = validatorError(res, validator.errors);
@@ -110,7 +110,7 @@ class AdminController {
         const token = jwt.sign(
           { email: data.email, id: user._id },
           process.env.JWT_SECRET_KEY,
-          { expiresIn: process.env.ACCESS_TOKEN_LIFE }
+          { expiresIn: process.env.ACCESS_TOKEN_LIFE },
         );
         let tokendata = await AdminTokenModel.create({
           token: token,
@@ -120,7 +120,7 @@ class AdminController {
           { _id: user._id },
           {
             fcmtoken: req.body.fcmtoken,
-          }
+          },
         );
         let user1 = await AdminModel.findById(user._id);
         // store token in session (don't use server-side localStorage for per-user authentication)
@@ -153,7 +153,7 @@ class AdminController {
         },
         {
           email: "Enter your Email",
-        }
+        },
       );
       if (!(await validator.check())) {
         let errors = validatorError(res, validator.errors);
@@ -205,7 +205,7 @@ class AdminController {
         "",
         otp5,
         "",
-        otp6
+        otp6,
       );
       let otp;
       if (result != "") {
@@ -292,7 +292,7 @@ class AdminController {
         },
         {
           password: hashedPassword,
-        }
+        },
       );
       const userData = await AdminModel.findOne({ _id: user._id });
       let jwt_secret = process.env.JWT_SECRET || "mysecret";
@@ -376,7 +376,7 @@ class AdminController {
         title: "Title is necessary",
         link: "Link is necessary",
         thumbnail: "Thumbnail is necessary",
-      }
+      },
     );
 
     const path = await makeDir("./assets/bannerimage/");
@@ -431,7 +431,7 @@ class AdminController {
         title: "Title is necessary",
         link: "Link is necessary",
         thumbnail: "Thumbnail is necessary",
-      }
+      },
     );
     let banner = await BannerModel.findById(req.body.id);
     const path = await makeDir("./assets/bannerimage/");
@@ -508,7 +508,7 @@ class AdminController {
         membershiperiod: " This Field is necessary",
         usdt: " This Field is necessary",
         telegramcoin: " This Field is necessary",
-      }
+      },
     );
     await validator.check();
     // validation error
@@ -546,7 +546,7 @@ class AdminController {
         membershiperiod: " This Field is necessary",
         usdt: " This Field is necessary",
         telegramcoin: " This Field is necessary",
-      }
+      },
     );
     await validator.check();
     // validation error
@@ -594,7 +594,7 @@ class AdminController {
       {
         thumbnail: "Image is necessary",
         categoryname: " Category Selection is required",
-      }
+      },
     );
     await validator.check();
     let error = validatorError(res, validator.errors);
@@ -672,7 +672,7 @@ class AdminController {
       },
       {
         categoryname: " Category Selection is required",
-      }
+      },
     );
     await validator.check();
     let error = validatorError(res, validator.errors);
@@ -795,7 +795,7 @@ class AdminController {
       },
       {
         folder: "Folder Name is necessary",
-      }
+      },
     );
     await validator.check();
     // validation error
@@ -827,7 +827,7 @@ class AdminController {
       },
       {
         folder: "Folder Name is necessary",
-      }
+      },
     );
     await validator.check();
     // validation error
@@ -994,7 +994,7 @@ class AdminController {
       {
         configkey: "Key is necessary",
         configvalue: "Value is necessary",
-      }
+      },
     );
     if (!(await validator.check())) {
       let errors = validatorError(res, validator.errors);
@@ -1036,14 +1036,14 @@ class AdminController {
       {
         configkey: " Key is necessary",
         configvalue: " Value is necessary",
-      }
+      },
     );
     await validator.check();
     // validation error
     let error = validatorError(res, validator.errors);
     if (error && JSON.stringify(error) != "{}") {
       let configuration = await ConfigurationModel.findByIdAndUpdate(
-        req.body.id
+        req.body.id,
       );
       res.render("Configuration/Editconfiguration", {
         baseUrl,
@@ -1066,7 +1066,7 @@ class AdminController {
 
   static deleteconfiguration = async (req, res) => {
     let configuration = await ConfigurationModel.findByIdAndDelete(
-      req.query.id
+      req.query.id,
     );
     return res.status(200).json({
       status: true,
@@ -1115,7 +1115,7 @@ class AdminController {
       },
       {
         title: "The Category  is necessary",
-      }
+      },
     );
     if (!(await validator.check())) {
       let errors = validatorError(res, validator.errors);
@@ -1155,7 +1155,7 @@ class AdminController {
       },
       {
         title: "The Category  is necessary",
-      }
+      },
     );
     await validator.check();
     // validation error
@@ -1200,7 +1200,7 @@ class AdminController {
       {
         link: "Link is necessary",
         thumbnail: "Thumbnail is necessary",
-      }
+      },
     );
 
     const path = await makeDir("./assets/logoimage/");
@@ -1252,7 +1252,7 @@ class AdminController {
       {
         link: "Link is necessary",
         thumbnail: "Thumbnail is necessary",
-      }
+      },
     );
     let logo = await LogoModel.findById(req.body.id);
     const path = await makeDir("./assets/logoimage/");
@@ -1311,7 +1311,7 @@ class AdminController {
         membershiperiod: " This Field is necessary",
         price: " This Field is necessary",
         // toncoin: " This Field is necessary",
-      }
+      },
     );
     await validator.check();
     // validation error
@@ -1349,14 +1349,14 @@ class AdminController {
         membershiperiod: "This Field is necessary",
         price: "This Field is necessary",
         // toncoin: "This Field is necessary",
-      }
+      },
     );
     await validator.check();
     // validation error
     let error = validatorError(res, validator.errors);
     if (error && JSON.stringify(error) != "{}") {
       let referralmembership = await ReferralMembershipModel.findByIdAndUpdate(
-        data.id
+        data.id,
       );
       res.render("Referral/Editreferralmembership", {
         baseUrl,
@@ -1379,7 +1379,7 @@ class AdminController {
 
   static DeleteReferralMembershipTenure = async (req, res) => {
     let referralmembership = await ReferralMembershipModel.findByIdAndDelete(
-      req.query.id
+      req.query.id,
     );
     return res.status(200).json({
       status: true,
@@ -1440,12 +1440,12 @@ class AdminController {
 
     res.setHeader(
       "Content-Type",
-      "application/vnd.openxmlfoemats-officedocument.spreadsheatml.sheet"
+      "application/vnd.openxmlfoemats-officedocument.spreadsheatml.sheet",
     );
 
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename=ReferralListDetail.xlsx`
+      `attachment; filename=ReferralListDetail.xlsx`,
     );
 
     return workbook.xlsx.write(res).then(() => {
@@ -1502,12 +1502,12 @@ class AdminController {
 
       res.setHeader(
         "Content-Type",
-        "application/vnd.openxmlfoemats-officedocument.spreadsheatml.sheet"
+        "application/vnd.openxmlfoemats-officedocument.spreadsheatml.sheet",
       );
 
       res.setHeader(
         "Content-Disposition",
-        `attachment; filename=StrapeDetail.xlsx`
+        `attachment; filename=StrapeDetail.xlsx`,
       );
 
       return workbook.xlsx.write(res).then(() => {
@@ -1529,7 +1529,7 @@ class AdminController {
     ];
 
     let referralreport = await ReferralReportModel.find({}).distinct(
-      "referral_user_id"
+      "referral_user_id",
     );
     let counter = 1;
     let referral = referralreport.map(async (e) => {
@@ -1555,12 +1555,12 @@ class AdminController {
       });
       res.setHeader(
         "Content-Type",
-        "application/vnd.openxmlfoemats-officedocument.spreadsheatml.sheet"
+        "application/vnd.openxmlfoemats-officedocument.spreadsheatml.sheet",
       );
 
       res.setHeader(
         "Content-Disposition",
-        `attachment; filename=ReferralReport.xlsx`
+        `attachment; filename=ReferralReport.xlsx`,
       );
 
       return workbook.xlsx.write(res).then(() => {
@@ -1621,12 +1621,12 @@ class AdminController {
 
       res.setHeader(
         "Content-Type",
-        "application/vnd.openxmlfoemats-officedocument.spreadsheatml.sheet"
+        "application/vnd.openxmlfoemats-officedocument.spreadsheatml.sheet",
       );
 
       res.setHeader(
         "Content-Disposition",
-        `attachment; filename=StripeDetails.xlsx`
+        `attachment; filename=StripeDetails.xlsx`,
       );
 
       return workbook.xlsx.write(res).then(() => {
@@ -1687,11 +1687,11 @@ class AdminController {
 
       res.setHeader(
         "Content-Type",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       );
       res.setHeader(
         "Content-Disposition",
-        `attachment; filename=USDTPaymentDetails.xlsx`
+        `attachment; filename=USDTPaymentDetails.xlsx`,
       );
 
       return workbook.xlsx.write(res).then(() => {
@@ -1750,11 +1750,11 @@ class AdminController {
 
       res.setHeader(
         "Content-Type",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       );
       res.setHeader(
         "Content-Disposition",
-        `attachment; filename=TelegramCoinPaymentDetails.xlsx`
+        `attachment; filename=TelegramCoinPaymentDetails.xlsx`,
       );
 
       return workbook.xlsx.write(res).then(() => {
@@ -1786,12 +1786,12 @@ class AdminController {
 
     res.setHeader(
       "Content-Type",
-      "application/vnd.openxmlfoemats-officedocument.spreadsheatml.sheet"
+      "application/vnd.openxmlfoemats-officedocument.spreadsheatml.sheet",
     );
 
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename=ReferralDetail.xlsx`
+      `attachment; filename=ReferralDetail.xlsx`,
     );
 
     return workbook.xlsx.write(res).then(() => {
@@ -1809,7 +1809,7 @@ class AdminController {
       },
       {
         value: "Value is necessary",
-      }
+      },
     );
     if (!(await validator.check())) {
       let errors = validatorError(res, validator.errors);
@@ -1824,10 +1824,10 @@ class AdminController {
           req.body.value === "1"
             ? "Paypal"
             : req.body.value === "2"
-            ? "Stripe"
-            : req.body.value === "3"
-            ? "Both"
-            : "",
+              ? "Stripe"
+              : req.body.value === "3"
+                ? "Both"
+                : "",
         payment_id: req.body.value,
       });
 
@@ -1849,7 +1849,7 @@ class AdminController {
       },
       {
         value: " Value is necessary",
-      }
+      },
     );
     await validator.check();
     // validation error
@@ -1861,10 +1861,10 @@ class AdminController {
             req.body.value === "1"
               ? "Paypal"
               : req.body.value === "2"
-              ? "Stripe"
-              : req.body.value === "3"
-              ? "Both"
-              : "",
+                ? "Stripe"
+                : req.body.value === "3"
+                  ? "Both"
+                  : "",
           payment_id: req.body.value,
         });
       res.render("Configuration/EditPaymentconfiguration", {
@@ -1879,10 +1879,10 @@ class AdminController {
           req.body.value === "1"
             ? "Paypal"
             : req.body.value === "2"
-            ? "Stripe"
-            : req.body.value === "3"
-            ? "Both"
-            : "",
+              ? "Stripe"
+              : req.body.value === "3"
+                ? "Both"
+                : "",
         payment_id: req.body.value,
       });
       req.session.isTost = true;
@@ -1894,7 +1894,7 @@ class AdminController {
 
   static DeleteStripePayment = async (req, res) => {
     let user = await MembershipStrpiePaymentModel.findByIdAndDelete(
-      req.query.id
+      req.query.id,
     );
     return res.status(200).json({
       status: true,
@@ -2056,7 +2056,7 @@ class AdminController {
       // If already approved, revert the membership
       if (payment.status == 1) {
         const membership = await MembershipModel.findById(
-          payment.membership_id
+          payment.membership_id,
         );
         const membershipPeriodYears = membership.membershiperiod || 1;
         let enddate = moment(user.enddate)
@@ -2106,7 +2106,7 @@ class AdminController {
       // If already approved, revert the membership
       if (payment.status == 1) {
         const membership = await MembershipModel.findById(
-          payment.membership_id
+          payment.membership_id,
         );
         const membershipPeriodYears = membership.membershiperiod || 1;
         let enddate = moment(user.enddate)
@@ -2376,8 +2376,19 @@ class AdminController {
         await import("../Models/AdvertisementRate.js")
       ).default;
 
-      const packages = await AdvertisementPackageModel.find().sort({
-        createdAt: -1,
+      let packages = await AdvertisementPackageModel.find();
+
+      // Sort packages by their primary position (first element of `positions`) and then by name
+      packages.sort((a, b) => {
+        const pa = Array.isArray(a.positions)
+          ? a.positions[0] || ""
+          : a.positions || "";
+        const pb = Array.isArray(b.positions)
+          ? b.positions[0] || ""
+          : b.positions || "";
+        if (pa < pb) return -1;
+        if (pa > pb) return 1;
+        return (a.name || "").localeCompare(b.name || "");
       });
 
       // Fetch rates for calculating display credits
@@ -2531,8 +2542,8 @@ class AdminController {
           payment.status === 0
             ? "Pending"
             : payment.status === 1
-            ? "Approved"
-            : "Rejected",
+              ? "Approved"
+              : "Rejected",
         approvalNotes: payment.approvalNotes,
         rejectionReason: payment.rejectionReason,
         createdAt: moment(payment.createdAt).format("YYYY-MM-DD HH:mm"),
@@ -2673,7 +2684,7 @@ class AdminController {
           displayCreditRate: parseInt(displayCreditRate),
           description: description || "",
         },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
 
       if (!updatedRate) {
