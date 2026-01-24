@@ -13,8 +13,9 @@ const advertisementSchema = new mongoose.Schema(
       enum: ["HOME_BANNER", "BOTTOM_CIRCLE"],
       required: true,
     },
+    // Allow one or more countries for targeted ads
     country: {
-      type: String,
+      type: [String],
       required: true,
       index: true,
     },
@@ -41,7 +42,7 @@ const advertisementSchema = new mongoose.Schema(
     displayCount: {
       type: Number,
       required: true,
-      min: 100,
+      min: 1,
     },
     displayUsed: {
       type: Number,

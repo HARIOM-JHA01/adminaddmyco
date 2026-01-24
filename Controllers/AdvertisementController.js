@@ -70,9 +70,33 @@ class AdvertisementController {
         };
       }
 
+      // Calculate actual used credits from existing ads
+      const actualUsedCredits = await AdvertisementModel.aggregate([
+        {
+          $match: {
+            sponsorId: sponsorId,
+            deletedAt: null,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalCredits: { $sum: "$credits" },
+          },
+        },
+      ]);
+
+      const usedCreditsFromAds =
+        actualUsedCredits.length > 0 ? actualUsedCredits[0].totalCredits : 0;
+      const actualBalance = credits.totalCredits - usedCreditsFromAds;
+
       return res.status(200).json({
         success: true,
-        data: credits,
+        data: {
+          ...credits.toObject(),
+          usedCredits: usedCreditsFromAds, // Override with calculated value
+          balanceCredits: actualBalance, // Override with calculated balance
+        },
       });
     } catch (error) {
       console.error("Error fetching credits:", error);
@@ -297,13 +321,25 @@ class AdvertisementController {
    */
   static createAdvertisement = async (req, res) => {
     try {
-      const sponsorId = req.user._id;
+      // If sponsorId is supplied, only allow it when it matches the authenticated user
+      // (disallow creating ads on behalf of another sponsor via this endpoint)
+      const sponsorIdInput = req.body.sponsorId;
+      const sponsorId = sponsorIdInput
+        ? String(sponsorIdInput)
+        : String(req.user._id);
+      if (sponsorIdInput && String(sponsorIdInput) !== String(req.user._id)) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "Cannot create advertisement for another sponsor via this endpoint",
+        });
+      }
+
       const { position, country, credits, redirectUrl } = req.body;
 
-      // Validate input
+      // Validate basic fields
       let validator = new Validator(req.body, {
         position: "required|in:HOME_BANNER,BOTTOM_CIRCLE",
-        country: "required",
         credits: "required|numeric|min:1",
         redirectUrl: "required|url",
       });
@@ -313,6 +349,23 @@ class AdvertisementController {
           success: false,
           errors: validator.errors,
         });
+      }
+
+      // Normalize country into an array (support string, comma-separated, or array)
+      let countries = [];
+      if (Array.isArray(country)) {
+        countries = country.map((c) => String(c).trim()).filter(Boolean);
+      } else if (typeof country === "string") {
+        countries = country
+          .split(",")
+          .map((c) => c.trim())
+          .filter(Boolean);
+      }
+
+      if (!countries.length) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Country is required" });
       }
 
       // Validate Telegram URL
@@ -348,18 +401,30 @@ class AdvertisementController {
           .json({ success: false, message: "Invalid computed display count" });
       }
 
-      // Enforce minimum display count (schema requirement)
-      if (displayCountNum < 100) {
-        return res.status(400).json({
-          success: false,
-          message: "Minimum display count is 100 for an advertisement",
-          computedDisplayCount: displayCountNum,
-        });
-      }
-
       // Check sponsor credits (credits are spent, not displayCount)
       let sponsorCredits = await SponsorCreditsModel.findOne({ sponsorId });
-      const available = sponsorCredits ? sponsorCredits.balanceCredits : 0;
+
+      // Calculate actual available credits from existing ads
+      const actualUsedCredits = await AdvertisementModel.aggregate([
+        {
+          $match: {
+            sponsorId: sponsorId,
+            deletedAt: null,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalCredits: { $sum: "$credits" },
+          },
+        },
+      ]);
+
+      const usedCreditsFromAds =
+        actualUsedCredits.length > 0 ? actualUsedCredits[0].totalCredits : 0;
+      const totalCredits = sponsorCredits ? sponsorCredits.totalCredits : 0;
+      const available = totalCredits - usedCreditsFromAds;
+
       if (!sponsorCredits || available < creditsNum) {
         console.warn(
           `CreateAd: sponsor ${sponsorId} tried to create ad with ${creditsNum} credits (computed displays: ${displayCountNum}) but has ${available} credits`,
@@ -406,16 +471,11 @@ class AdvertisementController {
         : baseUrl;
       const imageUrl = `${cleanBaseUrl}/assets/advertisement/${fileName}`;
 
-      // Deduct credits (user pays in credits, displays are computed from rates)
-      sponsorCredits.usedCredits += creditsNum;
-      sponsorCredits.balanceCredits -= creditsNum;
-      await sponsorCredits.save();
-
-      // Create advertisement
+      // Create advertisement first (before deducting credits)
       const advertisement = new AdvertisementModel({
         sponsorId,
         position,
-        country,
+        country: countries,
         credits: creditsNum,
         displayCount: displayCountNum,
         displayUsed: 0,
@@ -436,20 +496,10 @@ class AdvertisementController {
 
       await advertisement.save();
 
-      // Send confirmation email
-      const user = await UserModel.findById(sponsorId);
-      if (user && user.email) {
-        SendEmail.send({
-          email: user.email,
-          subject: "Advertisement Created Successfully",
-          html: `<p>Dear ${user.firstname},</p>
-                 <p>Your advertisement has been created successfully!</p>
-                 <p>Position: ${position}</p>
-                 <p>Credits: ${creditsNum}</p>
-                 <p>Displays: ${displayCountNum}</p>
-                 <p>New Balance: ${sponsorCredits.balanceCredits} credits</p>`,
-        });
-      }
+      // Deduct credits only after ad is successfully created
+      sponsorCredits.usedCredits += creditsNum;
+      sponsorCredits.balanceCredits -= creditsNum;
+      await sponsorCredits.save();
 
       return res.status(201).json({
         success: true,
@@ -457,7 +507,9 @@ class AdvertisementController {
           _id: advertisement._id,
           sponsorId: advertisement.sponsorId,
           position: advertisement.position,
-          country: advertisement.country,
+          country: Array.isArray(advertisement.country)
+            ? advertisement.country.join(", ")
+            : advertisement.country,
           credits: advertisement.credits,
           displayCount: advertisement.displayCount,
           displayUsed: advertisement.displayUsed,
@@ -519,7 +571,9 @@ class AdvertisementController {
           return {
             _id: ad._id,
             position: ad.position,
-            country: ad.country,
+            country: Array.isArray(ad.country)
+              ? ad.country.join(", ")
+              : ad.country,
             imageUrl: ad.imageUrl,
             redirectUrl: ad.redirectUrl,
             displayCount: ad.displayCount,
@@ -773,7 +827,9 @@ class AdvertisementController {
         data: {
           advertisementId: ad._id,
           position: ad.position,
-          country: ad.country,
+          country: Array.isArray(ad.country)
+            ? ad.country.join(", ")
+            : ad.country,
           status: ad.status,
           totalViews: displayLogs.length,
           totalClicks: clickLogs.length,
@@ -814,6 +870,26 @@ class AdvertisementController {
         balanceCredits: 0,
         transactions: [],
       };
+
+      // Calculate actual used credits from existing ads (more accurate than stored value)
+      const actualUsedCredits = await AdvertisementModel.aggregate([
+        {
+          $match: {
+            sponsorId: sponsorId,
+            deletedAt: null,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalCredits: { $sum: "$credits" },
+          },
+        },
+      ]);
+
+      const usedCreditsFromAds =
+        actualUsedCredits.length > 0 ? actualUsedCredits[0].totalCredits : 0;
+      const actualBalance = credits.totalCredits - usedCreditsFromAds;
 
       // Get advertisement rates
       const AdvertisementRateModel = (
@@ -926,8 +1002,8 @@ class AdvertisementController {
       const response = {
         credits: {
           total: credits.totalCredits,
-          used: credits.usedCredits,
-          balance: credits.balanceCredits,
+          used: usedCreditsFromAds, // Use calculated value from actual ads
+          balance: actualBalance, // Use calculated balance
           transactions: credits.transactions,
         },
         rates: rateMap, // Include rates for reference
@@ -964,14 +1040,16 @@ class AdvertisementController {
             creditAllocationByPosition.HOME_BANNER.displayCapacity +
             creditAllocationByPosition.BOTTOM_CIRCLE.displayCapacity,
           totalDisplaysPurchased:
-            positionStats.HOME_BANNER.displayTotal +
-            positionStats.BOTTOM_CIRCLE.displayTotal,
+            creditAllocationByPosition.HOME_BANNER.displayCapacity +
+            creditAllocationByPosition.BOTTOM_CIRCLE.displayCapacity,
           totalDisplaysUsed:
             positionStats.HOME_BANNER.displayUsed +
             positionStats.BOTTOM_CIRCLE.displayUsed,
           totalDisplaysRemaining:
-            positionStats.HOME_BANNER.displayRemaining +
-            positionStats.BOTTOM_CIRCLE.displayRemaining,
+            creditAllocationByPosition.HOME_BANNER.displayCapacity -
+            positionStats.HOME_BANNER.displayUsed +
+            (creditAllocationByPosition.BOTTOM_CIRCLE.displayCapacity -
+              positionStats.BOTTOM_CIRCLE.displayUsed),
           totalActiveAds:
             positionStats.HOME_BANNER.activeAds +
             positionStats.BOTTOM_CIRCLE.activeAds,
@@ -1046,11 +1124,21 @@ class AdvertisementController {
       }
 
       // Filter by country: first try user's country, then GLOBAL
-      let filteredAds = ads.filter(
-        (ad) => (ad.country || "GLOBAL") === country,
-      );
+      // Handle both array and string formats for ad.country
+      let filteredAds = ads.filter((ad) => {
+        const adCountries = Array.isArray(ad.country)
+          ? ad.country
+          : [ad.country || "GLOBAL"];
+        return adCountries.includes(requestedCountry);
+      });
+
       if (filteredAds.length === 0) {
-        filteredAds = ads.filter((ad) => (ad.country || "GLOBAL") === "GLOBAL");
+        filteredAds = ads.filter((ad) => {
+          const adCountries = Array.isArray(ad.country)
+            ? ad.country
+            : [ad.country || "GLOBAL"];
+          return adCountries.includes("GLOBAL");
+        });
       }
 
       // Return one random ad
@@ -1136,7 +1224,7 @@ class AdvertisementController {
   static trackDisplay = async (req, res) => {
     try {
       const { id } = req.params;
-      const { sessionId, country } = req.body;
+      const { sessionId, country, timezone } = req.body;
 
       const ad = await AdvertisementModel.findById(id);
       if (!ad) {
@@ -1146,6 +1234,22 @@ class AdvertisementController {
         });
       }
 
+      // Capture server-side information
+      const now = new Date();
+      const utcTimestamp = now.toISOString();
+
+      // Get IP address (handle various proxy headers)
+      const ipAddress =
+        req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
+        req.headers["x-real-ip"] ||
+        req.connection?.remoteAddress ||
+        req.socket?.remoteAddress ||
+        req.ip ||
+        "unknown";
+
+      // Get user agent
+      const userAgent = req.headers["user-agent"] || "unknown";
+
       // Increment view count
       ad.viewCount += 1;
       ad.displayUsed += 1;
@@ -1153,9 +1257,9 @@ class AdvertisementController {
 
       // Update statistics
       if (!ad.statistics.firstDisplayedAt) {
-        ad.statistics.firstDisplayedAt = new Date();
+        ad.statistics.firstDisplayedAt = now;
       }
-      ad.statistics.lastDisplayedAt = new Date();
+      ad.statistics.lastDisplayedAt = now;
 
       // If displayRemaining reaches 0, mark as COMPLETED
       if (ad.displayRemaining <= 0) {
@@ -1164,13 +1268,17 @@ class AdvertisementController {
 
       await ad.save();
 
-      // Log display
+      // Log display with enhanced tracking data
       await AdvertisementDisplayLogModel.create({
         advertisementId: id,
         sessionId,
-        country,
+        country: country || "GLOBAL",
         position: ad.position,
-        displayedAt: new Date(),
+        displayedAt: now,
+        displayedAtUTC: utcTimestamp,
+        timezone: timezone || null,
+        ipAddress,
+        userAgent,
       });
 
       return res.status(200).json({
@@ -2034,12 +2142,40 @@ class AdvertisementController {
         });
       }
 
-      // Update payment status
+      // Get package details to determine position
+      const pkg = await AdvertisementPackageModel.findById(
+        payment.package,
+      ).lean();
+      if (!pkg) {
+        return res.status(404).json({
+          success: false,
+          message: "Package not found",
+        });
+      }
+
+      // Calculate display capacity based on the package's position rate
+      const AdvertisementRateModel = (
+        await import("../Models/AdvertisementRate.js")
+      ).default;
+
+      // Use the first position in the package (packages are typically specific to one position)
+      const position = pkg.positions[0];
+      const rateDoc = await AdvertisementRateModel.findOne({
+        position,
+        isActive: true,
+      }).lean();
+
+      // Get the rate for this position, default to 1000 if not found
+      const rate = rateDoc ? rateDoc.displayCreditRate : 1000;
+      const displayCapacity = payment.credits * rate;
+
+      // Update payment status and store display capacity
       payment.status = 1; // Approved
       // Clear approval notes as per config: do not retain admin notes on approval
       payment.approvalNotes = "";
       payment.approvedBy = adminId;
       payment.approvedAt = new Date();
+      payment.displayCapacity = displayCapacity;
       await payment.save();
 
       // Update user's credits
@@ -2063,6 +2199,8 @@ class AdvertisementController {
         packageId: payment.package,
         creditsAdded: payment.credits,
         amountUSDT: payment.amount,
+        // Store the display capacity locked at this moment
+        displayCapacity: displayCapacity,
         // use allowed enum value
         status: "COMPLETED",
         walletAddress: payment.walletAddress,

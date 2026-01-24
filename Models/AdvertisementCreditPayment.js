@@ -16,6 +16,8 @@ const advertisementCreditPaymentSchema = new mongoose.Schema({
   rejectionReason: { type: String },
   approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
   approvedAt: { type: Date },
+  // Display capacity locked at the time of approval (credits × rate at approval time)
+  displayCapacity: { type: Number, default: null },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
@@ -27,7 +29,7 @@ advertisementCreditPaymentSchema.index({ transactionId: 1 });
 
 const AdvertisementCreditPaymentModel = mongoose.model(
   "AdvertisementCreditPayment",
-  advertisementCreditPaymentSchema
+  advertisementCreditPaymentSchema,
 );
 
 export default AdvertisementCreditPaymentModel;

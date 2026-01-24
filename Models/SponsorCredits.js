@@ -30,6 +30,11 @@ const sponsorCreditsSchema = new mongoose.Schema(
         },
         creditsAdded: Number,
         amountUSDT: Number,
+        // Display capacity locked at purchase/approval time (credits × rate at that moment)
+        displayCapacity: {
+          type: Number,
+          default: null,
+        },
         status: {
           type: String,
           enum: ["COMPLETED", "PENDING", "FAILED"],
@@ -47,12 +52,12 @@ const sponsorCreditsSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const SponsorCreditsModel = mongoose.model(
   "SponsorCredits",
-  sponsorCreditsSchema
+  sponsorCreditsSchema,
 );
 
 export default SponsorCreditsModel;

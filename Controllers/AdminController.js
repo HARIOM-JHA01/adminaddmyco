@@ -2316,7 +2316,7 @@ class AdminController {
           tgid: ad.sponsorId.tgid,
         },
         position: ad.position,
-        country: ad.country,
+        country: Array.isArray(ad.country) ? ad.country.join(", ") : ad.country,
         imageUrl: ad.imageUrl,
         redirectUrl: ad.redirectUrl,
         displayCount: ad.displayCount,
@@ -2503,7 +2503,9 @@ class AdminController {
         advertisements: advertisements.map((ad) => ({
           _id: ad._id,
           position: ad.position,
-          country: ad.country,
+          country: Array.isArray(ad.country)
+            ? ad.country.join(", ")
+            : ad.country,
           status: ad.status,
           displayCount: ad.displayCount,
           displayUsed: ad.displayUsed,

@@ -91,7 +91,6 @@ Complete implementation of all advertisement functionality:
 API Routes:
 
 - **User Routes** (with `isUser` middleware):
-
   - `GET /api/v1/advertisement/packages`
   - `GET /api/v1/advertisement/my-credits`
   - `POST /api/v1/advertisement/buy-credits`
@@ -103,7 +102,6 @@ API Routes:
   - `DELETE /api/v1/advertisement/:id`
 
 - **Public Routes** (no auth):
-
   - `GET /api/v1/advertisement/active`
   - `POST /api/v1/advertisement/:id/track-display`
   - `POST /api/v1/advertisement/:id/track-click`
@@ -176,27 +174,23 @@ Sponsor profile with:
 ### Business Logic
 
 1. **Credit Management**
-
    - Users purchase credits via USDT payment
    - Credits deducted when creating advertisements
    - Cannot create ad with insufficient credits
 
 2. **Display Tracking**
-
    - Display count decremented on each impression
    - Auto-complete ad when `displayRemaining` reaches 0
    - Track first and last display dates
    - Calculate CTR (Click-Through Rate)
 
 3. **Ad Selection**
-
    - Return 1 ad per position (HOME_BANNER or BOTTOM_CIRCLE)
    - Prioritize country-specific ads, fallback to GLOBAL
    - Random selection among eligible ads
    - Only show ACTIVE ads with remaining displays
 
 4. **Admin Approval**
-
    - Default approval on creation (can be configured)
    - Manual approval workflow for PENDING ads
    - Rejection with reason and credit refund
@@ -241,6 +235,7 @@ Sent on:
     "sponsorId": "...",
     "position": "HOME_BANNER",
     "country": "GLOBAL",
+    "credits": 1,
     "displayCount": 1000,
     "displayRemaining": 1000,
     "status": "ACTIVE",

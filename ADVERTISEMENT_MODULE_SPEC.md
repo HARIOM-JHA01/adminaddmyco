@@ -277,9 +277,10 @@
 
 ```
 {
+  "sponsorId": "USER_...",           // Optional: sponsor id. If provided it must match authenticated user (cannot create ad for other sponsor via this endpoint)
   "position": "HOME_BANNER",         // "HOME_BANNER" | "BOTTOM_CIRCLE"
-  "country": "GLOBAL",               // ISO country code or "GLOBAL"
-  "displayCount": 1000,              // Number of impressions to purchase
+  "country": ["GLOBAL","BD"],      // Single string, comma-separated string, or array of strings supported
+  "credits": 1,                       // Credits to spend; displayCount is computed as credits * displayCreditRate
   "redirectUrl": "https://t.me/mychannel",  // Telegram public URL only
   "image": <file>                    // Image file (PNG, JPG, WebP)
                                      // Dimensions: 1:1 for BOTTOM_CIRCLE, banner ratio for HOME_BANNER
@@ -296,6 +297,7 @@
     "sponsorId": "USER_...",
     "position": "HOME_BANNER",
     "country": "GLOBAL",
+    "credits": 1,
     "displayCount": 1000,
     "displayUsed": 0,
     "displayRemaining": 1000,
@@ -725,22 +727,18 @@ Add to main admin navigation:
 **Components**:
 
 1. **KPI Cards** (4 columns):
-
    - Total Ads Posted
    - Active Ads
    - Total Impressions (displays)
    - Total Revenue (USDT)
 
 2. **Chart 1: Ads by Position** (Pie Chart)
-
    - HOME_BANNER vs BOTTOM_CIRCLE
 
 3. **Chart 2: Impressions & Clicks Trend** (Line Chart)
-
    - Last 30 days trend
 
 4. **Chart 3: Top 5 Sponsors by Spend**
-
    - Table: Sponsor Name, Active Ads, Total Spend, Ads Click Count
 
 5. **Filter Options**:
@@ -874,7 +872,7 @@ Add to main admin navigation:
 - When user creates ad with `displayCount = 1000` and `displayCredits = 1000` per unit:
   - `SponsorCredits.usedCredits += 1000`
   - `SponsorCredits.balanceCredits -= 1000`
-- Cannot create ad if `balanceCredits < displayCount`
+- Cannot create ad if `balanceCredits < credits`
 
 ### 4.2 Display Impression Tracking
 

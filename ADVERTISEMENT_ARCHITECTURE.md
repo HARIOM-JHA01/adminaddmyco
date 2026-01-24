@@ -142,20 +142,22 @@ User (Mini App)
      ├─► POST /api/v1/advertisement/create
      │   ├─ position: "HOME_BANNER"
      │   ├─ country: "GLOBAL"
-     │   ├─ displayCount: 1000
+     │   ├─ credits: 1                  # Number of credits to spend; displayCount is computed using the position's displayCreditRate
      │   └─ redirectUrl: "https://t.me/..."
      │
      ▼
 AdvertisementController.createAdvertisement()
      │
-     ├─► Check Credits: balanceCredits >= displayCount?
+     ├─► Check Credits: balanceCredits >= credits?
      │   └─ If NO: Return 403 (Insufficient Credits)
      │
      ├─► Save Image to /assets/advertisement/
      │
      ├─► Deduct Credits from SponsorCredits
-     │   ├─ usedCredits += displayCount
-     │   └─ balanceCredits -= displayCount
+     │   ├─ usedCredits += credits
+     │   └─ balanceCredits -= credits
+     │
+     ├─► Compute displayCount = credits * displayCreditRate
      │
      ├─► Create Advertisement document
      │   └─ status: "ACTIVE" (auto-approved by default)

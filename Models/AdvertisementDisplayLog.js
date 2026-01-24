@@ -26,6 +26,22 @@ const advertisementDisplayLogSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    displayedAtUTC: {
+      type: String, // ISO 8601 UTC timestamp
+      default: null,
+    },
+    timezone: {
+      type: String,
+      default: null,
+    },
+    ipAddress: {
+      type: String,
+      default: null,
+    },
+    userAgent: {
+      type: String,
+      default: null,
+    },
     userClicked: {
       type: Boolean,
       default: false,
@@ -35,12 +51,12 @@ const advertisementDisplayLogSchema = new mongoose.Schema(
       default: null,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const AdvertisementDisplayLogModel = mongoose.model(
   "AdvertisementDisplayLog",
-  advertisementDisplayLogSchema
+  advertisementDisplayLogSchema,
 );
 
 export default AdvertisementDisplayLogModel;
