@@ -83,6 +83,13 @@ advertisement.patch(
   AdvertisementController.resumeAd,
 );
 
+// Add credits to advertisement
+advertisement.patch(
+  "/api/v1/advertisement/:id/add-credits",
+  isUser,
+  AdvertisementController.addCreditsToAd,
+);
+
 // Delete advertisement
 advertisement.delete(
   "/api/v1/advertisement/:id",

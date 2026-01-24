@@ -705,6 +705,127 @@ class AdvertisementController {
   };
 
   /**
+   * PATCH /api/v1/advertisement/:id/add-credits
+   * Add more credits to an existing advertisement to extend its display capacity
+   */
+  static addCreditsToAd = async (req, res) => {
+    try {
+      const sponsorId = req.user._id;
+      const { id } = req.params;
+      const { credits } = req.body;
+
+      // Validate credits
+      const creditsNum = Number(credits);
+      if (!Number.isFinite(creditsNum) || creditsNum <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid credits amount. Must be a positive number.",
+        });
+      }
+
+      // Find the advertisement
+      const ad = await AdvertisementModel.findById(id);
+      if (!ad) {
+        return res.status(404).json({
+          success: false,
+          message: "Advertisement not found",
+        });
+      }
+
+      // Check ownership
+      if (ad.sponsorId.toString() !== sponsorId.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: "You do not have permission to modify this advertisement",
+        });
+      }
+
+      // Get the rate for this position
+      const AdvertisementRateModel = (
+        await import("../Models/AdvertisementRate.js")
+      ).default;
+      const rateDoc = await AdvertisementRateModel.findOne({
+        position: ad.position,
+      }).lean();
+      const rate = rateDoc ? rateDoc.displayCreditRate : 1000;
+
+      // Calculate additional displays
+      const additionalDisplays = creditsNum * rate;
+
+      // Check if user has enough credits
+      const actualUsedCredits = await AdvertisementModel.aggregate([
+        {
+          $match: {
+            sponsorId: sponsorId,
+            deletedAt: null,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalCredits: { $sum: "$credits" },
+          },
+        },
+      ]);
+
+      const usedCreditsFromAds =
+        actualUsedCredits.length > 0 ? actualUsedCredits[0].totalCredits : 0;
+
+      let sponsorCredits = await SponsorCreditsModel.findOne({ sponsorId });
+      const totalCredits = sponsorCredits ? sponsorCredits.totalCredits : 0;
+      const available = totalCredits - usedCreditsFromAds;
+
+      if (available < creditsNum) {
+        return res.status(403).json({
+          success: false,
+          message: "Insufficient credits. Please purchase more credits.",
+          availableCredits: available,
+          requestedCredits: creditsNum,
+        });
+      }
+
+      // Update the advertisement
+      ad.credits += creditsNum;
+      ad.displayCount += additionalDisplays;
+      ad.displayRemaining += additionalDisplays;
+
+      // If ad was COMPLETED, reactivate it
+      if (ad.status === "COMPLETED") {
+        ad.status = "ACTIVE";
+      }
+
+      await ad.save();
+
+      // Update sponsor credits
+      sponsorCredits.usedCredits += creditsNum;
+      sponsorCredits.balanceCredits -= creditsNum;
+      await sponsorCredits.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Credits added successfully",
+        data: {
+          _id: ad._id,
+          creditsAdded: creditsNum,
+          displaysAdded: additionalDisplays,
+          totalCredits: ad.credits,
+          totalDisplays: ad.displayCount,
+          displayRemaining: ad.displayRemaining,
+          status: ad.status,
+          availableCredits: available - creditsNum,
+        },
+      });
+    } catch (error) {
+      console.error("Error adding credits to ad:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error adding credits to advertisement",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
    * DELETE /api/v1/advertisement/:id
    * Soft-delete an advertisement
    */
