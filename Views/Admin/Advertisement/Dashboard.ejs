@@ -170,35 +170,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Top Sponsors -->
-        <div class="top-sponsors">
-          <h3>Top 5 Sponsors by Impressions</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Sponsor TG Name</th>
-                <th>Total Active Ads</th>
-                <th>Total Impressions</th>
-                <th>Total Clicks</th>
-              </tr>
-            </thead>
-            <tbody>
-              <%data.topSponsors.forEach(sponsor => {%>
-              <tr>
-                <td>
-                  <a href="/admin/advertisement/sponsor/<%=sponsor._id%>">
-                    <%=sponsor.name%>
-                  </a>
-                </td>
-                <td><%=sponsor.activeAds%></td>
-                <td><%=sponsor.totalDisplays.toLocaleString()%></td>
-                <td><%=sponsor.totalClicks.toLocaleString()%></td>
-              </tr>
-              <%});%>
-            </tbody>
-          </table>
-        </div>
       </div>
 
       <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
@@ -208,7 +179,7 @@
           .getElementById("positionChart")
           .getContext("2d");
         const positionData = JSON.parse(
-          "<%=JSON.stringify(data.adsByPosition)%>"
+          "<%=JSON.stringify(data.adsByPosition)%>",
         );
         const positions = Object.keys(positionData);
         const counts = positions.map((p) => positionData[p].count);
