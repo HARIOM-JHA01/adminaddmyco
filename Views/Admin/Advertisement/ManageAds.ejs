@@ -226,15 +226,14 @@
                             </td>
                             <td>
                                 <div style="font-weight: 600;">
-                                    <% if (ad.sponsor.telegramUrl) { %>
+                                    <% if (ad.sponsor.tgid) { %>
                                         <a href="<%=ad.sponsor.telegramUrl%>" target="_blank" style="color: #3498db; text-decoration: none;">
-                                            @<%=ad.sponsor.telegramUsername.replace('@', '')%>
+                                            @<%=ad.sponsor.tgid.replace('@', '')%>
                                         </a>
                                     <% } else { %>
-                                        @<%=ad.sponsor.telegramUsername || 'N/A'%>
+                                        @<%=ad.sponsor.tgid || 'N/A'%>
                                     <% } %>
                                 </div>
-                                <div style="font-size: 11px; color: #999;">Sponsor TG Username</div>
                             </td>
                             <td><%=ad.position.replace('_', ' ')%></td>
                             <td><%=ad.country%></td>
