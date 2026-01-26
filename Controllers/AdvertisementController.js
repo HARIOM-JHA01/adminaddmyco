@@ -57,6 +57,7 @@ class AdvertisementController {
   static getMyCredits = async (req, res) => {
     try {
       const sponsorId = req.user._id;
+      const { position } = req.query;
 
       let credits = await SponsorCreditsModel.findOne({ sponsorId });
 
@@ -70,14 +71,14 @@ class AdvertisementController {
         };
       }
 
-      // Calculate actual used credits from existing ads
+      // Calculate actual used credits from existing ads (overall)
+      const overallMatch = {
+        sponsorId: sponsorId,
+        deletedAt: null,
+      };
+
       const actualUsedCredits = await AdvertisementModel.aggregate([
-        {
-          $match: {
-            sponsorId: sponsorId,
-            deletedAt: null,
-          },
-        },
+        { $match: overallMatch },
         {
           $group: {
             _id: null,
@@ -90,12 +91,37 @@ class AdvertisementController {
         actualUsedCredits.length > 0 ? actualUsedCredits[0].totalCredits : 0;
       const actualBalance = credits.totalCredits - usedCreditsFromAds;
 
+      // If a position is requested, calculate used credits for that position
+      let usedCreditsForPosition = 0;
+      if (position) {
+        const positionMatch = {
+          sponsorId: sponsorId,
+          deletedAt: null,
+          position,
+        };
+        const posAgg = await AdvertisementModel.aggregate([
+          { $match: positionMatch },
+          {
+            $group: {
+              _id: null,
+              totalCredits: { $sum: "$credits" },
+            },
+          },
+        ]);
+        usedCreditsForPosition = posAgg.length > 0 ? posAgg[0].totalCredits : 0;
+      }
+
       return res.status(200).json({
         success: true,
         data: {
           ...credits.toObject(),
           usedCredits: usedCreditsFromAds, // Override with calculated value
           balanceCredits: actualBalance, // Override with calculated balance
+          requestedPosition: position || null,
+          usedCreditsForPosition,
+          // Available credits for a specific position is the same as overall balance
+          // because the sponsor has a shared pool of credits across positions.
+          availableCreditsForPosition: actualBalance,
         },
       });
     } catch (error) {
@@ -1751,37 +1777,54 @@ class AdvertisementController {
       const skip = (page - 1) * limit;
 
       const ads = await AdvertisementModel.find(filter)
-        .populate("sponsorId", "firstname lastname email tgid")
+        .populate(
+          "sponsorId",
+          "firstname lastname email tgid telegramId username",
+        )
         .skip(skip)
         .limit(parseInt(limit))
         .sort({ createdAt: -1 });
 
       const total = await AdvertisementModel.countDocuments(filter);
 
-      const adsWithStats = ads.map((ad) => ({
-        _id: ad._id,
-        sponsor: {
-          _id: ad.sponsorId._id,
-          firstName: ad.sponsorId.firstname,
-          lastName: ad.sponsorId.lastname,
-          email: ad.sponsorId.email,
-          tgid: ad.sponsorId.tgid,
-        },
-        position: ad.position,
-        country: ad.country,
-        imageUrl: ad.imageUrl,
-        redirectUrl: ad.redirectUrl,
-        displayCount: ad.displayCount,
-        displayUsed: ad.displayUsed,
-        displayRemaining: ad.displayRemaining,
-        status: ad.status,
-        approvalStatus: ad.approvalStatus,
-        viewCount: ad.viewCount,
-        clickCount: ad.clickCount,
-        ctrPercentage:
-          ad.viewCount > 0 ? (ad.clickCount / ad.viewCount) * 100 : 0,
-        createdAt: ad.createdAt,
-      }));
+      const adsWithStats = ads.map((ad) => {
+        const telegramUsername =
+          ad.sponsorId?.telegramId ||
+          ad.sponsorId?.username ||
+          ad.sponsorId?.tgid ||
+          "N/A";
+        const telegramUrl =
+          telegramUsername && telegramUsername !== "N/A"
+            ? `https://t.me/${telegramUsername.replace("@", "")}`
+            : null;
+
+        return {
+          _id: ad._id,
+          sponsor: {
+            _id: ad.sponsorId?._id,
+            firstName: ad.sponsorId?.firstname,
+            lastName: ad.sponsorId?.lastname,
+            email: ad.sponsorId?.email,
+            tgid: ad.sponsorId?.tgid,
+            telegramUsername: telegramUsername,
+            telegramUrl: telegramUrl,
+          },
+          position: ad.position,
+          country: ad.country,
+          imageUrl: ad.imageUrl,
+          redirectUrl: ad.redirectUrl,
+          displayCount: ad.displayCount,
+          displayUsed: ad.displayUsed,
+          displayRemaining: ad.displayRemaining,
+          status: ad.status,
+          approvalStatus: ad.approvalStatus,
+          viewCount: ad.viewCount,
+          clickCount: ad.clickCount,
+          ctrPercentage:
+            ad.viewCount > 0 ? (ad.clickCount / ad.viewCount) * 100 : 0,
+          createdAt: ad.createdAt,
+        };
+      });
 
       return res.status(200).json({
         success: true,
