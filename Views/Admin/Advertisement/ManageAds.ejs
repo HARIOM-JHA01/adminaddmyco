@@ -228,10 +228,10 @@
                                 <div style="font-weight: 600;">
                                     <% if (ad.sponsor.tgid) { %>
                                         <a href="<%=ad.sponsor.telegramUrl%>" target="_blank" style="color: #3498db; text-decoration: none;">
-                                            @<%=ad.sponsor.tgid.replace('@', '')%>
+                                            <%=ad.sponsor.tgid.replace('@', '')%>
                                         </a>
                                     <% } else { %>
-                                        @<%=ad.sponsor.tgid || 'N/A'%>
+                                        <%=ad.sponsor.tgid || 'N/A'%>
                                     <% } %>
                                 </div>
                             </td>
