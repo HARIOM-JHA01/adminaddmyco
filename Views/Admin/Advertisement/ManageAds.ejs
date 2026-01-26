@@ -196,7 +196,20 @@
             </div>
             <div class="filter-group">
                 <label>Country</label>
-                <input type="text" name="country" placeholder="ISO code or GLOBAL" value="<%=filters.country || ''%>" onchange="updateFilters()">
+                <select name="country" onchange="updateFilters()">
+                    <option value="">All Countries</option>
+                    <% if (availableCountries && availableCountries.length > 0) { %>
+                        <% availableCountries.forEach(countryCode => { %>
+                            <% if (Array.isArray(countryCode)) { %>
+                                <% countryCode.forEach(code => { %>
+                                    <option value="<%=code%>" <%=filters.country === code ? 'selected' : ''%>><%=code%></option>
+                                <% }); %>
+                            <% } else { %>
+                                <option value="<%=countryCode%>" <%=filters.country === countryCode ? 'selected' : ''%>><%=countryCode%></option>
+                            <% } %>
+                        <% }); %>
+                    <% } %>
+                </select>
             </div>
         </div>
 
@@ -293,7 +306,7 @@
             const status = document.querySelector('select[name="status"]').value;
             const approvalStatus = document.querySelector('select[name="approvalStatus"]').value;
             const position = document.querySelector('select[name="position"]').value;
-            const country = document.querySelector('input[name="country"]').value;
+            const country = document.querySelector('select[name="country"]').value;
 
             let url = '?';
             if (status) url += `status=${status}&`;

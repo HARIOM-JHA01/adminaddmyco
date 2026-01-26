@@ -2300,7 +2300,10 @@ class AdminController {
       const skip = (page - 1) * limit;
 
       const ads = await AdvertisementModel.find(filter)
-        .populate("sponsorId", "firstname lastname email tgid")
+        .populate(
+          "sponsorId",
+          "firstname lastname email tgid telegramId username",
+        )
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 });
@@ -2308,30 +2311,53 @@ class AdminController {
       const total = await AdvertisementModel.countDocuments(filter);
       const totalPages = Math.ceil(total / limit);
 
-      const adsForDisplay = ads.map((ad) => ({
-        _id: ad._id,
-        sponsor: {
-          name: `${ad.sponsorId.firstname} ${ad.sponsorId.lastname}`,
-          email: ad.sponsorId.email,
-          tgid: ad.sponsorId.tgid,
-        },
-        position: ad.position,
-        country: Array.isArray(ad.country) ? ad.country.join(", ") : ad.country,
-        imageUrl: ad.imageUrl,
-        redirectUrl: ad.redirectUrl,
-        displayCount: ad.displayCount,
-        displayUsed: ad.displayUsed,
-        displayRemaining: ad.displayRemaining,
-        status: ad.status,
-        approvalStatus: ad.approvalStatus,
-        viewCount: ad.viewCount,
-        clickCount: ad.clickCount,
-        ctrPercentage:
-          ad.viewCount > 0
-            ? ((ad.clickCount / ad.viewCount) * 100).toFixed(2)
-            : 0,
-        createdAt: moment(ad.createdAt).format("YYYY-MM-DD HH:mm"),
-      }));
+      // Get unique countries from all ads
+      const uniqueCountries = await AdvertisementModel.distinct("country", {
+        deletedAt: null,
+      });
+
+      const adsForDisplay = ads.map((ad) => {
+        const telegramUsername =
+          ad.sponsorId?.telegramId ||
+          ad.sponsorId?.username ||
+          ad.sponsorId?.tgid ||
+          "N/A";
+        const telegramUrl =
+          telegramUsername && telegramUsername !== "N/A"
+            ? `https://t.me/${telegramUsername.replace("@", "")}`
+            : null;
+
+        return {
+          _id: ad._id,
+          sponsor: {
+            name:
+              `${ad.sponsorId?.firstname || ""} ${ad.sponsorId?.lastname || ""}`.trim() ||
+              "N/A",
+            email: ad.sponsorId?.email,
+            tgid: ad.sponsorId?.tgid,
+            telegramUsername: telegramUsername,
+            telegramUrl: telegramUrl,
+          },
+          position: ad.position,
+          country: Array.isArray(ad.country)
+            ? ad.country.join(", ")
+            : ad.country,
+          imageUrl: ad.imageUrl,
+          redirectUrl: ad.redirectUrl,
+          displayCount: ad.displayCount,
+          displayUsed: ad.displayUsed,
+          displayRemaining: ad.displayRemaining,
+          status: ad.status,
+          approvalStatus: ad.approvalStatus,
+          viewCount: ad.viewCount,
+          clickCount: ad.clickCount,
+          ctrPercentage:
+            ad.viewCount > 0
+              ? ((ad.clickCount / ad.viewCount) * 100).toFixed(2)
+              : 0,
+          createdAt: moment(ad.createdAt).format("YYYY-MM-DD HH:mm"),
+        };
+      });
 
       return res.render("Admin/Advertisement/ManageAds", {
         baseUrl,
@@ -2346,6 +2372,7 @@ class AdminController {
           position,
           country,
         },
+        availableCountries: uniqueCountries.sort(),
         pagination: {
           page: parseInt(page),
           totalPages,
