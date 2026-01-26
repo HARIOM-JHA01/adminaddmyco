@@ -225,8 +225,16 @@
                                 <img src="<%=ad.imageUrl%>" alt="Ad" class="image-preview">
                             </td>
                             <td>
-                                <div style="font-weight: 600;"><%=ad.sponsor.name%></div>
-                                <div style="font-size: 12px; color: #666;"><%=ad.sponsor.email%></div>
+                                <div style="font-weight: 600;">
+                                    <% if (ad.sponsor.telegramUrl) { %>
+                                        <a href="<%=ad.sponsor.telegramUrl%>" target="_blank" style="color: #3498db; text-decoration: none;">
+                                            @<%=ad.sponsor.telegramUsername.replace('@', '')%>
+                                        </a>
+                                    <% } else { %>
+                                        @<%=ad.sponsor.telegramUsername || 'N/A'%>
+                                    <% } %>
+                                </div>
+                                <div style="font-size: 11px; color: #999;">Sponsor TG Username</div>
                             </td>
                             <td><%=ad.position.replace('_', ' ')%></td>
                             <td><%=ad.country%></td>
