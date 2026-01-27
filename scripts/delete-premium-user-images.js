@@ -26,13 +26,33 @@ function deleteFile(filePath) {
   if (!filePath) return { success: false, reason: "No path provided" };
 
   try {
-    const fullPath = path.join(projectRoot, "assets", filePath);
-    if (fs.existsSync(fullPath)) {
-      fs.unlinkSync(fullPath);
-      return { success: true, path: filePath };
-    } else {
-      return { success: false, reason: "File not found", path: filePath };
+    // Clean up malformed paths (remove "undefinedassets" prefix)
+    let cleanPath = filePath;
+    // Remove all occurrences of "undefinedassets/" or "undefinedassets" prefix
+    cleanPath = cleanPath.replace(/^(undefinedassets\/)+/gi, "");
+    cleanPath = cleanPath.replace(/^undefinedassets/gi, "");
+    cleanPath = cleanPath.replace(/assets\//g, "");
+
+    // Try multiple possible paths
+    const possiblePaths = [
+      path.join(projectRoot, "assets", cleanPath),
+      path.join(projectRoot, cleanPath),
+      path.join(projectRoot, "assets", filePath),
+      path.join(projectRoot, filePath),
+    ];
+
+    for (const fullPath of possiblePaths) {
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+        return { success: true, path: cleanPath, actualPath: fullPath };
+      }
     }
+
+    return {
+      success: false,
+      reason: "File not found in any location",
+      path: cleanPath,
+    };
   } catch (error) {
     return { success: false, reason: error.message, path: filePath };
   }
