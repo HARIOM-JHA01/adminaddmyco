@@ -183,7 +183,16 @@
                   <strong><%= pkg.displayCredits.toLocaleString() %></strong>
                 </td>
                 <td><%= pkg.calculatedDisplayCredits.toLocaleString() %></td>
-                <td>$<%= pkg.priceUSDT.toFixed(2) %></td>
+                <td>
+                  <% if (pkg.originalPriceUSDT && pkg.originalPriceUSDT > pkg.priceUSDT) { %>
+                    <div>
+                      <span style="text-decoration: line-through; color: #888; font-size: 0.9em;">$<%= pkg.originalPriceUSDT.toFixed(2) %></span>
+                      <span style="color: #28a745; font-weight: bold; margin-left: 8px;">$<%= pkg.priceUSDT.toFixed(2) %></span>
+                    </div>
+                  <% } else { %>
+                    <span style="font-weight: bold;">$<%= pkg.priceUSDT.toFixed(2) %></span>
+                  <% } %>
+                </td>
                 <td><%= moment(pkg.createdAt).format('DD/MM/YYYY') %></td>
                 <td>
                   <% if (pkg.isActive) { %>
@@ -360,7 +369,31 @@
               <div>
                 <label
                   style="display: block; margin-bottom: 5px; font-weight: 600"
-                  >Price (USDT) *</label
+                  >Original Price (USDT)</label
+                >
+                <input
+                  type="number"
+                  id="originalPriceUSDT"
+                  name="originalPriceUSDT"
+                  min="0"
+                  step="0.01"
+                  style="
+                    width: 100%;
+                    padding: 10px;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    box-sizing: border-box;
+                    font-size: 14px;
+                  "
+                  placeholder="e.g., 149.99"
+                />
+                <small style="color: #666; font-size: 12px;">Optional: Original price (shown with strikethrough)</small>
+              </div>
+
+              <div>
+                <label
+                  style="display: block; margin-bottom: 5px; font-weight: 600"
+                  >Sale Price (USDT) *</label
                 >
                 <input
                   type="number"
@@ -379,6 +412,7 @@
                   "
                   placeholder="e.g., 99.99"
                 />
+                <small style="color: #666; font-size: 12px;">The actual selling price</small>
               </div>
             </div>
 
@@ -492,6 +526,7 @@
                 )
                   ? pkg.positions.length
                   : pkg.positions;
+                document.getElementById("originalPriceUSDT").value = pkg.originalPriceUSDT || "";
                 document.getElementById("priceUSDT").value = pkg.priceUSDT;
                 document.getElementById("isActive").checked = pkg.isActive;
 
@@ -623,12 +658,14 @@
             }
             const positions = [pos];
 
+            const originalPrice = document.getElementById("originalPriceUSDT").value;
             const formData = {
               name: document.getElementById("packageName").value,
               displayCredits: parseInt(
                 document.getElementById("displayCredits").value
               ),
               positions: positions,
+              originalPriceUSDT: originalPrice ? parseFloat(originalPrice) : null,
               priceUSDT: parseFloat(document.getElementById("priceUSDT").value),
               isActive: document.getElementById("isActive").checked,
             };

@@ -23,6 +23,11 @@ const advertisementPackageSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    originalPriceUSDT: {
+      type: Number,
+      default: null,
+      min: 0,
+    },
     positions: {
       type: [String],
       enum: ["HOME_BANNER", "BOTTOM_CIRCLE"],
