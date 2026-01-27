@@ -183,7 +183,7 @@ class UserController {
         });
 
         var randomstring = Math.floor(
-          Math.random() * (100000 - 999999 + 1) + 999999
+          Math.random() * (100000 - 999999 + 1) + 999999,
         );
         const replacements = {
           username: tgid,
@@ -215,7 +215,7 @@ class UserController {
         {
           password: hashedPassword,
           memberid: id,
-        }
+        },
       );
       const result1 = await UserModel.findById(result._id);
       return res.status(200).json({
@@ -279,7 +279,7 @@ class UserController {
         {
           token: accessToken,
           fcmtoken: req.body.fcmtoken,
-        }
+        },
       );
       req.session.token = accessToken;
       // console.log("req.session", req.session.token);
@@ -417,7 +417,7 @@ class UserController {
       if (referralCode) {
         const referralResult = await handlePartnerReferral(
           referralCode,
-          result
+          result,
         );
         if (referralResult.success) {
           partnerMessage = ` You have been successfully linked to a partner.`;
@@ -447,7 +447,7 @@ class UserController {
         { _id: result._id },
         {
           token: accessToken,
-        }
+        },
       );
       // If the user was linked to a partner via referral, mark their first login
       try {
@@ -489,7 +489,7 @@ class UserController {
         {
           token: accessToken,
           fcmtoken: req.body.fcmtoken,
-        }
+        },
       );
       let user1 = await UserModel.findById(user._id);
 
@@ -498,7 +498,7 @@ class UserController {
       if (data.partnercode) {
         const referralResult = await handlePartnerReferral(
           data.partnercode,
-          user
+          user,
         );
         if (referralResult.success) {
           partnerMessage = " You have been successfully linked to a partner.";
@@ -580,7 +580,7 @@ class UserController {
     });
 
     var randomstring = Math.floor(
-      Math.random() * (100000 - 999999 + 1) + 999999
+      Math.random() * (100000 - 999999 + 1) + 999999,
     );
     const replacements = {
       username: users.tgid,
@@ -604,7 +604,7 @@ class UserController {
       { _id: users._id },
       {
         password: hashedPassword,
-      }
+      },
     );
     const result1 = await UserModel.findById(result._id);
     return res.status(200).json({
@@ -1268,7 +1268,7 @@ class UserController {
         const uploadPath = path + "/" + imname;
         try {
           await new Promise((resolve, reject) =>
-            file.mv(uploadPath, (err) => (err ? reject(err) : resolve()))
+            file.mv(uploadPath, (err) => (err ? reject(err) : resolve())),
           );
         } catch (err) {
           console.error("Failed to save uploaded file:", err);
@@ -1332,7 +1332,7 @@ class UserController {
       } catch (notifError) {
         console.error(
           "Error sending company creation notifications:",
-          notifError
+          notifError,
         );
         // Don't fail the request if notification fails
       }
@@ -1422,7 +1422,7 @@ class UserController {
       } catch (e) {
         console.error(
           "Failed to load existing company for attachments check:",
-          e
+          e,
         );
       }
 
@@ -1446,16 +1446,16 @@ class UserController {
           (existing.images && Array.isArray(existing.images)
             ? existing.images
             : existing.image
-            ? [existing.image]
-            : [])) ||
+              ? [existing.image]
+              : [])) ||
         [];
       const existingVideosRaw =
         (existing &&
           (existing.videos && Array.isArray(existing.videos)
             ? existing.videos
             : existing.video
-            ? [existing.video]
-            : [])) ||
+              ? [existing.video]
+              : [])) ||
         [];
 
       const existingImages = existingImagesRaw
@@ -1506,7 +1506,7 @@ class UserController {
         const uploadPath = "./assets/companyprofile/" + imname;
         try {
           await new Promise((resolve, reject) =>
-            file.mv(uploadPath, (err) => (err ? reject(err) : resolve()))
+            file.mv(uploadPath, (err) => (err ? reject(err) : resolve())),
           );
         } catch (e) {
           console.error("Failed to save uploaded company file:", e);
@@ -1526,9 +1526,28 @@ class UserController {
           });
       }
 
-      // build final sets (deduplicated). If client provided explicit kept list, treat it as canonical baseline.
-      const finalImagesSet = new Set([...baselineImages, ...newImages]);
-      const finalVideosSet = new Set([...baselineVideos, ...newVideos]);
+      // Build final sets - when new media is uploaded, replace instead of adding
+      // For videos (premium users): new videos replace all old videos
+      // For images (free users): new images replace all old images
+      let finalImagesSet;
+      let finalVideosSet;
+
+      if (newVideos.length > 0) {
+        // New video uploaded - replace all old videos (for premium users with 1 video limit)
+        finalVideosSet = new Set(newVideos);
+        // Keep existing images if no new images uploaded
+        finalImagesSet =
+          newImages.length > 0 ? new Set(newImages) : new Set(baselineImages);
+      } else if (newImages.length > 0) {
+        // New images uploaded - replace all old images (for free users with 3 image limit)
+        finalImagesSet = new Set(newImages);
+        // Keep existing videos if no new videos uploaded
+        finalVideosSet = new Set(baselineVideos);
+      } else {
+        // No new files uploaded - keep existing media
+        finalImagesSet = new Set(baselineImages);
+        finalVideosSet = new Set(baselineVideos);
+      }
 
       // enforce max 3 attachments total
       if (finalImagesSet.size + finalVideosSet.size > 3) {
@@ -1852,7 +1871,7 @@ class UserController {
         const uploadPath = path + "/" + imname;
         try {
           await new Promise((resolve, reject) =>
-            file.mv(uploadPath, (err) => (err ? reject(err) : resolve()))
+            file.mv(uploadPath, (err) => (err ? reject(err) : resolve())),
           );
         } catch (err) {
           console.error("Failed to save uploaded chamber file:", err);
@@ -1911,7 +1930,7 @@ class UserController {
       } catch (notifError) {
         console.error(
           "Error sending chamber creation notifications:",
-          notifError
+          notifError,
         );
         // Don't fail the request if notification fails
       }
@@ -1998,7 +2017,7 @@ class UserController {
       } catch (e) {
         console.error(
           "Failed to load existing chamber for attachments check:",
-          e
+          e,
         );
       }
 
@@ -2022,16 +2041,16 @@ class UserController {
           (existing.images && Array.isArray(existing.images)
             ? existing.images
             : existing.image
-            ? [existing.image]
-            : [])) ||
+              ? [existing.image]
+              : [])) ||
         [];
       const existingVideosRaw =
         (existing &&
           (existing.videos && Array.isArray(existing.videos)
             ? existing.videos
             : existing.video
-            ? [existing.video]
-            : [])) ||
+              ? [existing.video]
+              : [])) ||
         [];
 
       const existingImages = existingImagesRaw
@@ -2082,7 +2101,7 @@ class UserController {
         const uploadPath = "./assets/chamber/" + imname;
         try {
           await new Promise((resolve, reject) =>
-            file.mv(uploadPath, (err) => (err ? reject(err) : resolve()))
+            file.mv(uploadPath, (err) => (err ? reject(err) : resolve())),
           );
         } catch (e) {
           console.error("Failed to save uploaded chamber file:", e);
@@ -2102,9 +2121,28 @@ class UserController {
           });
       }
 
-      // build final sets (deduplicated). If client provided explicit kept list, treat it as canonical baseline.
-      const finalImagesSet = new Set([...baselineImages, ...newImages]);
-      const finalVideosSet = new Set([...baselineVideos, ...newVideos]);
+      // Build final sets - when new media is uploaded, replace instead of adding
+      // For videos (premium users): new videos replace all old videos
+      // For images (free users): new images replace all old images
+      let finalImagesSet;
+      let finalVideosSet;
+
+      if (newVideos.length > 0) {
+        // New video uploaded - replace all old videos (for premium users with 1 video limit)
+        finalVideosSet = new Set(newVideos);
+        // Keep existing images if no new images uploaded
+        finalImagesSet =
+          newImages.length > 0 ? new Set(newImages) : new Set(baselineImages);
+      } else if (newImages.length > 0) {
+        // New images uploaded - replace all old images (for free users with 3 image limit)
+        finalImagesSet = new Set(newImages);
+        // Keep existing videos if no new videos uploaded
+        finalVideosSet = new Set(baselineVideos);
+      } else {
+        // No new files uploaded - keep existing media
+        finalImagesSet = new Set(baselineImages);
+        finalVideosSet = new Set(baselineVideos);
+      }
 
       // enforce max 3 attachments total
       if (finalImagesSet.size + finalVideosSet.size > 3) {
@@ -2354,7 +2392,7 @@ class UserController {
           Notification._id,
           {
             view: 1,
-          }
+          },
         );
         return res.status(200).json({
           success: true,
@@ -2387,7 +2425,7 @@ class UserController {
     try {
       let data = req.body;
       let Notification = await NotificationModel.findByIdAndDelete(
-        req.params.id
+        req.params.id,
       );
       return res.status(200).json({
         success: true,
@@ -2510,7 +2548,7 @@ class UserController {
           { _id: user._id },
           {
             usertype: 1,
-          }
+          },
         );
         var data1 = await UserModel.findById(user._id);
         return res.status(422).json({
@@ -2547,7 +2585,7 @@ class UserController {
           { _id: user._id },
           {
             usertype: 2,
-          }
+          },
         );
         var data1 = await UserModel.findById(user._id);
         return res.status(422).json({
@@ -2628,7 +2666,7 @@ class UserController {
     await BackgroundModel.updateOne(
       { user_id: req.user._id },
       { $set: { Thumbnail: req.body.Thumbnail } },
-      { upsert: true }
+      { upsert: true },
     );
     const system = await SystemModel.findById(req.params.id);
     const background = await BackgroundModel.findOne({ user_id: req.user._id });
@@ -2641,28 +2679,28 @@ class UserController {
       await BackgroundModel.updateOne(
         { user_id: req.user._id },
         { $set: { Thumbnail: req.body.Thumbnail } },
-        { upsert: true }
+        { upsert: true },
       );
     }
     if (typeof req.body.fontcolor != "undefined") {
       await BackgroundModel.updateOne(
         { user_id: req.user._id },
         { $set: { fontcolor: req.body.fontcolor } },
-        { upsert: true }
+        { upsert: true },
       );
     }
     if (typeof req.body.bgcolor != "undefined") {
       await BackgroundModel.updateOne(
         { user_id: req.user._id },
         { $set: { backgroundcolor: req.body.bgcolor } },
-        { upsert: true }
+        { upsert: true },
       );
     }
     if (typeof req.body.iconcolor != "undefined") {
       await BackgroundModel.updateOne(
         { user_id: req.user._id },
         { $set: { iconcolor: req.body.iconcolor } },
-        { upsert: true }
+        { upsert: true },
       );
     }
     const system = await SystemModel.findById(req.params.id);
@@ -2703,21 +2741,21 @@ class UserController {
         await BackgroundModel.updateOne(
           { user_id: req.user._id },
           { $set: { fontcolor: req.body.fontcolor } },
-          { upsert: true }
+          { upsert: true },
         );
       }
       if (typeof req.body.bgcolor != "undefined") {
         await BackgroundModel.updateOne(
           { user_id: req.user._id },
           { $set: { backgroundcolor: req.body.bgcolor } },
-          { upsert: true }
+          { upsert: true },
         );
       }
       if (typeof req.body.iconcolor != "undefined") {
         await BackgroundModel.updateOne(
           { user_id: req.user._id },
           { $set: { iconcolor: req.body.iconcolor } },
-          { upsert: true }
+          { upsert: true },
         );
       }
 
@@ -3155,7 +3193,7 @@ class UserController {
           } catch (e) {
             console.error(
               "Failed adding contact to folders during auto-accept:",
-              e
+              e,
             );
           }
 
@@ -3234,7 +3272,7 @@ class UserController {
       },
       {
         status: "status is required",
-      }
+      },
     );
     await validator.check();
     // validation error
@@ -3250,7 +3288,7 @@ class UserController {
         {
           status: req.body.status,
         },
-        { new: true }
+        { new: true },
       );
       let approve = "";
       // fetch the updated contact document
@@ -3634,7 +3672,7 @@ class UserController {
       },
       {
         image: "Images is necessary",
-      }
+      },
     );
     await validator.check();
     let error = validatorError(res, validator.errors);
@@ -3716,7 +3754,7 @@ class UserController {
         membership_period: "MembershipDetail is required",
         price: "Price is required",
         join_date: "joindate is required",
-      }
+      },
     );
     if (!(await validator.check())) {
       return res.status(422).json({
@@ -3765,12 +3803,12 @@ class UserController {
     } else {
       const userdetails = await UserModel.findById(dec.user);
       let membershipData = await ReferralMembershipModel.findById(
-        dec.membership
+        dec.membership,
       );
       const _startDate =
         userdetails.enddate === null ||
         moment(userdetails.enddate, "YYYY-MM-DD").isBefore(
-          moment().format("YYYY-MM-DD")
+          moment().format("YYYY-MM-DD"),
         )
           ? moment().format("YYYY-MM-DD")
           : userdetails?.enddate;
@@ -3840,7 +3878,7 @@ class UserController {
         });
       } else {
         let membershipData = await ReferralMembershipModel.findById(
-          data.membership
+          data.membership,
         );
         if (!membershipData) {
           return res.status(500).json({
@@ -4032,7 +4070,7 @@ class UserController {
       const _startDate =
         userdetails.enddate === null ||
         moment(userdetails.enddate, "YYYY-MM-DD").isBefore(
-          moment().format("YYYY-MM-DD")
+          moment().format("YYYY-MM-DD"),
         )
           ? moment().format("YYYY-MM-DD")
           : userdetails?.enddate;
@@ -4322,7 +4360,7 @@ class UserController {
           // data URI (base64)
           if (str.indexOf("base64") !== -1 || str.startsWith("data:")) {
             const matches = str.match(
-              /^data:([A-Za-z-+\/]+\/[A-Za-z0-9-.+]+);base64,(.+)$/
+              /^data:([A-Za-z-+\/]+\/[A-Za-z0-9-.+]+);base64,(.+)$/,
             );
             if (matches && matches.length === 3) {
               const mimeType = matches[1];
@@ -4336,7 +4374,7 @@ class UserController {
                 // write file
                 fs.writeFileSync(
                   "./assets/" + defaultFolder + "/" + fileName,
-                  Buffer.from(data, "base64")
+                  Buffer.from(data, "base64"),
                 );
                 // update DB to saved relative path
                 const relativePath = defaultFolder + "/" + fileName;
@@ -4348,7 +4386,7 @@ class UserController {
               } catch (e) {
                 console.error(
                   `Failed to save base64 ${fieldName} for company ${c._id}:`,
-                  e
+                  e,
                 );
               }
             }
