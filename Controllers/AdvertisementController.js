@@ -1038,7 +1038,7 @@ class AdvertisementController {
         actualUsedCredits.length > 0 ? actualUsedCredits[0].totalCredits : 0;
       const actualBalance = credits.totalCredits - usedCreditsFromAds;
 
-      // Get advertisement rates
+      // Get advertisement rates (for reference only, not for calculation)
       const AdvertisementRateModel = (
         await import("../Models/AdvertisementRate.js")
       ).default;
@@ -1089,6 +1089,7 @@ class AdvertisementController {
       });
 
       // Calculate credit allocation and display capacity by position
+      // Use stored displayCapacity from transactions (locked at purchase/approval time)
       const creditAllocationByPosition = {
         HOME_BANNER: {
           creditsAllocated: 0,
@@ -1104,6 +1105,7 @@ class AdvertisementController {
       const packages = await AdvertisementPackageModel.find({ isActive: true });
 
       // Calculate credits allocated to each position based on completed transactions
+      // Use the displayCapacity stored at purchase/approval time
       credits.transactions.forEach((transaction) => {
         if (transaction.status === "COMPLETED") {
           // Find the package
@@ -1115,21 +1117,34 @@ class AdvertisementController {
             const creditsPerPosition =
               transaction.creditsAdded / positions.length;
 
+            // If displayCapacity is stored in transaction, divide it among positions
+            // Otherwise fallback to calculating with current rate (for old transactions)
+            const displayCapacityPerPosition = transaction.displayCapacity
+              ? transaction.displayCapacity / positions.length
+              : null;
+
             positions.forEach((pos) => {
               if (creditAllocationByPosition[pos]) {
                 creditAllocationByPosition[pos].creditsAllocated +=
                   creditsPerPosition;
-                // Calculate display capacity using rates
-                const rate = rateMap[pos] || 1000; // Default to 1000 if no rate found
-                creditAllocationByPosition[pos].displayCapacity +=
-                  creditsPerPosition * rate;
+
+                // Use stored displayCapacity if available, otherwise fallback to calculation
+                if (displayCapacityPerPosition !== null) {
+                  creditAllocationByPosition[pos].displayCapacity +=
+                    displayCapacityPerPosition;
+                } else {
+                  // Fallback for old transactions without stored displayCapacity
+                  const rate = rateMap[pos] || 1000;
+                  creditAllocationByPosition[pos].displayCapacity +=
+                    creditsPerPosition * rate;
+                }
               }
             });
           }
         }
       });
 
-      // Calculate used credits based on actual display usage
+      // Calculate used credits based on stored display capacity per position
       const creditUsageByPosition = {
         HOME_BANNER: {
           creditsUsed: 0,
@@ -1139,11 +1154,23 @@ class AdvertisementController {
         },
       };
 
-      // Calculate credits used based on display usage and rates
+      // Calculate credits used based on display usage relative to purchased capacity
       Object.keys(positionStats).forEach((position) => {
-        const rate = rateMap[position] || 1000;
+        const purchasedCapacity =
+          creditAllocationByPosition[position].displayCapacity;
+        const allocatedCredits =
+          creditAllocationByPosition[position].creditsAllocated;
         const displaysUsed = positionStats[position].displayUsed;
-        creditUsageByPosition[position].creditsUsed = displaysUsed / rate;
+
+        // Calculate credit usage proportionally based on purchased capacity
+        if (purchasedCapacity > 0 && allocatedCredits > 0) {
+          creditUsageByPosition[position].creditsUsed =
+            (displaysUsed / purchasedCapacity) * allocatedCredits;
+        } else {
+          // Fallback: use current rate if no capacity data
+          const rate = rateMap[position] || 1000;
+          creditUsageByPosition[position].creditsUsed = displaysUsed / rate;
+        }
       });
 
       const response = {
