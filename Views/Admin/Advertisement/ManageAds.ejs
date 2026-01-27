@@ -230,7 +230,6 @@
                         <th>Views</th>
                         <th>Clicks / CTR</th>
                         <th>Created</th>
-                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -266,15 +265,6 @@
                             <td><%=ad.viewCount%></td>
                             <td><%=ad.clickCount%> / <%=ad.ctrPercentage%>%</td>
                             <td><%= moment(ad.createdAt).format('DD/MM/YYYY') %></td>
-                            <td>
-                                <div class="actions">
-                                    <button class="btn-small" onclick="viewAdDetails('<%=ad._id%>')">View</button>
-                                    <%if(ad.approvalStatus === 'PENDING') {%>
-                                        <button class="btn-small btn-approve" onclick="approveAd('<%=ad._id%>')">Approve</button>
-                                        <button class="btn-small btn-reject" onclick="rejectAd('<%=ad._id%>')">Reject</button>
-                                    <%}%>
-                                </div>
-                            </td>
                         </tr>
                     <%});%>
                 </tbody>
