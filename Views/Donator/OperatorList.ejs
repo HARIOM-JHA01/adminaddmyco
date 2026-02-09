@@ -1,0 +1,140 @@
+<%- include('../Layout/Header') %>
+<link rel="stylesheet" href="//cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css">
+<%- include('../Layout/Sidebar') %>
+
+<div id="main">
+  <div class="page-heading">
+    <div class="page-title mb-3">
+      <div class="row">
+        <div class="col-12 col-md-6 order-md-1 order-last">
+          <h3><a href="<%= baseUrl %>admin/dashboard" class="text-primary"><i class="fas fa-arrow-left me-2"></i></a>Operators</h3>
+        </div>
+        <div class="col-12 col-md-6 order-md-2 order-first">
+          <a href="<%= baseUrl %>admin/donator/operator/create" class="btn btn-primary float-end">
+            <i class="bi bi-plus-circle"></i> New Operator
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="card">
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped" id="operatorTable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Employee Credits</th>
+                  <th>Operator Slots</th>
+                  <th>Status</th>
+                  <th>Last Login</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (operators && operators.length > 0) { %>
+                  <% operators.forEach(op => { %>
+                  <tr>
+                    <td><strong><%= op.name %></strong></td>
+                    <td><%= op.email %></td>
+                    <td><span class="badge bg-info"><%= op.credits %> credits</span></td>
+                    <td><span class="badge bg-primary"><%= op.operatorSlots || 0 %> slots</span></td>
+                    <td>
+                      <% if (op.isActive) { %>
+                        <span class="badge bg-success">Active</span>
+                      <% } else { %>
+                        <span class="badge bg-danger">Inactive</span>
+                      <% } %>
+                    </td>
+                    <td><%= op.lastLogin ? moment(op.lastLogin).format('DD-MM-YYYY HH:mm') : 'Never' %></td>
+                    <td><%= moment(op.createdAt).format('DD-MM-YYYY') %></td>
+                    <td>
+                      <button class="btn btn-sm btn-warning" onclick="editOperator('<%= op._id %>')">Edit</button>
+                      <button class="btn btn-sm btn-danger deactivate-operator" data-id="<%= op._id %>" data-active="<%= op.isActive %>"><%= op.isActive ? 'Deactivate' : 'Activate' %></button>
+                    </td>
+                  </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="7" class="text-center text-muted">No operators found</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<footer>
+  <div class="footer clearfix mb-0 text-muted">
+    <div class="float-start">
+      <p>2023 &copy; All rights are reserved</p>
+    </div>
+  </div>
+</footer>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="//cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+
+<script>
+$(document).ready(function() {
+  $('#operatorTable').DataTable({
+    "searching": true,
+    "paging": true
+  });
+});
+
+function editOperator(id) {
+  window.location.href = '<%= baseUrl %>admin/donator/operator/edit/' + id;
+}
+
+$(document).on('click', '.deactivate-operator', function() {
+  var id = $(this).data('id');
+  var isActive = $(this).data('active');
+  var baseUrl = '<%= baseUrl %>';
+  
+  var action = isActive ? 'deactivate' : 'activate';
+  var message = isActive ? 'Are you sure you want to deactivate this operator?' : 'Are you sure you want to activate this operator?';
+  
+  swal({
+    title: "Confirm",
+    text: message,
+    icon: "warning",
+    buttons: true,
+  }).then((confirm) => {
+    if (confirm) {
+      $.ajax({
+        type: "POST",
+        url: baseUrl + 'admin/donator/operator/' + action + '/' + id,
+        dataType: "json",
+        success: function(response) {
+          if (response.success) {
+            $.toast({
+              heading: 'Success',
+              text: response.message,
+              position: 'top-right',
+              icon: 'success'
+            });
+            setTimeout(() => location.reload(), 1000);
+          }
+        },
+        error: function(err) {
+          $.toast({
+            heading: 'Error',
+            text: err.responseJSON?.message || 'Error updating operator',
+            position: 'top-right',
+            icon: 'error'
+          });
+        }
+      });
+    }
+  });
+});
+</script>

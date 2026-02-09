@@ -29,7 +29,7 @@ user.get("/getcontactfolder", isUser, UserController.GetContactFolder);
 user.delete(
   "/deletecontactfolder/:id",
   isUser,
-  UserController.DeleteContactFolder
+  UserController.DeleteContactFolder,
 );
 
 // ..........................USERS[FREE,PRIMIUMUSER,DONATED]...................
@@ -145,7 +145,7 @@ user.get("/referralReportlist", isUser, UserController.ReferralReportList);
 user.post(
   "/create-checkout-session",
   isUser,
-  UserController.StripeCheckOutSession
+  UserController.StripeCheckOutSession,
 );
 user.post("/success", isUser, UserController.success);
 
@@ -158,7 +158,7 @@ user.post("/stripe_payment", isUser, UserController.MembershipCheckOutSession);
 user.post(
   "/success_stripe_payment",
   isUser,
-  UserController.SuccessMembershipStripe
+  UserController.SuccessMembershipStripe,
 );
 user.get("/getpaymentconfiguration", UserController.GetPaymentConfiguration);
 
@@ -167,7 +167,7 @@ user.post("/telegram/payment", isUser, PaymentController.TelegramPayment);
 user.post(
   "/telegram/payment/complete",
   isUser,
-  PaymentController.CompleteTelegramCoinPayment
+  PaymentController.CompleteTelegramCoinPayment,
 );
 user.post("/usdt/payment", isUser, PaymentController.USDTPayment);
 
@@ -180,5 +180,8 @@ user.post("/getuserprofile", UserController.GetUserProfile);
 user.post("/getusercompanies", UserController.GetUserCompanies);
 user.post("/getuserchambers", UserController.GetUserChambers);
 user.post("/getbackgroundbyusername", UserController.GetUserBackground);
+
+// ...............................CREATE DONATOR.......................................
+user.post("/create-donator", UserController.CreateDonator);
 
 export default user;

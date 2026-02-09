@@ -1,0 +1,169 @@
+<%- include('../Layout/Header') %>
+<link rel="stylesheet" href="//cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css">
+<%- include('../Layout/Sidebar') %>
+
+<div id="main">
+  <div class="page-heading">
+    <div class="page-title mb-3">
+      <div class="row">
+        <div class="col-12 col-md-6 order-md-1 order-last">
+          <h3><a href="<%= baseUrl %>admin/dashboard" class="text-primary"><i class="fas fa-arrow-left me-2"></i></a>Donator Purchases</h3>
+        </div>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="card">
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped" id="purchaseTable">
+              <thead>
+                <tr>
+                  <th>Purchase ID</th>
+                  <th>Operator</th>
+                  <th>Package</th>
+                  <th>Amount (USDT)</th>
+                  <th>Transaction ID</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (purchases && purchases.length > 0) { %>
+                  <% purchases.forEach(purchase => { %>
+                  <tr>
+                    <td><code><%= purchase._id.toString().substring(0, 8) %>...</code></td>
+                    <td><%= purchase.operator ? purchase.operator.name : 'N/A' %></td>
+                    <td><%= purchase.package ? purchase.package.name : 'N/A' %></td>
+                    <td><span class="badge bg-info"><%= purchase.package ? purchase.package.employeeCredits : 0 %> emp</span> <span class="badge bg-primary"><%= purchase.package ? purchase.package.operatorCredits : 0 %> op</span></td>
+                    <td><strong>$<%= purchase.amount %></strong></td>
+                    <td><code><%= purchase.transactionId || 'N/A' %></code></td>
+                    <td>
+                      <% if (purchase.status === 0) { %>
+                        <span class="badge bg-warning">Pending</span>
+                      <% } else if (purchase.status === 1) { %>
+                        <span class="badge bg-success">Approved</span>
+                      <% } else if (purchase.status === 2) { %>
+                        <span class="badge bg-danger">Rejected</span>
+                      <% } else { %>
+                        <span class="badge bg-secondary">Cancelled</span>
+                      <% } %>
+                    </td>
+                    <td><%= moment(purchase.createdAt).format('DD-MM-YYYY HH:mm') %></td>
+                    <td>
+                      <% if (purchase.status === 0) { %>
+                        <button class="btn btn-sm btn-success approve-purchase" data-id="<%= purchase._id %>">Approve</button>
+                        <button class="btn btn-sm btn-danger reject-purchase" data-id="<%= purchase._id %>">Reject</button>
+                      <% } else { %>
+                        <span class="text-muted text-sm">-</span>
+                      <% } %>
+                    </td>
+                  </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="8" class="text-center text-muted">No purchases found</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<footer>
+  <div class="footer clearfix mb-0 text-muted">
+    <div class="float-start">
+      <p>2023 &copy; All rights are reserved</p>
+    </div>
+  </div>
+</footer>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="//cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+
+<script>
+$(document).ready(function() {
+  $('#purchaseTable').DataTable({
+    "searching": true,
+    "paging": true
+  });
+});
+
+$(document).on('click', '.approve-purchase', function() {
+  var purchaseId = $(this).data('id');
+  var baseUrl = '<%= baseUrl %>';
+  
+  swal({
+    title: "Approve Purchase?",
+    text: "This will add credits to the operator's account.",
+    icon: "info",
+    buttons: true,
+  }).then((confirm) => {
+    if (confirm) {
+      $.ajax({
+        type: "POST",
+        url: baseUrl + 'admin/donator/purchase/approve/' + purchaseId,
+        dataType: "json",
+        success: function(response) {
+          if (response.success) {
+            $.toast({
+              heading: 'Success',
+              text: response.message,
+              position: 'top-right',
+              icon: 'success'
+            });
+            setTimeout(() => location.reload(), 1000);
+          }
+        },
+        error: function(err) {
+          $.toast({
+            heading: 'Error',
+            text: err.responseJSON?.message || 'Error approving purchase',
+            position: 'top-right',
+            icon: 'error'
+          });
+        }
+      });
+    }
+  });
+});
+
+$(document).on('click', '.reject-purchase', function() {
+  var purchaseId = $(this).data('id');
+  var baseUrl = '<%= baseUrl %>';
+  
+  var reason = prompt("Enter rejection reason (optional):");
+  
+  $.ajax({
+    type: "POST",
+    url: baseUrl + 'admin/donator/purchase/reject/' + purchaseId,
+    data: { rejectionReason: reason },
+    dataType: "json",
+    success: function(response) {
+      if (response.success) {
+        $.toast({
+          heading: 'Success',
+          text: response.message,
+          position: 'top-right',
+          icon: 'success'
+        });
+        setTimeout(() => location.reload(), 1000);
+      }
+    },
+    error: function(err) {
+      $.toast({
+        heading: 'Error',
+        text: err.responseJSON?.message || 'Error rejecting purchase',
+        position: 'top-right',
+        icon: 'error'
+      });
+    }
+  });
+});
+</script>

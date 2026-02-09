@@ -4,6 +4,7 @@ import connectDB from "./Db/Connectdb.js";
 import admin from "./Routes/Admin.js";
 import user from "./Routes/User.js";
 import partner from "./Routes/Partner.js";
+import donator from "./Routes/Donator.js";
 import advertisement from "./Routes/Advertisement.js";
 import fileUpload from "express-fileupload";
 import session from "express-session";
@@ -39,7 +40,7 @@ app.use(
     resave: true,
     saveUninitialized: true,
     cookie: { maxAge: 172800000 }, // 48 hours in milliseconds
-  })
+  }),
 );
 app.use("/assets", express.static("assets"));
 app.use(cors());
@@ -59,7 +60,7 @@ initializeAdvertisementConfig();
 app.use((req, res, next) => {
   const now = new Date();
   console.log(
-    `[${now.toISOString()}] ${req.method} request to ${req.url} from ${req.ip}`
+    `[${now.toISOString()}] ${req.method} request to ${req.url} from ${req.ip}`,
   );
   next();
 });
@@ -68,11 +69,11 @@ app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
     "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept ,Authorization"
+    "Origin, X-Requested-With, Content-Type, Accept ,Authorization",
   );
   res.setHeader(
     "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTION"
+    "GET, POST, PUT, DELETE, OPTION",
   );
   res.setHeader("Access-Control-Allow-Credentials", true);
   next();
@@ -82,6 +83,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json({ extended: false }));
 app.use("/admin", admin);
 app.use("/partner", partner);
+app.use("/donator", donator);
 app.use("/", user);
 app.use("/", advertisement);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -100,6 +102,6 @@ app.get("/", function (req, res) {
 http.createServer(app).listen(port, () => {
   console.log(`HTTP server listening at http://localhost:${port}`);
   console.log(
-    `API documentation available at http://localhost:${port}/api-docs`
+    `API documentation available at http://localhost:${port}/api-docs`,
   );
 });

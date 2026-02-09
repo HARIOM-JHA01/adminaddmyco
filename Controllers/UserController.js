@@ -4456,5 +4456,113 @@ class UserController {
       });
     }
   };
+
+  /**
+   * Create a new donator user
+   * POST /api/v1/user/create-donator
+   */
+  static CreateDonator = async (req, res) => {
+    try {
+      const { tgid, country } = req.body;
+
+      // Validation
+      const validator = new Validator(
+        { tgid, country },
+        {
+          tgid: "required|string",
+          country: "required|string",
+        },
+      );
+
+      if (!(await validator.check())) {
+        return res.status(422).json({
+          success: false,
+          errors: validator.errors,
+        });
+      }
+
+      // Check if user with this tgid already exists
+      const existingUser = await UserModel.findOne({ tgid: tgid.trim() });
+      if (existingUser) {
+        return res.status(422).json({
+          success: false,
+          message: "User with this Telegram ID already exists",
+        });
+      }
+
+      // Generate random username (freeUsername)
+      const freeUsername = crypto.randomBytes(4).toString("hex");
+
+      // Fetch country code from API
+      let countryCode = "DM"; // Default fallback
+      try {
+        const countryResponse = await fetch(
+          "https://telegramdirectory.org/api/getCountry",
+        );
+        const countryData = await countryResponse.json();
+
+        if (countryData.CountryData && Array.isArray(countryData.CountryData)) {
+          const selectedCountry = countryData.CountryData.find(
+            (c) =>
+              c.country_name.toLowerCase() === country.trim().toLowerCase(),
+          );
+          if (selectedCountry && selectedCountry.country_2_char_code) {
+            countryCode = selectedCountry.country_2_char_code;
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching country code:", error);
+        // Continue with default countryCode
+      }
+
+      // Get count of users in this country to generate sequential ID
+      const countryCount = await UserModel.countDocuments({
+        country: country.trim(),
+      });
+      const sequence = countryCount + 1;
+      const sequenceStr = sequence.toString();
+      const padding = "000000000000";
+      const memberid =
+        countryCode + "-" + padding.slice(0, -sequenceStr.length) + sequenceStr;
+
+      // Create new donator user
+      const newUser = new UserModel({
+        tgid: tgid.trim(),
+        country: country.trim(),
+        freeUsername: freeUsername,
+        username: tgid.trim(),
+        memberid: memberid,
+        usertype: 2, // Donator type
+        membertype: "Donator",
+        joindate: new Date().toISOString(),
+        date: new Date(),
+        isReferral: 0,
+        refstatue: 0,
+        paymentBy: 2, // Donator payment type
+      });
+
+      const savedUser = await newUser.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Donator user created successfully",
+        data: {
+          _id: savedUser._id,
+          tgid: savedUser.tgid,
+          freeUsername: savedUser.freeUsername,
+          country: savedUser.country,
+          memberid: savedUser.memberid,
+          usertype: savedUser.usertype,
+        },
+      });
+    } catch (error) {
+      console.error("CreateDonator error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  };
 }
 export default UserController;

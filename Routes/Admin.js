@@ -6,6 +6,8 @@ import AdminController from "../Controllers/AdminController.js";
 import MasterAdminController from "../Controllers/MasterAdminController.js";
 import { isAdmin } from "../Middleware/AdminAuthentication.js";
 import PartnerAdminController from "../Controllers/PartnerAdminController.js";
+import DonatorAdminController from "../Controllers/DonatorAdminController.js";
+import DonatorController from "../Controllers/DonatorController.js";
 
 // .........................DASHBOARD-CONTROLLER........................
 admin.get("/", DashboardController.signIn);
@@ -129,28 +131,28 @@ admin.post("/editlogo", AdminController.EditLogo);
 admin.get(
   "/referralmembership",
   isAdmin,
-  DashboardController.ReferralMembershipTenure
+  DashboardController.ReferralMembershipTenure,
 );
 admin.get(
   "/addreferralmembership",
   isAdmin,
-  DashboardController.AddReferralMembershipTenure
+  DashboardController.AddReferralMembershipTenure,
 );
 admin.get(
   "/editreferralmembership",
   isAdmin,
-  DashboardController.EditReferralMembershipTenure
+  DashboardController.EditReferralMembershipTenure,
 );
 
 // .....................MEMEBRSHIP[CONFIGURATION].........................
 admin.post("/referralmembership", AdminController.ReferralMembershipTenure);
 admin.post(
   "/editreferralmembership",
-  AdminController.EditReferralMembershipTenure
+  AdminController.EditReferralMembershipTenure,
 );
 admin.get(
   "/deletereferralmembership",
-  AdminController.DeleteReferralMembershipTenure
+  AdminController.DeleteReferralMembershipTenure,
 );
 
 // :::::::::::::::::::REFERRAL-DETAIL:::::::::::::::::::::
@@ -169,7 +171,7 @@ admin.get("/package/create", isAdmin, PartnerAdminController.PackageCreate);
 admin.post(
   "/package/create",
   isAdmin,
-  PartnerAdminController.PackageCreatePost
+  PartnerAdminController.PackageCreatePost,
 );
 admin.get("/package/edit/:id", isAdmin, PartnerAdminController.PackageEdit);
 admin.post("/package/edit", isAdmin, PartnerAdminController.PackageEditPost);
@@ -177,27 +179,27 @@ admin.post("/package/edit", isAdmin, PartnerAdminController.PackageEditPost);
 admin.post(
   "/package/edit/:id",
   isAdmin,
-  PartnerAdminController.PackageEditPost
+  PartnerAdminController.PackageEditPost,
 );
 admin.get("/package/delete/:id", isAdmin, PartnerAdminController.PackageDelete);
 admin.get("/package/delete", isAdmin, PartnerAdminController.PackageDelete);
 admin.get(
   "/package/activate/:id",
   isAdmin,
-  PartnerAdminController.PackageActivate
+  PartnerAdminController.PackageActivate,
 );
 // also accept query param for backward compatibility
 admin.get("/package/activate", isAdmin, PartnerAdminController.PackageActivate);
 admin.get(
   "/package/deactivate/:id",
   isAdmin,
-  PartnerAdminController.PackageDeactivate
+  PartnerAdminController.PackageDeactivate,
 );
 // also accept query param for backward compatibility
 admin.get(
   "/package/deactivate",
   isAdmin,
-  PartnerAdminController.PackageDeactivate
+  PartnerAdminController.PackageDeactivate,
 );
 
 // Payment admin view
@@ -235,17 +237,17 @@ admin.get("/createadmin", DashboardController.CreateAdmin);
 admin.get("/paymentconfiguration", DashboardController.PaymentConfiguration);
 admin.get(
   "/addpaymentconfiguration",
-  DashboardController.AddPaymentConfiguration
+  DashboardController.AddPaymentConfiguration,
 );
 admin.get(
   "/editpaymentconfiguration",
-  DashboardController.EditPaymentConfiguration
+  DashboardController.EditPaymentConfiguration,
 );
 
 admin.post("/addpaymentconfiguration", AdminController.PaymentConfiguration);
 admin.post(
   "/editpaymentconfiguration",
-  AdminController.EditPaymentconfiguration
+  AdminController.EditPaymentconfiguration,
 );
 
 admin.get("/membershipstripe", DashboardController.MembershipStripePayment);
@@ -253,14 +255,14 @@ admin.get("/usdtmembership", isAdmin, DashboardController.USDTPayment);
 admin.get(
   "/telegramcoinmembership",
   isAdmin,
-  DashboardController.TelegramCoinPayment
+  DashboardController.TelegramCoinPayment,
 );
 admin.get("/deletestripepayment", AdminController.DeleteStripePayment);
 admin.get("/exportstripedetail", AdminController.ExportStripeDetail);
 admin.get("/exportusdtpayment", AdminController.ExportUSDTPayment);
 admin.get(
   "/exporttelegramcoinpayment",
-  AdminController.ExportTelegramCoinPayment
+  AdminController.ExportTelegramCoinPayment,
 );
 
 // USDT Payment Actions
@@ -278,7 +280,7 @@ admin.post("/set-telegram-premium", AdminController.setTelegramPremium);
 admin.get(
   "/check-expired-memberships",
   isAdmin,
-  AdminController.CheckExpiredMemberships
+  AdminController.CheckExpiredMemberships,
 );
 
 // ........................ADVERTISEMENT...................................
@@ -286,31 +288,102 @@ admin.get("/advertisements", isAdmin, AdminController.advertisementDashboard);
 admin.get(
   "/advertisements/manage",
   isAdmin,
-  AdminController.manageAdvertisements
+  AdminController.manageAdvertisements,
 );
 admin.get("/advertisements/packages", isAdmin, AdminController.managePackages);
 admin.get(
   "/advertisements/packages/create",
   isAdmin,
-  AdminController.createPackagePage
+  AdminController.createPackagePage,
 );
 admin.get("/advertisements/rates", isAdmin, AdminController.manageCouponRates);
 admin.post(
   "/advertisements/rates/update",
   isAdmin,
-  AdminController.updateCouponRate
+  AdminController.updateCouponRate,
 );
 admin.get(
   "/advertisements/credit-payments",
   isAdmin,
-  AdminController.manageCreditPayments
+  AdminController.manageCreditPayments,
 );
 
 // Advertisement country-level configurations removed; manage system-wide setting at /admin/configuration (ConfigKey = ADVERTISEMENTS_COUNTRY_FILTER).
 admin.get(
   "/advertisement/sponsor/:sponsorId",
   isAdmin,
-  AdminController.sponsorDetails
+  AdminController.sponsorDetails,
+);
+
+// ======================== DONATOR MODULE ========================
+admin.get("/donator/packages", isAdmin, DonatorAdminController.PackageList);
+
+admin.get(
+  "/donator/package/create",
+  isAdmin,
+  DonatorAdminController.PackageForm,
+);
+
+admin.get(
+  "/donator/package/edit/:id",
+  isAdmin,
+  DonatorAdminController.PackageForm,
+);
+
+admin.post("/donator/package/create", isAdmin, DonatorController.CreatePackage);
+
+admin.post(
+  "/donator/package/edit/:id",
+  isAdmin,
+  DonatorController.UpdatePackage,
+);
+
+admin.delete("/donator/package/:id", isAdmin, DonatorController.DeletePackage);
+
+admin.get("/donator/purchases", isAdmin, DonatorAdminController.PurchaseList);
+
+admin.post(
+  "/donator/purchase/approve/:id",
+  isAdmin,
+  DonatorController.ApprovePurchase,
+);
+
+admin.post(
+  "/donator/purchase/reject/:id",
+  isAdmin,
+  DonatorController.RejectPurchase,
+);
+
+admin.get("/donator/operators", isAdmin, DonatorAdminController.OperatorList);
+
+admin.get(
+  "/donator/operator/create",
+  isAdmin,
+  DonatorAdminController.OperatorForm,
+);
+
+admin.post(
+  "/donator/operator/create",
+  isAdmin,
+  DonatorController.CreateOperator,
+);
+
+admin.post(
+  "/donator/operator/deactivate/:id",
+  isAdmin,
+  DonatorAdminController.DeactivateOperator,
+);
+
+admin.post(
+  "/donator/operator/activate/:id",
+  isAdmin,
+  DonatorAdminController.ActivateOperator,
+);
+
+admin.post(
+  "/donator/operator/add-credits/:id",
+  isAdmin,
+  DonatorAdminController.AddCredits,
 );
 
 export default admin;

@@ -24,21 +24,18 @@
           </a>
         </li>
         <li
-          class="sidebar-item has-sub <%= (path == 'freeuser') || (path == 'premium') || (path == 'donateduser') ? 'active' : '' %>">
+          class="sidebar-item has-sub <%= (path == 'freeuser') || (path == 'premium') ? 'active' : '' %>">
           <a href="#" class='sidebar-link'>
             <i class="bi bi-stack"></i>
             <span>Users</span>
           </a>
           <ul
-            class="submenu <%= (path == 'freeuser') || (path == 'premium') || (path == 'donateduser') ? 'active' : '' %>">
+            class="submenu <%= (path == 'freeuser') || (path == 'premium') ? 'active' : '' %>">
             <li class="submenu-item <%= (path == 'freeuser') ? 'active' : '' %> ">
               <a href="<%= baseUrl %>admin/freeuser">Free Users</a>
             </li>
             <li class="submenu-item <%= (path == 'premium') ? 'active' : '' %> ">
               <a href="<%= baseUrl %>admin/premium">Premium Users</a>
-            </li>
-            <li class="submenu-item <%= (path == 'donateduser') ? 'active' : '' %> ">
-              <a href="<%= baseUrl %>admin/donateduser">Donators</a>
             </li>
 
           </ul>
@@ -176,6 +173,29 @@
             </li>
           </ul>
         </li>
+
+        <!-- Donator module -->
+        <li class="sidebar-item has-sub <%= (path == 'donateduser') || (path == 'donator-packages') || (path == 'donator-purchases') || (path == 'donator-operators') ? 'active' : '' %> ">
+          <a href="#" class='sidebar-link'>
+            <i class="bi bi-gift"></i>
+            <span>Donator Module</span>
+          </a>
+          <ul class="submenu <%= (path == 'donateduser') || (path == 'donator-packages') || (path == 'donator-purchases') || (path == 'donator-operators') ? 'active' : '' %> ">
+            <li class="submenu-item <%= (path == 'donateduser') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/donateduser">Donators</a>
+            </li>
+            <li class="submenu-item <%= (path == 'donator-packages') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/donator/packages">Packages</a>
+            </li>
+            <li class="submenu-item <%= (path == 'donator-purchases') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/donator/purchases">Purchases</a>
+            </li>
+            <li class="submenu-item <%= (path == 'donator-operators') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/donator/operators">Operators</a>
+            </li>
+          </ul>
+        </li>
+
           <li
           class="sidebar-item has-sub <%= (path == 'createadmin') || (path == 'adminuserlist') ? 'active' : '' %>">
           <a href="#" class='sidebar-link'>
