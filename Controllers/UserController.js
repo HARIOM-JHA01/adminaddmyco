@@ -2727,12 +2727,10 @@ class UserController {
 
       // Allow usertype 1 (premium) and 2 (donator)
       if (user.usertype !== 1 && user.usertype !== 2) {
-        return res
-          .status(403)
-          .json({
-            success: false,
-            message: "Premium/donator membership required",
-          });
+        return res.status(403).json({
+          success: false,
+          message: "Premium/donator membership required",
+        });
       }
 
       // Ensure multipart file present
@@ -3122,6 +3120,7 @@ class UserController {
   };
 
   static SystemImages = async (req, res) => {
+    // Aggregate existing system images (unchanged)
     let image = await SystemModel.aggregate([
       {
         $lookup: {
@@ -3140,23 +3139,71 @@ class UserController {
         },
       },
     ]);
-    // const userDetails = await UserModel.findById()
-    console.log("image", image);
-    image = await image.map((e) => {
-      let a = JSON.parse(JSON.stringify(e));
-      let im = a.Thumbnail.split(",");
-      a["Thumbnail"] = im.map((e1) => {
-        return baseUrl + "assets/systemimage/" + e1;
-      });
-      // a['categoryname'] = a.category.categoryname;
+
+    // Try to read optional Bearer token and resolve user (do not require auth)
+    let authUser = null;
+    try {
+      const authHeader = req.headers.authorization || req.headers.Authorization;
+      if (
+        authHeader &&
+        typeof authHeader === "string" &&
+        authHeader.split(" ")[0] === "Bearer"
+      ) {
+        const token = authHeader.split(" ")[1];
+        // verify token and ensure it exists in DB (same checks as isUser middleware)
+        const payload = jwt.verify(token, accessTokenSecret);
+        const tokenData = await UserModel.findOne({ token: token });
+        if (tokenData && payload && payload.id) {
+          authUser = await UserModel.findById(payload.id).select(
+            "_id username",
+          );
+        }
+      }
+    } catch (err) {
+      // ignore token errors — keep endpoint public/forward compatible
+      authUser = null;
+    }
+
+    // Map system image filenames to public URLs
+    image = image.map((e) => {
+      const a = JSON.parse(JSON.stringify(e));
+      const im = a.Thumbnail ? a.Thumbnail.split(",").filter(Boolean) : [];
+      a["Thumbnail"] = im.map((e1) => baseUrl + "assets/systemimage/" + e1);
       return a;
     });
-    console.log("image", image);
-    //   image[0]['Thumbnail'] = baseUrl + 'assets/systemimage' + image[0]['Thumbnail'];
-    return res.status(200).json({
-      success: true,
-      data: image,
-    });
+
+    // If authenticated user found, always prepend a "Your images" category
+    // (Thumbnail array will be empty if the user has no uploaded backgrounds)
+    if (authUser) {
+      try {
+        const bg = await BackgroundModel.findOne({ user_id: authUser._id });
+        const thumbs =
+          bg && bg.Thumbnail
+            ? bg.Thumbnail.split(",")
+                .filter(Boolean)
+                .map((f) => baseUrl + "assets/background/" + f)
+            : [];
+
+        const userEntry = {
+          _id: `user-${authUser._id}`,
+          Thumbnail: thumbs,
+          categoryname: "your-images",
+          date: bg ? bg.date : null,
+          __v: 0,
+          category: [
+            { _id: authUser._id, categoryname: "Your images", __v: 0 },
+          ],
+          user: [{ _id: authUser._id, username: authUser.username || "" }],
+        };
+
+        // insert as first item for visibility (always present for authenticated user)
+        image.unshift(userEntry);
+      } catch (err) {
+        console.error("SystemImages - include user backgrounds failed:", err);
+      }
+    }
+
+    return res.status(200).json({ success: true, data: image });
   };
 
   // ....................................CONTACT..................................
