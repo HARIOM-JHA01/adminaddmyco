@@ -2763,10 +2763,11 @@ class UserController {
           .json({ success: false, message: "File too large" });
       }
 
-      // Persist file to ./assets/background/
-      const uploadDir = await makeDir(
-        path.join(__dirname, `../assets/background`),
-      );
+      // Persist file to the same `assets` directory Express serves from (process.cwd()/assets)
+      // Use process.cwd() so uploads and static middleware point to the same place even when __dirname differs
+      const assetsRoot = path.resolve(process.cwd(), "assets");
+      const uploadDir = await makeDir(path.join(assetsRoot, "background"));
+
       const ext =
         (file.name && file.name.split(".").pop()) ||
         mime.getExtension(file.mimetype) ||
@@ -2775,8 +2776,10 @@ class UserController {
       const uploadPath = path.join(uploadDir, fileName);
       await file.mv(uploadPath);
 
-      // verify file was written where expected and log path (helps debug missing files)
-      console.log(`UploadBackground: saved file to ${uploadPath}`);
+      // verify file was written where expected and log both assetsRoot and the saved path
+      console.log(
+        `UploadBackground: assetsRoot=${assetsRoot}, saved file to ${uploadPath}`,
+      );
       if (!fs.existsSync(uploadPath)) {
         console.error(
           `UploadBackground: file not found after mv(): ${uploadPath}`,
