@@ -2775,6 +2775,17 @@ class UserController {
       const uploadPath = path.join(uploadDir, fileName);
       await file.mv(uploadPath);
 
+      // verify file was written where expected and log path (helps debug missing files)
+      console.log(`UploadBackground: saved file to ${uploadPath}`);
+      if (!fs.existsSync(uploadPath)) {
+        console.error(
+          `UploadBackground: file not found after mv(): ${uploadPath}`,
+        );
+        return res
+          .status(500)
+          .json({ success: false, message: "File write failed" });
+      }
+
       // Build public URL
       const cleanBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
       const fileUrl = `${cleanBase}/assets/background/${fileName}`;
