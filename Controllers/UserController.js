@@ -2763,9 +2763,13 @@ class UserController {
           .json({ success: false, message: "File too large" });
       }
 
-      // Persist file to the same `assets` directory Express serves from (process.cwd()/assets)
-      // Use process.cwd() so uploads and static middleware point to the same place even when __dirname differs
-      const assetsRoot = path.resolve(process.cwd(), "assets");
+      // Persist file to the project `assets` directory (deterministic, based on this file location)
+      // Use __dirname to ensure uploads go to the repository's ./assets, regardless of process.cwd()
+      const assetsRoot = path.resolve(__dirname, "..", "assets");
+      // Log both paths to aid troubleshooting when PM2/workdir differs
+      console.log(
+        `UploadBackground: __dirname=${__dirname}, process.cwd()=${process.cwd()}, assetsRoot=${assetsRoot}`,
+      );
       const uploadDir = await makeDir(path.join(assetsRoot, "background"));
 
       const ext =
