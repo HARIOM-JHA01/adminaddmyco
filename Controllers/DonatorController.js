@@ -127,6 +127,99 @@ class DonatorController {
   };
 
   /**
+   * Donator (owner) aggregated summary
+   * GET /donator/me/summary
+   */
+  static GetDonatorSummary = async (req, res) => {
+    try {
+      if (!req.user || req.user.usertype !== 2)
+        return res.status(403).json({ success: false, message: "Forbidden" });
+
+      const profile = await UserModel.findById(req.user._id).select(
+        "-password",
+      );
+
+      // Operators created by this donator
+      const operators = await OperatorModel.find({
+        createdByDonator: req.user._id,
+      }).select("name email credits operatorSlots isActive createdAt");
+
+      const opIds = operators.map((o) => o._id);
+
+      // Purchases: both direct purchases by donator AND purchases assigned to operators
+      const purchases = await DonatorPurchaseModel.find({
+        $or: [
+          { donator: req.user._id }, // Direct purchases by this donator
+          { operator: { $in: opIds } }, // Purchases assigned to operators created by this donator
+        ],
+      })
+        .populate("package")
+        .sort({ createdAt: -1 })
+        .limit(100);
+
+      const approved = purchases.filter((p) => p.status === 1);
+
+      const totalCreditsOperator = approved.reduce(
+        (sum, p) => sum + (p.creditsGrantedOperator || 0),
+        0,
+      );
+      const totalCreditsEmployee = approved.reduce(
+        (sum, p) => sum + (p.creditsGrantedEmployee || 0),
+        0,
+      );
+
+      // Employee creations by those operators (via audits)
+      const audits = await DonatorAuditModel.find({
+        actorType: "operator",
+        action: "employee.create",
+        actorId: { $in: opIds },
+      }).sort({ createdAt: -1 });
+      const userIds = Array.from(
+        new Set(audits.map((a) => String(a.entityId))),
+      );
+
+      const recentUserIds = userIds
+        .slice(0, 50)
+        .map((id) => require("mongoose").Types.ObjectId(id));
+      const recentUsers = await UserModel.find({ _id: { $in: recentUserIds } })
+        .select("username tgid email firstname lastname createdAt")
+        .lean();
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          profile,
+          operators,
+          purchases: purchases.map((p) => ({
+            _id: p._id,
+            operator: p.operator,
+            packageName: p.package ? p.package.name : null,
+            creditsGrantedOperator: p.creditsGrantedOperator,
+            creditsGrantedEmployee: p.creditsGrantedEmployee,
+            status: p.status,
+            createdAt: p.createdAt,
+          })),
+          purchasesSummary: {
+            total: purchases.length,
+            approved: approved.length,
+            totalCreditsOperator,
+            totalCreditsEmployee,
+          },
+          employeesSummary: {
+            totalEmployeesCreated: userIds.length,
+            recentUsers,
+          },
+        },
+      });
+    } catch (err) {
+      console.error("GetDonatorSummary error:", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Server error", error: err.message });
+    }
+  };
+
+  /**
    * Operator: Register/Sign up
    * POST /donator/operator/register
    */
@@ -437,7 +530,489 @@ class DonatorController {
     }
   };
 
-  // ======================== PACKAGE MANAGEMENT (ADMIN) ========================
+  /**
+   * Operator: Aggregated summary
+   * GET /donator/operator/summary
+   */
+  static GetOperatorSummary = async (req, res) => {
+    try {
+      const profile = await OperatorModel.findById(req.operator._id).select(
+        "-password",
+      );
+
+      const operators = await OperatorModel.find({
+        createdByAdmin: req.operator._id,
+      }).select("name email credits operatorSlots isActive createdAt");
+
+      const purchases = await DonatorPurchaseModel.find({
+        operator: req.operator._id,
+      })
+        .populate("package")
+        .sort({ createdAt: -1 })
+        .limit(50);
+
+      const approved = purchases.filter((p) => p.status === 1);
+      const creditsUsed = approved.reduce(
+        (sum, p) => sum + (p.creditsGrantedEmployee || 0),
+        0,
+      );
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          profile,
+          credits: {
+            credits: profile.credits,
+            operatorSlots: profile.operatorSlots,
+          },
+          operators,
+          usersSummary: {
+            creditsUsed,
+            potentialUsers: creditsUsed,
+            purchases: approved.map((p) => ({
+              _id: p._id,
+              packageName: p.package ? p.package.name : null,
+              creditsGranted: p.creditsGrantedEmployee,
+              createdAt: p.approvedAt || p.createdAt,
+            })),
+          },
+          purchases: purchases.map((p) => ({
+            _id: p._id,
+            packageName: p.package ? p.package.name : null,
+            creditsGranted: p.creditsGrantedEmployee,
+            status: p.status,
+            createdAt: p.createdAt,
+          })),
+        },
+      });
+    } catch (error) {
+      console.error("GetOperatorSummary error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  };
+
+  // ======================== DONATOR (owner) - endpoints ========================
+  /**
+   * Donator (usertype=2): create operator under your account
+   * POST /donator/me/operators
+   */
+  static CreateOperatorByDonator = async (req, res) => {
+    try {
+      if (!req.user || req.user.usertype !== 2)
+        return res.status(403).json({ success: false, message: "Forbidden" });
+
+      const { tgid, password } = req.body;
+
+      const validator = new Validator(
+        { tgid, password },
+        {
+          tgid: "required|string|minLength:3",
+          password: "required|string|minLength:6",
+        },
+      );
+
+      if (!(await validator.check()))
+        return res
+          .status(422)
+          .json({ success: false, errors: validator.errors });
+
+      // Check if operator with this tgid already exists
+      const existing = await OperatorModel.findOne({
+        tgid: tgid.toLowerCase().trim(),
+      });
+      if (existing)
+        return res.status(422).json({
+          success: false,
+          message: "Telegram username already registered as operator",
+        });
+
+      // Hash password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      // Create operator
+      const op = new OperatorModel({
+        tgid: tgid.toLowerCase().trim(),
+        telegramId: tgid.toLowerCase().trim(),
+        name: tgid.toLowerCase().trim(), // Use tgid as name
+        password: hashedPassword,
+        isActive: true,
+        credits: 0,
+        operatorSlots: 0,
+        createdByDonator: req.user._id,
+      });
+
+      const saved = await op.save();
+
+      await DonatorAuditModel.create({
+        actorType: "donator",
+        actorId: req.user._id,
+        action: "operator.create",
+        details: { tgid: saved.tgid },
+        entityType: "Operator",
+        entityId: saved._id,
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: "Operator created successfully",
+        data: {
+          _id: saved._id,
+          tgid: saved.tgid,
+          telegramId: saved.telegramId,
+          name: saved.name,
+          credits: saved.credits,
+          operatorSlots: saved.operatorSlots,
+          isActive: saved.isActive,
+          createdAt: saved.createdAt,
+        },
+      });
+    } catch (err) {
+      console.error("CreateOperatorByDonator error:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: err.message,
+      });
+    }
+  };
+
+  /**
+   * Donator: list operators you created
+   * GET /donator/me/operators
+   */
+  static GetDonatorOperators = async (req, res) => {
+    try {
+      if (!req.user || req.user.usertype !== 2)
+        return res.status(403).json({ success: false, message: "Forbidden" });
+
+      const q = req.query.q ? String(req.query.q).trim() : null;
+      const page = Math.max(1, parseInt(req.query.page || "1"));
+      const limit = Math.min(
+        200,
+        Math.max(1, parseInt(req.query.limit || "50")),
+      );
+      const filter = { createdByDonator: req.user._id };
+      if (q) {
+        const re = new RegExp(q.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&"), "i");
+        filter.$or = [{ name: re }, { email: re }];
+      }
+      const [total, list] = await Promise.all([
+        OperatorModel.countDocuments(filter),
+        OperatorModel.find(filter)
+          .sort({ createdAt: -1 })
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .select("name email credits operatorSlots isActive createdAt")
+          .lean(),
+      ]);
+      return res
+        .status(200)
+        .json({ success: true, data: list, meta: { total, page, limit } });
+    } catch (err) {
+      console.error("GetDonatorOperators error:", err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+  };
+
+  /**
+   * Donator: Buy package (credits added to donator account)
+   * POST /donator/me/buy
+   */
+  static DonatorBuyPackage = async (req, res) => {
+    try {
+      if (!req.user || req.user.usertype !== 2)
+        return res.status(403).json({ success: false, message: "Forbidden" });
+
+      const { packageId, transactionId, walletAddress } = req.body;
+      const validator = new Validator(
+        { packageId, transactionId },
+        {
+          packageId: "required",
+          transactionId: "required|string",
+        },
+      );
+      if (!(await validator.check()))
+        return res
+          .status(422)
+          .json({ success: false, errors: validator.errors });
+
+      const package_ = await DonatorPackageModel.findById(packageId);
+      if (!package_)
+        return res
+          .status(404)
+          .json({ success: false, message: "Package not found" });
+
+      const existing = await DonatorPurchaseModel.findOne({ transactionId });
+      if (existing)
+        return res
+          .status(422)
+          .json({ success: false, message: "Transaction already exists" });
+
+      const purchase = new DonatorPurchaseModel({
+        donator: req.user._id,
+        package: packageId,
+        amount: package_.price,
+        currency: package_.currency,
+        transactionId,
+        walletAddress: walletAddress ? walletAddress.trim() : null,
+        paymentMethod: "USDT",
+        status: 0,
+      });
+      const saved = await purchase.save();
+
+      await DonatorAuditModel.create({
+        actorType: "donator",
+        actorId: req.user._id,
+        action: "purchase.create",
+        details: { packageId, transactionId, walletAddress },
+        entityType: "DonatorPurchase",
+        entityId: saved._id,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Purchase created. Awaiting admin approval.",
+        data: {
+          purchaseId: saved._id,
+          status: saved.status,
+          amount: saved.amount,
+          walletAddress: saved.walletAddress,
+        },
+      });
+    } catch (err) {
+      console.error("DonatorBuyPackage error:", err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+  };
+
+  /**
+   * Donator: Get purchase history
+   * GET /donator/purchases
+   */
+  static GetDonatorPurchases = async (req, res) => {
+    try {
+      if (!req.user || req.user.usertype !== 2)
+        return res.status(403).json({ success: false, message: "Forbidden" });
+
+      const page = Math.max(1, parseInt(req.query.page || "1"));
+      const limit = Math.min(
+        200,
+        Math.max(1, parseInt(req.query.limit || "20")),
+      );
+      const status = req.query.status ? parseInt(req.query.status) : null;
+
+      const filter = { donator: req.user._id };
+      if (status !== null && !isNaN(status)) {
+        filter.status = status;
+      }
+
+      const [total, purchases] = await Promise.all([
+        DonatorPurchaseModel.countDocuments(filter),
+        DonatorPurchaseModel.find(filter)
+          .populate("package")
+          .sort({ createdAt: -1 })
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .lean(),
+      ]);
+
+      const mapped = purchases.map((p) => ({
+        _id: p._id,
+        packageName: p.package ? p.package.name : null,
+        amount: p.amount,
+        currency: p.currency,
+        transactionId: p.transactionId,
+        walletAddress: p.walletAddress,
+        creditsGrantedEmployee: p.creditsGrantedEmployee || 0,
+        creditsGrantedOperator: p.creditsGrantedOperator || 0,
+        status: p.status,
+        statusLabel:
+          p.status === 0
+            ? "Pending"
+            : p.status === 1
+              ? "Approved"
+              : p.status === 2
+                ? "Rejected"
+                : "Cancelled",
+        createdAt: p.createdAt,
+        approvedAt: p.approvedAt,
+      }));
+
+      return res.status(200).json({
+        success: true,
+        data: mapped,
+        meta: {
+          total,
+          page,
+          limit,
+          pages: Math.ceil(total / limit),
+        },
+      });
+    } catch (err) {
+      console.error("GetDonatorPurchases error:", err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+  };
+
+  /**
+   * Donator: Assign employee credits to an operator
+   * POST /donator/assign-credits
+   */
+  static AssignCreditsToOperator = async (req, res) => {
+    try {
+      if (!req.user || req.user.usertype !== 2)
+        return res.status(403).json({ success: false, message: "Forbidden" });
+
+      const { operatorId, employeeCreditsToAssign } = req.body;
+      const validator = new Validator(
+        { operatorId, employeeCreditsToAssign },
+        {
+          operatorId: "required",
+          employeeCreditsToAssign: "required|integer|min:1",
+        },
+      );
+      if (!(await validator.check()))
+        return res
+          .status(422)
+          .json({ success: false, errors: validator.errors });
+
+      const operator = await OperatorModel.findById(operatorId);
+      if (!operator)
+        return res
+          .status(404)
+          .json({ success: false, message: "Operator not found" });
+      if (String(operator.createdByDonator) !== String(req.user._id))
+        return res
+          .status(403)
+          .json({ success: false, message: "Operator does not belong to you" });
+
+      const donator = await UserModel.findById(req.user._id);
+      if (!donator || (donator.credits || 0) < employeeCreditsToAssign)
+        return res.status(422).json({
+          success: false,
+          message: "Insufficient employee credits",
+          availableEmployeeCredits: donator ? donator.credits || 0 : 0,
+        });
+
+      // Deduct employee credits from donator, add to operator
+      const [updatedDonator, updatedOperator] = await Promise.all([
+        UserModel.findByIdAndUpdate(
+          req.user._id,
+          { $inc: { credits: -employeeCreditsToAssign } },
+          { new: true },
+        ),
+        OperatorModel.findByIdAndUpdate(
+          operatorId,
+          { $inc: { credits: employeeCreditsToAssign } },
+          { new: true },
+        ),
+      ]);
+
+      await DonatorAuditModel.create({
+        actorType: "donator",
+        actorId: req.user._id,
+        action: "credits.assign",
+        details: {
+          operatorId,
+          employeeCreditsAssigned: employeeCreditsToAssign,
+          donatorPreviousBalance:
+            (updatedDonator.credits || 0) + employeeCreditsToAssign,
+          donatorNewBalance: updatedDonator.credits || 0,
+          operatorPreviousBalance:
+            (updatedOperator.credits || 0) - employeeCreditsToAssign,
+          operatorNewBalance: updatedOperator.credits || 0,
+        },
+        entityType: "Operator",
+        entityId: operatorId,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: `${employeeCreditsToAssign} employee credits assigned to operator successfully.`,
+        data: {
+          donatorEmployeeCredits: updatedDonator.credits || 0,
+          operatorEmployeeCredits: updatedOperator.credits || 0,
+        },
+      });
+    } catch (err) {
+      console.error("AssignCreditsToOperator error:", err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+  };
+
+  /**
+   * Donator: list employees created by your operators (audit-backed)
+   * GET /donator/me/employees
+   */
+  static GetDonatorEmployees = async (req, res) => {
+    try {
+      if (!req.user || req.user.usertype !== 2)
+        return res.status(403).json({ success: false, message: "Forbidden" });
+
+      const q = req.query.q ? String(req.query.q).trim() : null;
+      const page = Math.max(1, parseInt(req.query.page || "1"));
+      const limit = Math.min(
+        200,
+        Math.max(1, parseInt(req.query.limit || "50")),
+      );
+
+      // find operators owned by this donator
+      const ops = await OperatorModel.find({ createdByDonator: req.user._id })
+        .select("_id")
+        .lean();
+      const opIds = ops.map((o) => o._id);
+
+      if (!opIds.length)
+        return res
+          .status(200)
+          .json({ success: true, data: [], meta: { total: 0, page, limit } });
+
+      // Find audit records for employee.create by these operators
+      const audits = await DonatorAuditModel.find({
+        actorType: "operator",
+        action: "employee.create",
+        actorId: { $in: opIds },
+      }).sort({ createdAt: -1 });
+      const userIds = audits.map((a) => a.entityId).filter(Boolean);
+
+      // De-dupe and paginate
+      const uniqueUserIds = Array.from(new Set(userIds.map(String))).map((s) =>
+        require("mongoose").Types.ObjectId(s),
+      );
+      const total = uniqueUserIds.length;
+      const pageSlice = uniqueUserIds.slice((page - 1) * limit, page * limit);
+
+      const userFilter = { _id: { $in: pageSlice } };
+      if (q) {
+        const re = new RegExp(q.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&"), "i");
+        userFilter.$or = [
+          { username: re },
+          { tgid: re },
+          { email: re },
+          { firstname: re },
+          { lastname: re },
+        ];
+      }
+
+      const users = await UserModel.find(userFilter)
+        .select(
+          "username tgid email firstname lastname startdate enddate membertype usertype",
+        )
+        .lean();
+
+      return res
+        .status(200)
+        .json({ success: true, data: users, meta: { total, page, limit } });
+    } catch (err) {
+      console.error("GetDonatorEmployees error:", err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+  };
 
   /**
    * Admin: Create donator package
@@ -757,14 +1332,12 @@ class DonatorController {
       const employeeCreditsToAdd = purchase.package.employeeCredits || 0;
       const operatorCreditsToAdd = purchase.package.operatorCredits || 0;
 
-      // Atomically update operator: employee creation credits + operator slots
-      const updatedOperator = await OperatorModel.findByIdAndUpdate(
-        purchase.operator,
+      // Get donator and add credits to donator account
+      const donatorId = purchase.donator;
+      const updatedDonator = await UserModel.findByIdAndUpdate(
+        donatorId,
         {
-          $inc: {
-            credits: employeeCreditsToAdd,
-            operatorSlots: operatorCreditsToAdd,
-          },
+          $inc: { credits: employeeCreditsToAdd },
         },
         { new: true },
       );
@@ -784,15 +1357,10 @@ class DonatorController {
         actorId: req.user._id,
         action: "purchase.approve",
         details: {
-          operatorId: purchase.operator,
-          employeeCreditsAdded: employeeCreditsToAdd,
-          operatorSlotsAdded: operatorCreditsToAdd,
-          previousEmployeeBalance:
-            updatedOperator.credits - employeeCreditsToAdd,
-          newEmployeeBalance: updatedOperator.credits,
-          previousOperatorSlots:
-            (updatedOperator.operatorSlots || 0) - operatorCreditsToAdd,
-          newOperatorSlots: updatedOperator.operatorSlots || 0,
+          donatorId,
+          creditsAdded: employeeCreditsToAdd,
+          previousBalance: (updatedDonator.credits || 0) - employeeCreditsToAdd,
+          newBalance: updatedDonator.credits || 0,
         },
         entityType: "DonatorPurchase",
         entityId: purchase._id,
@@ -800,10 +1368,9 @@ class DonatorController {
 
       return res.status(200).json({
         success: true,
-        message: `Purchase approved. ${employeeCreditsToAdd} employee credits and ${operatorCreditsToAdd} operator slots added to operator.`,
+        message: `Purchase approved. ${employeeCreditsToAdd} credits added to donator account.`,
         data: {
-          operatorCredits: updatedOperator.credits,
-          operatorSlots: updatedOperator.operatorSlots || 0,
+          donatorCredits: updatedDonator.credits || 0,
         },
       });
     } catch (error) {
@@ -975,6 +1542,8 @@ class DonatorController {
         paymentBy: 7, // Donator code
         country: "", // Can be updated later
         memberid: await DonatorController.generateMemberId(),
+        // link to the operator who created this employee
+        createdByOperator: req.operator?._id || null,
       });
 
       const savedEmployee = await employee.save();

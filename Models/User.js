@@ -61,8 +61,16 @@ const userSchema = new mongoose.Schema(
     logoTelegramUrl: { type: String },
     referralType: { type: Number, default: 0 },
     paymentBy: { type: Number, default: 0 },
+    // If this user was created by an Operator, set that operator's id here
+    createdByOperator: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Operator",
+      index: true,
+    },
+    // Donator credits (for usertype=2 donators to assign to operators)
+    credits: { type: Number, default: 0 },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 //  Compiling Schema

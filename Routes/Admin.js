@@ -356,6 +356,13 @@ admin.post(
 
 admin.get("/donator/operators", isAdmin, DonatorAdminController.OperatorList);
 
+// Admin API: get donator operators + employees (JSON)
+admin.get(
+  "/donator/operators-employees",
+  isAdmin,
+  AdminController.DonatorOperatorsEmployees,
+);
+
 admin.get(
   "/donator/operator/create",
   isAdmin,

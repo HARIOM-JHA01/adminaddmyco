@@ -2712,6 +2712,100 @@ class UserController {
     });
   };
 
+  // --------------------- Upload single background image (multipart) ---------------------
+  // POST /uploadBackground
+  // Auth: Bearer token / session (isUser middleware)
+  // Permission: premium OR donator users (usertype === 1 or 2)
+  // Accepts: multipart/form-data { file, category?, title? }
+  // Allowed MIME: image/jpeg, image/png, image/webp
+  // Max size: 5 MB -> returns 413 if exceeded
+  static UploadBackground = async (req, res) => {
+    try {
+      // Require authenticated user
+      const user = req.user;
+      if (!user) return res.sendStatus(401);
+
+      // Allow usertype 1 (premium) and 2 (donator)
+      if (user.usertype !== 1 && user.usertype !== 2) {
+        return res
+          .status(403)
+          .json({
+            success: false,
+            message: "Premium/donator membership required",
+          });
+      }
+
+      // Ensure multipart file present
+      if (!req.files || !req.files.file) {
+        return res
+          .status(400)
+          .json({ success: false, message: "No file provided" });
+      }
+
+      const file = req.files.file;
+
+      // Validate MIME type
+      const allowed = ["image/jpeg", "image/png", "image/webp"];
+      if (!allowed.includes(file.mimetype)) {
+        return res
+          .status(415)
+          .json({ success: false, message: "Unsupported file type" });
+      }
+
+      // Validate size (5 MB)
+      const MAX_SIZE =
+        (process.env.BACKGROUND_MAX_FILE_SIZE
+          ? parseInt(process.env.BACKGROUND_MAX_FILE_SIZE)
+          : 5) *
+        1024 *
+        1024;
+      if (file.size > MAX_SIZE) {
+        return res
+          .status(413)
+          .json({ success: false, message: "File too large" });
+      }
+
+      // Persist file to ./assets/background/
+      const uploadDir = await makeDir(
+        path.join(__dirname, `../assets/background`),
+      );
+      const ext =
+        (file.name && file.name.split(".").pop()) ||
+        mime.getExtension(file.mimetype) ||
+        "jpg";
+      const fileName = `bg_${user._id}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const uploadPath = path.join(uploadDir, fileName);
+      await file.mv(uploadPath);
+
+      // Build public URL
+      const cleanBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+      const fileUrl = `${cleanBase}/assets/background/${fileName}`;
+
+      // Update BackgroundModel -> append to Thumbnail CSV
+      const existing = await BackgroundModel.findOne({ user_id: user._id });
+      let thumbnails = [];
+      if (existing && existing.Thumbnail) {
+        thumbnails = existing.Thumbnail.split(",").filter(Boolean);
+      }
+      thumbnails.push(fileName);
+      await BackgroundModel.updateOne(
+        { user_id: user._id },
+        { $set: { Thumbnail: thumbnails.join(",") } },
+        { upsert: true },
+      );
+      const background = await BackgroundModel.findOne({ user_id: user._id });
+
+      return res.status(201).json({
+        success: true,
+        data: { fileName, fileUrl, background },
+        message: "Background uploaded successfully",
+      });
+    } catch (err) {
+      console.error("UploadBackground error:", err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+  };
+
   static GetBackgroundimage = async (req, res) => {
     try {
       let data = req.body;

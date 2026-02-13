@@ -10,6 +10,9 @@ import fs from "fs";
 import SendEmail from "../Utils/SendEmail.js";
 import AdminModel from "../Models/Admin.js";
 import UserModel from "../Models/User.js";
+import mongoose from "mongoose";
+import OperatorModel from "../Models/Operator.js";
+import DonatorPurchaseModel from "../Models/DonatorPurchase.js";
 import MembershipModel from "../Models/Membership.js";
 import BannerModel from "../Models/Banner.js";
 import SystemModel from "../Models/Systemimage.js";
@@ -140,6 +143,121 @@ class AdminController {
       success: true,
       data: userDetails,
     });
+  };
+
+  // Admin: list donator operators + employees (JSON)
+  // - supports pagination and simple search
+  // - NOTE: employees created via the Donator flow are identified by `paymentBy: 7`
+  // - accurate per-operator employee -> operator linkage requires `createdByOperator` on User (future enhancement)
+  static DonatorOperatorsEmployees = async (req, res) => {
+    try {
+      const operatorPage = Math.max(1, parseInt(req.query.operatorPage || "1"));
+      const operatorLimit = Math.min(
+        200,
+        Math.max(1, parseInt(req.query.operatorLimit || "50")),
+      );
+      const employeePage = Math.max(1, parseInt(req.query.employeePage || "1"));
+      const employeeLimit = Math.min(
+        200,
+        Math.max(1, parseInt(req.query.employeeLimit || "50")),
+      );
+
+      const q = req.query.q ? String(req.query.q).trim() : null;
+      const operatorId = req.query.operatorId || null;
+
+      const operatorQuery = {};
+      if (operatorId) operatorQuery._id = operatorId;
+      if (q) {
+        const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+        operatorQuery.$or = [{ name: re }, { email: re }];
+      }
+
+      const employeeQuery = { paymentBy: 7 }; // employees created via donator/operator flow
+      if (q) {
+        const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+        employeeQuery.$or = [
+          { username: re },
+          { tgid: re },
+          { email: re },
+          { firstname: re },
+          { lastname: re },
+        ];
+      }
+
+      const [totalOperators, operators] = await Promise.all([
+        OperatorModel.countDocuments(operatorQuery),
+        OperatorModel.find(operatorQuery)
+          .sort({ createdAt: -1 })
+          .skip((operatorPage - 1) * operatorLimit)
+          .limit(operatorLimit)
+          .select(
+            "name email credits operatorSlots isActive createdAt lastLogin",
+          )
+          .lean(),
+      ]);
+
+      // estimate employee credits granted per operator from purchases (fast single aggregation)
+      const operatorIds = operators.map((o) => o._id).filter(Boolean);
+      let creditsByOperator = {};
+      if (operatorIds.length) {
+        const agg = await DonatorPurchaseModel.aggregate([
+          {
+            $match: {
+              operator: {
+                $in: operatorIds.map((id) => mongoose.Types.ObjectId(id)),
+              },
+            },
+          },
+          {
+            $group: {
+              _id: "$operator",
+              totalCreditsGranted: { $sum: "$creditsGrantedEmployee" },
+            },
+          },
+        ]);
+        creditsByOperator = agg.reduce((acc, cur) => {
+          acc[String(cur._id)] = cur.totalCreditsGranted || 0;
+          return acc;
+        }, {});
+      }
+
+      const operatorsWithEst = operators.map((op) => ({
+        ...op,
+        estimatedEmployeeCreditsGranted: creditsByOperator[String(op._id)] || 0,
+      }));
+
+      const [totalEmployees, employees] = await Promise.all([
+        UserModel.countDocuments(employeeQuery),
+        UserModel.find(employeeQuery)
+          .sort({ createdAt: -1 })
+          .skip((employeePage - 1) * employeeLimit)
+          .limit(employeeLimit)
+          .select(
+            "username tgid email firstname lastname startdate enddate membertype usertype",
+          )
+          .lean(),
+      ]);
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          meta: {
+            totalOperators,
+            operatorPage,
+            operatorLimit,
+            totalEmployees,
+            employeePage,
+            employeeLimit,
+            note: "Per-operator mapping is estimated from purchases. To get exact mapping, add `createdByOperator` on User model.",
+          },
+          operators: operatorsWithEst,
+          employees,
+        },
+      });
+    } catch (err) {
+      console.error("DonatorOperatorsEmployees error:", err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
   };
 
   // ...........ADMIN-FORGOTPASSWORD............

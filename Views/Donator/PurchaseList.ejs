@@ -19,11 +19,10 @@
             <table class="table table-striped" id="purchaseTable">
               <thead>
                 <tr>
-                  <th>Purchase ID</th>
-                  <th>Operator</th>
-                  <th>Package</th>
+                  <th>Package Name</th>
                   <th>Amount (USDT)</th>
                   <th>Transaction ID</th>
+                  <th>Wallet Address</th>
                   <th>Status</th>
                   <th>Created</th>
                   <th>Actions</th>
@@ -33,12 +32,10 @@
                 <% if (purchases && purchases.length > 0) { %>
                   <% purchases.forEach(purchase => { %>
                   <tr>
-                    <td><code><%= purchase._id.toString().substring(0, 8) %>...</code></td>
-                    <td><%= purchase.operator ? purchase.operator.name : 'N/A' %></td>
                     <td><%= purchase.package ? purchase.package.name : 'N/A' %></td>
-                    <td><span class="badge bg-info"><%= purchase.package ? purchase.package.employeeCredits : 0 %> emp</span> <span class="badge bg-primary"><%= purchase.package ? purchase.package.operatorCredits : 0 %> op</span></td>
                     <td><strong>$<%= purchase.amount %></strong></td>
                     <td><code><%= purchase.transactionId || 'N/A' %></code></td>
+                    <td><code><%= purchase.walletAddress || 'N/A' %></code></td>
                     <td>
                       <% if (purchase.status === 0) { %>
                         <span class="badge bg-warning">Pending</span>
@@ -50,7 +47,7 @@
                         <span class="badge bg-secondary">Cancelled</span>
                       <% } %>
                     </td>
-                    <td><%= moment(purchase.createdAt).format('DD-MM-YYYY HH:mm') %></td>
+                    <td><%= moment(purchase.createdAt).format('DD-MM-YYYY') %></td>
                     <td>
                       <% if (purchase.status === 0) { %>
                         <button class="btn btn-sm btn-success approve-purchase" data-id="<%= purchase._id %>">Approve</button>
@@ -63,7 +60,7 @@
                   <% }); %>
                 <% } else { %>
                   <tr>
-                    <td colspan="8" class="text-center text-muted">No purchases found</td>
+                    <td colspan="7" class="text-center text-muted">No purchases found</td>
                   </tr>
                 <% } %>
               </tbody>
@@ -86,6 +83,7 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="//cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 $(document).ready(function() {
@@ -99,35 +97,41 @@ $(document).on('click', '.approve-purchase', function() {
   var purchaseId = $(this).data('id');
   var baseUrl = '<%= baseUrl %>';
   
-  swal({
+  Swal.fire({
     title: "Approve Purchase?",
-    text: "This will add credits to the operator's account.",
-    icon: "info",
-    buttons: true,
-  }).then((confirm) => {
-    if (confirm) {
+    text: "Credits will be granted to the user account",
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#28a745",
+    cancelButtonColor: "#6c757d",
+    confirmButtonText: "Yes, approve!",
+  }).then((result) => {
+    if (result.isConfirmed) {
       $.ajax({
         type: "POST",
         url: baseUrl + 'admin/donator/purchase/approve/' + purchaseId,
         dataType: "json",
         success: function(response) {
           if (response.success) {
-            $.toast({
-              heading: 'Success',
-              text: response.message,
-              position: 'top-right',
-              icon: 'success'
-            });
-            setTimeout(() => location.reload(), 1000);
+            Swal.fire(
+              "Approved!",
+              response.message,
+              "success"
+            ).then(() => location.reload());
+          } else {
+            Swal.fire(
+              "Error!",
+              response.message || 'Error approving purchase',
+              "error"
+            );
           }
         },
         error: function(err) {
-          $.toast({
-            heading: 'Error',
-            text: err.responseJSON?.message || 'Error approving purchase',
-            position: 'top-right',
-            icon: 'error'
-          });
+          Swal.fire(
+            "Error!",
+            err.responseJSON?.message || 'Error approving purchase',
+            "error"
+          );
         }
       });
     }
@@ -138,30 +142,54 @@ $(document).on('click', '.reject-purchase', function() {
   var purchaseId = $(this).data('id');
   var baseUrl = '<%= baseUrl %>';
   
-  var reason = prompt("Enter rejection reason (optional):");
-  
-  $.ajax({
-    type: "POST",
-    url: baseUrl + 'admin/donator/purchase/reject/' + purchaseId,
-    data: { rejectionReason: reason },
-    dataType: "json",
-    success: function(response) {
-      if (response.success) {
-        $.toast({
-          heading: 'Success',
-          text: response.message,
-          position: 'top-right',
-          icon: 'success'
-        });
-        setTimeout(() => location.reload(), 1000);
+  Swal.fire({
+    title: "Reject Purchase?",
+    text: "User will be notified of rejection",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#dc3545",
+    cancelButtonColor: "#6c757d",
+    confirmButtonText: "Yes, reject!",
+    input: "textarea",
+    inputPlaceholder: "Rejection reason (required)",
+    inputAttributes: {
+      "aria-label": "Rejection reason",
+    },
+    inputValidator: (value) => {
+      if (!value) {
+        return "Please provide a rejection reason";
       }
     },
-    error: function(err) {
-      $.toast({
-        heading: 'Error',
-        text: err.responseJSON?.message || 'Error rejecting purchase',
-        position: 'top-right',
-        icon: 'error'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      $.ajax({
+        type: "POST",
+        url: baseUrl + 'admin/donator/purchase/reject/' + purchaseId,
+        data: JSON.stringify({ rejectionReason: result.value }),
+        contentType: "application/json",
+        dataType: "json",
+        success: function(response) {
+          if (response.success) {
+            Swal.fire(
+              "Rejected!",
+              response.message,
+              "success"
+            ).then(() => location.reload());
+          } else {
+            Swal.fire(
+              "Error!",
+              response.message || 'Error rejecting purchase',
+              "error"
+            );
+          }
+        },
+        error: function(err) {
+          Swal.fire(
+            "Error!",
+            err.responseJSON?.message || 'Error rejecting purchase',
+            "error"
+          );
+        }
       });
     }
   });

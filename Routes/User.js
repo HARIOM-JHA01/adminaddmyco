@@ -51,6 +51,8 @@ user.get("/addprofileuser", isUser, UserController.addprofile);
 user.get("/theme", isUser, UserController.Theme);
 user.post("/addbackground", isUser, UserController.Backgroundimage);
 user.post("/backgroundimage", isUser, UserController.BackgroundImages);
+// Multipart upload endpoint for background images (premium users only)
+user.post("/uploadBackground", isUser, UserController.UploadBackground);
 user.get("/getbackground", isUser, UserController.GetBackgroundimage);
 user.post("/colorbackground", isUser, UserController.ColorBackground);
 user.get("/getcolorbackground", UserController.Colorbackground);
