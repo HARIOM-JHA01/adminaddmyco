@@ -85,7 +85,7 @@
                                         <th>UserName</th>
                                         <th>TG-id</th>
                                         <th>Country</th>
-                                        <th>JoinDate</th>
+                                        <th>Donator On Date</th>
                                         <th>Action</th>
                                         </tr>
                                     </thead>
@@ -109,9 +109,15 @@
                                                         <%= v.country%>
                                                     </span></td>
                                                 <td><span class="name-field">
-                                                    <%= moment(v.date).format('DD-MM-YYYY') %>
+                                                    <%= v.donatorOnDate ? moment(v.donatorOnDate).format('DD-MM-YYYY') : 'N/A' %>
                                                     </span></td>
                                                 <td>
+                                                    <a
+                                                        href="<%= baseUrl %>admin/donateduser/view/<%= v._id %>"
+                                                        class="btn btn-primary btn-sm"
+                                                    >
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
                                                     <button type="button" data-id="<%= v._id %>" id="refresh"
                                                         class="btn icon icon-left btn-danger btn-sm delete-data"><i
                                                             class="bi bi-trash"></i> </button>

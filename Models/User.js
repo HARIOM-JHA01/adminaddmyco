@@ -69,6 +69,8 @@ const userSchema = new mongoose.Schema(
     },
     // Donator credits (for usertype=2 donators to assign to operators)
     credits: { type: Number, default: 0 },
+    // Date when user became a donator
+    donatorOnDate: { type: Date, default: null },
   },
   { timestamps: true },
 );

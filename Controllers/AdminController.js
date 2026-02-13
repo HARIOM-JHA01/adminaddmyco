@@ -1032,6 +1032,7 @@ class AdminController {
       const user = await UserModel.findById(req.query.id);
       await UserModel.findByIdAndUpdate(user._id, {
         usertype: 2,
+        donatorOnDate: new Date(),
       });
       req.session.tostMsg = "Added Successfully...";
       req.session.tostBackground = "#0b6a3c";

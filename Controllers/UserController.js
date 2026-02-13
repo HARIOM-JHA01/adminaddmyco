@@ -2585,6 +2585,7 @@ class UserController {
           { _id: user._id },
           {
             usertype: 2,
+            donatorOnDate: new Date(),
           },
         );
         var data1 = await UserModel.findById(user._id);
@@ -2801,7 +2802,16 @@ class UserController {
       const existing = await BackgroundModel.findOne({ user_id: user._id });
       let thumbnails = [];
       if (existing && existing.Thumbnail) {
-        thumbnails = existing.Thumbnail.split(",").filter(Boolean);
+        // Extract only filenames (not full URLs) from existing thumbnails
+        thumbnails = existing.Thumbnail.split(",")
+          .filter(Boolean)
+          .map((item) => {
+            // If it's a full URL, extract just the filename
+            if (item.startsWith("http://") || item.startsWith("https://")) {
+              return item.split("/").pop();
+            }
+            return item;
+          });
       }
       thumbnails.push(fileName);
       await BackgroundModel.updateOne(
@@ -3199,7 +3209,18 @@ class UserController {
           bg && bg.Thumbnail
             ? bg.Thumbnail.split(",")
                 .filter(Boolean)
-                .map((f) => baseUrl + "assets/background/" + f)
+                .filter((f) => {
+                  // Filter out base64 data - only keep actual filenames/URLs
+                  return !f.includes("base64") && !f.startsWith("data:");
+                })
+                .map((f) => {
+                  // If already a full URL, return as-is
+                  if (f.startsWith("http://") || f.startsWith("https://")) {
+                    return f;
+                  }
+                  // Otherwise, prepend base URL
+                  return baseUrl + "assets/background/" + f;
+                })
             : [];
 
         const userEntry = {
@@ -4694,6 +4715,7 @@ class UserController {
         usertype: 2, // Donator type
         membertype: "Donator",
         joindate: new Date().toISOString(),
+        donatorOnDate: new Date(),
         date: new Date(),
         isReferral: 0,
         refstatue: 0,

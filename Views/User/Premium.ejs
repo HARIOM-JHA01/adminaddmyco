@@ -32,7 +32,6 @@ import session from "express-session"
               <% }) %>
             </select>
           </label>
-        </div>
         <div class="table-responsive">
           <table class="table table-striped mb-0" id="filterTable">
             <thead>
@@ -44,9 +43,7 @@ import session from "express-session"
                 <th>TG-id</th>
                 <th>Partner Code</th>
                 <th>Country</th>
-                <!-- <th>Membership Tenure</th> -->
                 <th>Join-Date</th>
-                <!-- <th>Start-Date</th> -->
                 <th>End-Date</th>
                 <th>Paid</th>
                 <th></th>
@@ -113,25 +110,21 @@ import session from "express-session"
                     By Reward
                  <% } %>
                   </span></td>
-                <td>
+                <!-- <td>
                   <% if(v.isReferral != 1){ %> 
                     <button type="button" id="refresh" class="btn  btn-refer">
                       <img src="../../assets/images/ref icon.png" class="img-fluid approve_btn" data-id = "<%= v.tgid%>" alt="referral">
                     </button>
                     <% } %>
                  
-                </td>
-                <td>
-                  <div class="dropdown d-inline-block">
-                    <button class="btn icon icon-left btn-primary btn-sm  " type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                      <i class="bi bi-arrow-up-square"></i>
-                    </button>
-                    <ul class="dropdown-menu  dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
-                      <li><a class="dropdown-item delete-data1 " id="refresh" data-id="<%= v._id %>" href="#">Switched Donated</a>
-                      </li>
-                    </ul>
+                </td> -->
+                <td style="vertical-align: middle; text-align: center;">
+                  <div style="display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;">
+                    <a class="delete-data1" data-id="<%= v._id %>" href="#">
+                      <button type="button" style="border-radius:50%; background-color:green; color:white; border:none; width:35px; height:35px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:bold; padding:0;">E</button>
+                    </a>
+                    <button type="button" data-id="<%= v._id %>" class="btn btn-danger btn-sm delete-data" style="width:35px;height:35px;padding:0;display:flex;align-items:center;justify-content:center;"><i class="bi bi-trash"></i></button>
                   </div>
-                  <button type="button" data-id="<%= v._id %>" id="refresh" class="btn icon icon-left btn-danger btn-sm delete-data"><i class="bi bi-trash"></i> </button>
                 </td>
               </tr>
               <% i++ %>

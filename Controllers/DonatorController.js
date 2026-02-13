@@ -32,7 +32,7 @@ class DonatorController {
     try {
       const {
         name,
-        email,
+        username,
         password,
         confirmPassword,
         isActive,
@@ -41,10 +41,10 @@ class DonatorController {
       } = req.body;
 
       const validator = new Validator(
-        { name, email, password, confirmPassword },
+        { name, username, password, confirmPassword },
         {
           name: "required|string",
-          email: "required|email",
+          username: "required|string|minLength:3",
           password: "required|minLength:8",
           confirmPassword: "required",
         },
@@ -64,11 +64,13 @@ class DonatorController {
         });
       }
 
-      const existingOperator = await OperatorModel.findOne({ email });
+      const existingOperator = await OperatorModel.findOne({
+        username: username.toLowerCase(),
+      });
       if (existingOperator) {
         return res.status(422).json({
           success: false,
-          message: "Email already registered",
+          message: "Username already registered",
         });
       }
 
@@ -77,7 +79,7 @@ class DonatorController {
 
       const operator = new OperatorModel({
         name: name.trim(),
-        email: email.toLowerCase(),
+        username: username.toLowerCase(),
         password: hashedPassword,
         isActive: isActive !== false,
         credits: initialCredits ? parseInt(initialCredits) : 0,
@@ -95,7 +97,7 @@ class DonatorController {
         actorId: req.user._id,
         action: "operator.create",
         details: {
-          email: savedOperator.email,
+          username: savedOperator.username,
           name: savedOperator.name,
           credits: savedOperator.credits,
           operatorSlots: savedOperator.operatorSlots,
@@ -110,7 +112,7 @@ class DonatorController {
         data: {
           _id: savedOperator._id,
           name: savedOperator.name,
-          email: savedOperator.email,
+          username: savedOperator.username,
           credits: savedOperator.credits,
           operatorSlots: savedOperator.operatorSlots || 0,
           isActive: savedOperator.isActive,
@@ -185,6 +187,12 @@ class DonatorController {
         .select("username tgid email firstname lastname createdAt")
         .lean();
 
+      // Calculate used and left credits
+      const usedCreditsOperator = operators.length; // Each operator costs 1 credit
+      const usedCreditsEmployee = userIds.length; // Total employees created
+      const leftCreditsOperator = totalCreditsOperator - usedCreditsOperator;
+      const leftCreditsEmployee = totalCreditsEmployee - usedCreditsEmployee;
+
       return res.status(200).json({
         success: true,
         data: {
@@ -204,6 +212,10 @@ class DonatorController {
             approved: approved.length,
             totalCreditsOperator,
             totalCreditsEmployee,
+            usedCreditsOperator,
+            usedCreditsEmployee,
+            leftCreditsOperator,
+            leftCreditsEmployee,
           },
           employeesSummary: {
             totalEmployeesCreated: userIds.length,
@@ -225,13 +237,19 @@ class DonatorController {
    */
   static OperatorRegister = async (req, res) => {
     try {
-      const { name, email, password, confirmPassword } = req.body;
+      const { name, username, password, confirmPassword, tgid, telegramId } =
+        req.body;
+
+      // Normalize login identifier: accept `username`, `tgid` or `telegramId`
+      const loginName = (username || tgid || telegramId || "")
+        .toLowerCase()
+        .trim();
 
       const validator = new Validator(
-        { name, email, password, confirmPassword },
+        { name, username: loginName, password, confirmPassword },
         {
           name: "required|string",
-          email: "required|email",
+          username: "required|string|minLength:3",
           password: "required|minLength:8",
           confirmPassword: "required",
         },
@@ -251,11 +269,13 @@ class DonatorController {
         });
       }
 
-      const existingOperator = await OperatorModel.findOne({ email });
+      const existingOperator = await OperatorModel.findOne({
+        username: loginName,
+      });
       if (existingOperator) {
         return res.status(422).json({
           success: false,
-          message: "Email already registered",
+          message: "Username already registered",
         });
       }
 
@@ -264,7 +284,9 @@ class DonatorController {
 
       const operator = new OperatorModel({
         name: name.trim(),
-        email: email.toLowerCase(),
+        username: loginName,
+        tgid: loginName,
+        telegramId: loginName,
         password: hashedPassword,
         isActive: true,
       });
@@ -276,7 +298,7 @@ class DonatorController {
         actorType: "operator",
         actorId: savedOperator._id,
         action: "operator.register",
-        details: { email: savedOperator.email },
+        details: { username: savedOperator.username },
         entityType: "Operator",
         entityId: savedOperator._id,
       });
@@ -287,7 +309,7 @@ class DonatorController {
         data: {
           _id: savedOperator._id,
           name: savedOperator.name,
-          email: savedOperator.email,
+          username: savedOperator.username,
         },
       });
     } catch (error) {
@@ -306,12 +328,17 @@ class DonatorController {
    */
   static OperatorLogin = async (req, res) => {
     try {
-      const { email, password } = req.body;
+      const { username, password, tgid, telegramId } = req.body;
+
+      // Accept username, tgid or telegramId as equivalent
+      const loginName = (username || tgid || telegramId || "")
+        .toLowerCase()
+        .trim();
 
       const validator = new Validator(
-        { email, password },
+        { username: loginName, password },
         {
-          email: "required|email",
+          username: "required|string",
           password: "required",
         },
       );
@@ -323,14 +350,12 @@ class DonatorController {
         });
       }
 
-      const operator = await OperatorModel.findOne({
-        email: email.toLowerCase(),
-      });
+      const operator = await OperatorModel.findOne({ username: loginName });
 
       if (!operator) {
         return res.status(422).json({
           success: false,
-          message: "Invalid email or password",
+          message: "Invalid username or password",
         });
       }
 
@@ -351,7 +376,7 @@ class DonatorController {
 
       const payload = {
         id: operator._id,
-        email: operator.email,
+        username: operator.username,
       };
 
       const token = jwt.sign(payload, accessTokenSecret, {
@@ -369,7 +394,7 @@ class DonatorController {
         actorType: "operator",
         actorId: operator._id,
         action: "operator.login",
-        details: { email: operator.email },
+        details: { username: operator.username },
         entityType: "Operator",
         entityId: operator._id,
       });
@@ -380,7 +405,7 @@ class DonatorController {
         data: {
           _id: operator._id,
           name: operator.name,
-          email: operator.email,
+          username: operator.username,
           credits: operator.credits,
           token,
         },
@@ -620,14 +645,15 @@ class DonatorController {
           .status(422)
           .json({ success: false, errors: validator.errors });
 
-      // Check if operator with this tgid already exists
+      // Check if operator with this tgid/username already exists
+      const tgidClean = tgid.toLowerCase().trim();
       const existing = await OperatorModel.findOne({
-        tgid: tgid.toLowerCase().trim(),
+        $or: [{ tgid: tgidClean }, { username: tgidClean }],
       });
       if (existing)
         return res.status(422).json({
           success: false,
-          message: "Telegram username already registered as operator",
+          message: "Username already registered as operator",
         });
 
       // Hash password
@@ -636,9 +662,10 @@ class DonatorController {
 
       // Create operator
       const op = new OperatorModel({
-        tgid: tgid.toLowerCase().trim(),
-        telegramId: tgid.toLowerCase().trim(),
-        name: tgid.toLowerCase().trim(), // Use tgid as name
+        tgid: tgidClean,
+        telegramId: tgidClean,
+        username: tgidClean,
+        name: tgidClean, // Use tgid as name
         password: hashedPassword,
         isActive: true,
         credits: 0,
@@ -652,7 +679,7 @@ class DonatorController {
         actorType: "donator",
         actorId: req.user._id,
         action: "operator.create",
-        details: { tgid: saved.tgid },
+        details: { username: saved.username },
         entityType: "Operator",
         entityId: saved._id,
       });
@@ -662,6 +689,7 @@ class DonatorController {
         message: "Operator created successfully",
         data: {
           _id: saved._id,
+          username: saved.username,
           tgid: saved.tgid,
           telegramId: saved.telegramId,
           name: saved.name,
@@ -699,7 +727,7 @@ class DonatorController {
       const filter = { createdByDonator: req.user._id };
       if (q) {
         const re = new RegExp(q.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&"), "i");
-        filter.$or = [{ name: re }, { email: re }];
+        filter.$or = [{ name: re }, { username: re }];
       }
       const [total, list] = await Promise.all([
         OperatorModel.countDocuments(filter),
@@ -707,7 +735,7 @@ class DonatorController {
           .sort({ createdAt: -1 })
           .skip((page - 1) * limit)
           .limit(limit)
-          .select("name email credits operatorSlots isActive createdAt")
+          .select("name username credits operatorSlots isActive createdAt")
           .lean(),
       ]);
       return res
@@ -716,6 +744,168 @@ class DonatorController {
     } catch (err) {
       console.error("GetDonatorOperators error:", err);
       return res.status(500).json({ success: false, message: "Server error" });
+    }
+  };
+
+  /**
+   * Donator: Get detailed information about a specific operator
+   * GET /donator/me/operators/:operatorId
+   */
+  static GetOperatorDetails = async (req, res) => {
+    try {
+      if (!req.user || req.user.usertype !== 2)
+        return res.status(403).json({ success: false, message: "Forbidden" });
+
+      const operatorId = req.params.operatorId;
+
+      // Find operator and verify ownership
+      const operator = await OperatorModel.findOne({
+        _id: operatorId,
+        createdByDonator: req.user._id,
+      }).select("-password -token");
+
+      if (!operator)
+        return res.status(404).json({
+          success: false,
+          message: "Operator not found or not owned by you",
+        });
+
+      // Get all employees created by this operator
+      const employees = await UserModel.find({
+        createdByOperator: operatorId,
+      })
+        .select(
+          "username freeUsername tgid email firstname lastname usertype membertype startdate enddate paymentstatus createdAt",
+        )
+        .sort({ createdAt: -1 })
+        .lean();
+
+      // Get all purchases assigned to this operator
+      const purchases = await DonatorPurchaseModel.find({
+        operator: operatorId,
+      })
+        .populate("package")
+        .sort({ createdAt: -1 })
+        .lean();
+
+      // Get audit logs for this operator
+      const auditLogs = await DonatorAuditModel.find({
+        $or: [
+          { actorType: "operator", actorId: operatorId },
+          { entityType: "Operator", entityId: operatorId },
+        ],
+      })
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .lean();
+
+      // Calculate statistics
+      const totalEmployees = employees.length;
+      const activeEmployees = employees.filter(
+        (e) => e.paymentstatus === 1,
+      ).length;
+      const totalCreditsGranted = purchases
+        .filter((p) => p.status === 1)
+        .reduce((sum, p) => sum + (p.creditsGrantedEmployee || 0), 0);
+      const creditsUsed = totalEmployees;
+      const creditsLeft = operator.credits;
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          operator,
+          employees,
+          statistics: {
+            totalEmployees,
+            activeEmployees,
+            totalCreditsGranted,
+            creditsUsed,
+            creditsLeft,
+          },
+          purchases: purchases.map((p) => ({
+            _id: p._id,
+            packageName: p.package ? p.package.name : null,
+            creditsGranted: p.creditsGrantedEmployee,
+            status: p.status,
+            createdAt: p.createdAt,
+            approvedAt: p.approvedAt,
+          })),
+          auditLogs,
+        },
+      });
+    } catch (err) {
+      console.error("GetOperatorDetails error:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: err.message,
+      });
+    }
+  };
+
+  /**
+   * Donator: Delete an operator
+   * DELETE /donator/me/operators/:operatorId
+   */
+  static DeleteOperator = async (req, res) => {
+    try {
+      if (!req.user || req.user.usertype !== 2)
+        return res.status(403).json({ success: false, message: "Forbidden" });
+
+      const operatorId = req.params.operatorId;
+
+      // Find operator and verify ownership
+      const operator = await OperatorModel.findOne({
+        _id: operatorId,
+        createdByDonator: req.user._id,
+      });
+
+      if (!operator)
+        return res.status(404).json({
+          success: false,
+          message: "Operator not found or not owned by you",
+        });
+
+      // Check if operator has any employees
+      const employeeCount = await UserModel.countDocuments({
+        createdByOperator: operatorId,
+      });
+
+      if (employeeCount > 0) {
+        return res.status(409).json({
+          success: false,
+          message: `Cannot delete operator with ${employeeCount} existing employees. Please contact support.`,
+        });
+      }
+
+      // Delete the operator
+      await OperatorModel.findByIdAndDelete(operatorId);
+
+      // Create audit log
+      await DonatorAuditModel.create({
+        actorType: "donator",
+        actorId: req.user._id,
+        action: "operator.delete",
+        details: {
+          operatorId: operator._id,
+          tgid: operator.tgid,
+          name: operator.name,
+        },
+        entityType: "Operator",
+        entityId: operator._id,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Operator deleted successfully",
+      });
+    } catch (err) {
+      console.error("DeleteOperator error:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: err.message,
+      });
     }
   };
 

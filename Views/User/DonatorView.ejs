@@ -1,0 +1,353 @@
+<%- include('../Layout/Header') %>
+<link
+  rel="stylesheet"
+  href="//cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css"
+/>
+<%- include('../Layout/Sidebar') %>
+<div id="main">
+  <div class="page-heading">
+    <div class="page-title mb-3">
+      <div class="row">
+        <div class="col-12 col-md-6 order-md-1 order-last">
+          <h3>
+            <a href="<%= baseUrl %>admin/donateduser" class="text-primary"
+              ><i class="fas fa-arrow-left me-2"></i></a
+            >Donator Details
+          </h3>
+        </div>
+        <div class="col-12 col-md-6 order-md-2 order-first">
+          <nav
+            aria-label="breadcrumb"
+            class="breadcrumb-header float-start float-lg-end"
+          >
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item">
+                <a href="<%= baseUrl %>admin/dashboard">Dashboard</a>
+              </li>
+              <li class="breadcrumb-item">
+                <a href="<%= baseUrl %>admin/donateduser">Donators</a>
+              </li>
+              <li class="breadcrumb-item active">Details</li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    <section class="section">
+      <!-- Donator Info Card -->
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Donator Information</h4>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <table class="table table-borderless">
+                <tr>
+                  <th width="200">Member ID:</th>
+                  <td>
+                    <strong><%= donator.memberid %></strong>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Username:</th>
+                  <td>
+                    <% if (donator.username) { %>
+                    <a
+                      href="https://t.me/<%= donator.username %>"
+                      target="_blank"
+                      ><%= donator.username %></a
+                    >
+                    <% } else { %>
+                    <span>N/A</span>
+                    <% } %>
+                  </td>
+                </tr>
+                <tr>
+                  <th>TG ID:</th>
+                  <td>
+                    <% if (donator.tgid) { %>
+                    <a
+                      href="https://t.me/<%= donator.tgid %>"
+                      target="_blank"
+                      ><%= donator.tgid %></a
+                    >
+                    <% } else { %>
+                    <span>N/A</span>
+                    <% } %>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Country:</th>
+                  <td>
+                    <%= donator.country ? donator.country : 'N/A' %> <% if
+                    (donator.countryCode) { %> (<%= donator.countryCode %>) <% }
+                    %>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <table class="table table-borderless">
+                <tr>
+                  <th>Donator On Date:</th>
+                  <td>
+                    <%= donator.donatorOnDate ? moment(donator.donatorOnDate).format('DD-MM-YYYY HH:mm') : 'N/A' %>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Total Employee Credits:</th>
+                  <td>
+                    <span class="badge bg-info"><%= stats.totalEmployeeCredits || 0 %></span>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Total Operator Credits:</th>
+                  <td>
+                    <span class="badge bg-success"><%= stats.totalOperatorCredits || 0 %></span>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Membership Type:</th>
+                  <td>
+                    <span class="badge bg-info"
+                      ><%= donator.membertype ? donator.membertype : 'N/A' %></span
+                    >
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics Cards -->
+      <div class="row">
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-body">
+              <h6 class="text-muted">Total Operators</h6>
+              <h3><%= stats.totalOperators %></h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-body">
+              <h6 class="text-muted">Total Employees</h6>
+              <h3><%= stats.totalEmployees %></h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-body">
+              <h6 class="text-muted">Total Purchases</h6>
+              <h3><%= stats.totalPurchases %></h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-body">
+              <h6 class="text-muted">Approved Purchases</h6>
+              <h3><%= stats.approvedPurchases %></h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Operators Table -->
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Operators</h4>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped mb-0" id="operators_table">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Telegram ID</th>
+                  <th>Credits</th>
+                  <th>Active</th>
+                  <th>Created Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (operators.length > 0) { %>
+                  <% var i=1; operators.forEach(function(v) { %>
+                  <tr>
+                    <td><%= i %></td>
+                    <td><%= v.name %></td>
+                    <td><%= v.email %></td>
+                    <td>
+                      <% if (v.tgid) { %>
+                      <a href="https://t.me/<%= v.tgid %>" target="_blank"><%= v.tgid %></a>
+                      <% } else { %>
+                      N/A
+                      <% } %>
+                    </td>
+                    <td>
+                      <span class="badge bg-info"><%= v.credits %></span>
+                    </td>
+                    <td>
+                      <% if (v.isActive) { %>
+                      <span class="badge bg-success">Yes</span>
+                      <% } else { %>
+                      <span class="badge bg-danger">No</span>
+                      <% } %>
+                    </td>
+                    <td><%= moment(v.createdAt).format('DD-MM-YYYY') %></td>
+                  </tr>
+                  <% i++ %> 
+                  <% }) %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="7" class="text-center text-muted">No operators found</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employees Table -->
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Employees</h4>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped mb-0" id="employees_table">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Username</th>
+                  <th>Member ID</th>
+                  <th>Telegram ID</th>
+                  <th>Country</th>
+                  <th>Created Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (employees.length > 0) { %>
+                  <% var i=1; employees.forEach(function(v) { %>
+                  <tr>
+                    <td><%= i %></td>
+                    <td><%= v.username %></td>
+                    <td><%= v.memberid %></td>
+                    <td>
+                      <% if (v.tgid) { %>
+                      <a href="https://t.me/<%= v.tgid %>" target="_blank"><%= v.tgid %></a>
+                      <% } else { %>
+                      N/A
+                      <% } %>
+                    </td>
+                    <td><%= v.country %></td>
+                    <td><%= moment(v.createdAt).format('DD-MM-YYYY') %></td>
+                  </tr>
+                  <% i++ %> 
+                  <% }) %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="6" class="text-center text-muted">No employees found</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Purchases Table -->
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Package Purchases</h4>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped mb-0" id="purchases_table">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Operator</th>
+                  <th>Package</th>
+                  <th>Amount</th>
+                  <th>Payment Method</th>
+                  <th>Status</th>
+                  <th>Purchase Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (purchases.length > 0) { %>
+                  <% var i=1; purchases.forEach(function(v) { %>
+                  <tr>
+                    <td><%= i %></td>
+                    <td>
+                      <% if (v.operator) { %>
+                        <%= v.operator.name %>
+                      <% } else { %>
+                        N/A
+                      <% } %>
+                    </td>
+                    <td>
+                      <% if (v.package) { %>
+                        <%= v.package.name %>
+                      <% } else { %>
+                        N/A
+                      <% } %>
+                    </td>
+                    <td><%= v.amount %> <%= v.currency %></td>
+                    <td><%= v.paymentMethod %></td>
+                    <td>
+                      <% if (v.status == 0) { %>
+                      <span class="badge bg-warning">Pending</span>
+                      <% } else if (v.status == 1) { %>
+                      <span class="badge bg-success">Approved</span>
+                      <% } else if (v.status == 2) { %>
+                      <span class="badge bg-danger">Rejected</span>
+                      <% } else { %>
+                      <span class="badge bg-secondary">Cancelled</span>
+                      <% } %>
+                    </td>
+                    <td><%= moment(v.createdAt).format('DD-MM-YYYY HH:mm') %></td>
+                  </tr>
+                  <% i++ %> 
+                  <% }) %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="7" class="text-center text-muted">No purchases found</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="//cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+
+<script>
+  $(document).ready(function () {
+    $("#operators_table").DataTable({
+      order: [[6, "desc"]],
+    });
+    $("#employees_table").DataTable({
+      order: [[5, "desc"]],
+    });
+    $("#purchases_table").DataTable({
+      order: [[6, "desc"]],
+    });
+  });
+</script>
+
+<%- include('../Layout/Footer') %>

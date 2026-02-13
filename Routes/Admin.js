@@ -23,6 +23,7 @@ admin.get("/myaccount", isAdmin, DashboardController.MyAccount);
 admin.get("/freeuser", isAdmin, DashboardController.FreeUser);
 admin.get("/premium", isAdmin, DashboardController.PremiumUser);
 admin.get("/donateduser", isAdmin, DashboardController.DonatedUser);
+admin.get("/donateduser/view/:id", isAdmin, DashboardController.ViewDonator);
 
 // .............................BANNERS..................................
 admin.get("/banner", isAdmin, DashboardController.Banner);

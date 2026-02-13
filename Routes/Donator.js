@@ -75,6 +75,22 @@ donator.post(
 // GET /donator/me/operators
 donator.get("/me/operators", isDonator, DonatorController.GetDonatorOperators);
 
+// Donator: get detailed info about a specific operator
+// GET /donator/me/operators/:operatorId
+donator.get(
+  "/me/operators/:operatorId",
+  isDonator,
+  DonatorController.GetOperatorDetails,
+);
+
+// Donator: delete an operator
+// DELETE /donator/me/operators/:operatorId
+donator.delete(
+  "/me/operators/:operatorId",
+  isDonator,
+  DonatorController.DeleteOperator,
+);
+
 // Owner-friendly aliases (keeps backward compatibility and simpler paths)
 // GET /donator/operators -> list operators created by donator (alias)
 donator.get("/operators", isDonator, DonatorController.GetDonatorOperators);

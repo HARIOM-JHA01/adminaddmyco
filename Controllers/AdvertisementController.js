@@ -664,8 +664,11 @@ class AdvertisementController {
         });
       }
 
-      ad.status = "PAUSED";
-      await ad.save();
+      await AdvertisementModel.findByIdAndUpdate(
+        id,
+        { status: "PAUSED" },
+        { new: true },
+      );
 
       return res.status(200).json({
         success: true,
@@ -709,8 +712,11 @@ class AdvertisementController {
         });
       }
 
-      ad.status = "ACTIVE";
-      await ad.save();
+      await AdvertisementModel.findByIdAndUpdate(
+        id,
+        { status: "ACTIVE" },
+        { new: true },
+      );
 
       return res.status(200).json({
         success: true,
@@ -811,16 +817,20 @@ class AdvertisementController {
       }
 
       // Update the advertisement
-      ad.credits += creditsNum;
-      ad.displayCount += additionalDisplays;
-      ad.displayRemaining += additionalDisplays;
+      const updateData = {
+        $inc: {
+          credits: creditsNum,
+          displayCount: additionalDisplays,
+          displayRemaining: additionalDisplays,
+        },
+      };
 
       // If ad was COMPLETED, reactivate it
       if (ad.status === "COMPLETED") {
-        ad.status = "ACTIVE";
+        updateData.status = "ACTIVE";
       }
 
-      await ad.save();
+      await AdvertisementModel.findByIdAndUpdate(id, updateData, { new: true });
 
       // Update sponsor credits
       sponsorCredits.usedCredits += creditsNum;
@@ -875,8 +885,11 @@ class AdvertisementController {
         });
       }
 
-      ad.deletedAt = new Date();
-      await ad.save();
+      await AdvertisementModel.findByIdAndUpdate(
+        id,
+        { deletedAt: new Date() },
+        { new: true },
+      );
 
       return res.status(200).json({
         success: true,
@@ -1424,23 +1437,25 @@ class AdvertisementController {
       // Get user agent
       const userAgent = req.headers["user-agent"] || "unknown";
 
-      // Increment view count
-      ad.viewCount += 1;
-      ad.displayUsed += 1;
-      ad.displayRemaining -= 1;
+      // Use findByIdAndUpdate to avoid validation issues with missing required fields
+      const updateData = {
+        viewCount: ad.viewCount + 1,
+        displayUsed: ad.displayUsed + 1,
+        displayRemaining: ad.displayRemaining - 1,
+      };
 
       // Update statistics
       if (!ad.statistics.firstDisplayedAt) {
-        ad.statistics.firstDisplayedAt = now;
+        updateData["statistics.firstDisplayedAt"] = now;
       }
-      ad.statistics.lastDisplayedAt = now;
+      updateData["statistics.lastDisplayedAt"] = now;
 
       // If displayRemaining reaches 0, mark as COMPLETED
-      if (ad.displayRemaining <= 0) {
-        ad.status = "COMPLETED";
+      if (ad.displayRemaining - 1 <= 0) {
+        updateData.status = "COMPLETED";
       }
 
-      await ad.save();
+      await AdvertisementModel.findByIdAndUpdate(id, updateData, { new: true });
 
       // Log display with enhanced tracking data
       await AdvertisementDisplayLogModel.create({
@@ -1486,12 +1501,19 @@ class AdvertisementController {
         });
       }
 
-      // Increment click count and update CTR
-      ad.clickCount += 1;
-      ad.statistics.ctrPercentage =
-        ad.viewCount > 0 ? (ad.clickCount / ad.viewCount) * 100 : 0;
+      // Calculate CTR percentage
+      const ctrPercentage =
+        ad.viewCount > 0 ? ((ad.clickCount + 1) / ad.viewCount) * 100 : 0;
 
-      await ad.save();
+      // Use findByIdAndUpdate to avoid validation issues
+      const updatedAd = await AdvertisementModel.findByIdAndUpdate(
+        id,
+        {
+          $inc: { clickCount: 1 },
+          "statistics.ctrPercentage": ctrPercentage,
+        },
+        { new: true },
+      );
 
       // Log click
       await AdvertisementDisplayLogModel.updateOne(
@@ -1504,7 +1526,7 @@ class AdvertisementController {
 
       return res.status(200).json({
         success: true,
-        redirectUrl: ad.redirectUrl,
+        redirectUrl: updatedAd.redirectUrl,
       });
     } catch (error) {
       console.error("Error tracking click:", error);
@@ -1892,7 +1914,11 @@ class AdvertisementController {
       }
 
       ad.approvalStatus = "APPROVED";
-      await ad.save();
+      await AdvertisementModel.findByIdAndUpdate(
+        id,
+        { approvalStatus: "APPROVED" },
+        { new: true },
+      );
 
       // Send approval email
       const sponsor = await UserModel.findById(ad.sponsorId);
@@ -1951,7 +1977,15 @@ class AdvertisementController {
       ad.approvalStatus = "REJECTED";
       ad.rejectionReason = rejectionReason;
       ad.status = "REJECTED";
-      await ad.save();
+      await AdvertisementModel.findByIdAndUpdate(
+        id,
+        {
+          approvalStatus: "REJECTED",
+          rejectionReason: rejectionReason,
+          status: "REJECTED",
+        },
+        { new: true },
+      );
 
       // Refund credits if not yet used
       if (ad.displayUsed === 0) {

@@ -188,7 +188,7 @@ class DashboardController {
           }
           // Return a shallow copy with partnerCode attached
           return { ...u, partnerCode };
-        })
+        }),
       );
 
       res.render("User/Premium", {
@@ -209,7 +209,7 @@ class DashboardController {
     if (req.query.country && req.query.country !== "") {
       query.country = req.query.country;
     }
-    let donateduser = await UserModel.find(query).sort({ _id: -1 });
+    let donateduser = await UserModel.find(query).sort({ donatorOnDate: -1 });
     let country1 = await UserModel.aggregate([
       {
         $match: {
@@ -235,6 +235,93 @@ class DashboardController {
       moment: moment,
       loginUser: req.user,
     });
+  };
+
+  static ViewDonator = async (req, res) => {
+    try {
+      const id = req.params.id || req.query.id;
+
+      // Get donator information
+      const donator = await UserModel.findById(id).lean();
+      if (!donator || donator.usertype !== 2) {
+        return res.status(404).render("Error", {
+          baseUrl,
+          error: "Donator not found",
+        });
+      }
+
+      // Get all operators created by this donator
+      const OperatorModel = (await import("../Models/Operator.js")).default;
+      const operators = await OperatorModel.find({
+        createdByDonator: id,
+      })
+        .sort({ createdAt: -1 })
+        .lean();
+
+      // Get all employees (users with usertype=1) created by these operators
+      const operatorIds = operators.map((op) => op._id);
+      const employees = await UserModel.find({
+        createdByOperator: { $in: operatorIds },
+        usertype: 1,
+      })
+        .sort({ createdAt: -1 })
+        .lean();
+
+      // Get all purchases made by this donator
+      const DonatorPurchaseModel = (
+        await import("../Models/DonatorPurchase.js")
+      ).default;
+      const DonatorPackageModel = (await import("../Models/DonatorPackage.js"))
+        .default;
+
+      const purchases = await DonatorPurchaseModel.find({
+        donator: id,
+      })
+        .populate("operator", "name email tgid")
+        .populate("package", "name employeeCredits operatorCredits price")
+        .sort({ createdAt: -1 })
+        .lean();
+
+      // Calculate credits from approved purchases
+      const approvedPurchases = purchases.filter((p) => p.status === 1);
+      const totalOperatorCredits = approvedPurchases.reduce(
+        (sum, p) => sum + (p.creditsGrantedOperator || 0),
+        0,
+      );
+      const totalEmployeeCredits = approvedPurchases.reduce(
+        (sum, p) => sum + (p.creditsGrantedEmployee || 0),
+        0,
+      );
+
+      // Calculate stats
+      const stats = {
+        totalOperators: operators.length,
+        totalEmployees: employees.length,
+        totalPurchases: purchases.length,
+        approvedPurchases: approvedPurchases.length,
+        totalOperatorCredits,
+        totalEmployeeCredits,
+      };
+
+      res.render("User/DonatorView", {
+        baseUrl,
+        donator,
+        operators,
+        employees,
+        purchases,
+        stats,
+        path: "donateduser",
+        session: req.session,
+        moment: moment,
+        loginUser: req.user,
+      });
+    } catch (error) {
+      console.error("ViewDonator error:", error);
+      res.status(500).render("Error", {
+        baseUrl,
+        error: error.message,
+      });
+    }
   };
 
   // ....................MEBERSHIP[CONFIGURATION]......................
@@ -454,7 +541,7 @@ class DashboardController {
   // .......................PAYMENT[TELEGRAM COIN].............................
   static TelegramCoinPayment = async (req, res) => {
     const telegramCoinPayments = await TelegramCoinMembershipPaymentModel.find(
-      {}
+      {},
     ).sort({ createdAt: -1 });
     let list = telegramCoinPayments.map(async (v) => {
       let userdetail = await UserModel.findById(v.user);
@@ -546,7 +633,7 @@ class DashboardController {
 
   static EditReferralMembershipTenure = async (req, res) => {
     let referralmembership = await ReferralMembershipModel.findById(
-      req.query.id
+      req.query.id,
     );
     res.render("Referral/Editreferralmembership", {
       baseUrl,
@@ -572,7 +659,7 @@ class DashboardController {
 
   static ReferralReport = async (req, res) => {
     let referralreport = await ReferralReportModel.find({}).distinct(
-      "referral_user_id"
+      "referral_user_id",
     );
     let referral = referralreport.map(async (e) => {
       const list = await UserModel.findById(e);
@@ -643,7 +730,7 @@ class DashboardController {
     let notification = await AdminNotificationModel.find({}).sort({ _id: -1 });
     await AdminNotificationModel.updateMany(
       { status: 0 },
-      { $set: { status: 1 } }
+      { $set: { status: 1 } },
     );
     res.render("Referral/Notification", {
       baseUrl,

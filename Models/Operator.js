@@ -3,8 +3,15 @@ import mongoose from "mongoose";
 const operatorSchema = new mongoose.Schema(
   {
     name: { type: String, trim: true },
-    email: { type: String, unique: true, sparse: true, lowercase: true },
     tgid: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      lowercase: true,
+    },
+    // Login username for operator (preferred for authentication)
+    username: {
       type: String,
       unique: true,
       sparse: true,
@@ -32,8 +39,8 @@ const operatorSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-operatorSchema.index({ email: 1 });
 operatorSchema.index({ tgid: 1 });
+operatorSchema.index({ username: 1 });
 operatorSchema.index({ token: 1 });
 operatorSchema.index({ isActive: 1 });
 
