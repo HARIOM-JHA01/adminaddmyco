@@ -1,10 +1,10 @@
-# Donator Module - Implementation Summary
+# Enterprise Module - Implementation Summary
 
 ## What Was Built
 
-A complete donator module for managing operator-based user creation with credit-based membership. The system allows:
+A complete enterprise module for managing operator-based user creation with credit-based membership. The system allows:
 
-1. **Admins** to create and manage donator packages (define credits and price)
+1. **Admins** to create and manage enterprise packages (define credits and price)
 2. **Admins** to approve/reject operator purchase requests and manage operators
 3. **Operators** to register, login, buy packages, and create premium employee accounts
 4. **Employees** created by operators automatically get 1-year premium membership
@@ -15,10 +15,10 @@ A complete donator module for managing operator-based user creation with credit-
 
 ### Models (4 files)
 
-- `Models/DonatorPackage.js` - Package definitions (credits, price, validity)
-- `Models/DonatorPurchase.js` - Purchase/order records (pending/approved/rejected)
+- `Models/EnterprisePackage.js` - Package definitions (credits, price, validity)
+- `Models/EnterprisePurchase.js` - Purchase/order records (pending/approved/rejected)
 - `Models/Operator.js` - Operator account model with JWT token storage
-- `Models/DonatorAudit.js` - Audit trail for all actions
+- `Models/EnterpriseAudit.js` - Audit trail for all actions
 
 ### Middleware (1 file)
 
@@ -26,26 +26,26 @@ A complete donator module for managing operator-based user creation with credit-
 
 ### Controllers (2 files)
 
-- `Controllers/DonatorController.js` - All operator and public endpoints (package list, buy, create employee, login)
-- `Controllers/DonatorAdminController.js` - Admin view rendering and operator management
+- `Controllers/EnterpriseController.js` - All operator and public endpoints (package list, buy, create employee, login)
+- `Controllers/EnterpriseAdminController.js` - Admin view rendering and operator management
 
 ### Routes (2 files modified, 1 file created)
 
-- `Routes/Donator.js` - Operator and public API routes (new)
+- `Routes/Enterprise.js` - Operator and public API routes (new)
 - `Routes/Admin.js` - Admin routes added (modified)
-- `App.js` - Donator routes registered (modified)
+- `App.js` - Enterprise routes registered (modified)
 
 ### Views (5 files)
 
-- `Views/Donator/PackageList.ejs` - Admin: List all packages
-- `Views/Donator/PackageCreate.ejs` - Admin: Create/edit package
-- `Views/Donator/PurchaseList.ejs` - Admin: List purchases with approve/reject buttons
-- `Views/Donator/OperatorList.ejs` - Admin: List operators with activate/deactivate
-- `Views/Donator/OperatorCreate.ejs` - Admin: Create new operator
+- `Views/Enterprise/PackageList.ejs` - Admin: List all packages
+- `Views/Enterprise/PackageCreate.ejs` - Admin: Create/edit package
+- `Views/Enterprise/PurchaseList.ejs` - Admin: List purchases with approve/reject buttons
+- `Views/Enterprise/OperatorList.ejs` - Admin: List operators with activate/deactivate
+- `Views/Enterprise/OperatorCreate.ejs` - Admin: Create new operator
 
 ### Documentation (1 file)
 
-- `DONATOR_MODULE_API.md` - Complete API documentation with all endpoints and examples
+- `ENTERPRISE_MODULE_API.md` - Complete API documentation with all endpoints and examples
 
 ---
 
@@ -67,7 +67,7 @@ A complete donator module for managing operator-based user creation with credit-
 ### 3. Operator Management
 
 - Admin creates operators with email/password
-- Operators can self-register via `/donator/operator/register`
+- Operators can self-register via `/enterprise/operator/register`
 - Operators login with email/password → JWT token returned
 - Operators can be deactivated (login prevention)
 - Manual credit top-up by admin
@@ -80,7 +80,7 @@ A complete donator module for managing operator-based user creation with credit-
   - `usertype=1` (premium)
   - `membertype="premium"`
   - 1-year membership (`startdate`/`enddate`)
-  - `paymentBy=7` (Donator code)
+  - `paymentBy=7` (Enterprise code)
   - Unique `freeUsername` (random 8-char hex)
   - `username` set to Telegram ID
   - JWT token for immediate login
@@ -98,36 +98,36 @@ A complete donator module for managing operator-based user creation with credit-
 ### Operator Routes (Public/Authenticated)
 
 ```
-POST   /donator/operator/register          - Register new operator
-POST   /donator/operator/login             - Operator login → JWT token
-GET    /donator/operator/profile           - Get operator profile (auth required)
-GET    /donator/operator/credits           - Get operator credits and slots (auth required)
-GET    /donator/operator/operators         - Get list of sub-operators (auth required)
-GET    /donator/operator/users             - Get list of employees created (auth required)
-GET    /donator/packages                   - List active packages (public)
-POST   /donator/buy                        - Buy package (auth required)
-POST   /donator/operator/create-employee   - Create employee account (auth required)
+POST   /enterprise/operator/register          - Register new operator
+POST   /enterprise/operator/login             - Operator login → JWT token
+GET    /enterprise/operator/profile           - Get operator profile (auth required)
+GET    /enterprise/operator/credits           - Get operator credits and slots (auth required)
+GET    /enterprise/operator/operators         - Get list of sub-operators (auth required)
+GET    /enterprise/operator/users             - Get list of employees created (auth required)
+GET    /enterprise/packages                   - List active packages (public)
+POST   /enterprise/buy                        - Buy package (auth required)
+POST   /enterprise/operator/create-employee   - Create employee account (auth required)
 ```
 
 ### Admin Routes
 
 ```
-GET    /admin/donator/packages             - Render packages list page
-GET    /admin/donator/package/create       - Render create package form
-GET    /admin/donator/package/edit/:id     - Render edit package form
-POST   /admin/donator/package/create       - Create package (API)
-POST   /admin/donator/package/edit/:id     - Update package (API)
+GET    /admin/enterprise/packages             - Render packages list page
+GET    /admin/enterprise/package/create       - Render create package form
+GET    /admin/enterprise/package/edit/:id     - Render edit package form
+POST   /admin/enterprise/package/create       - Create package (API)
+POST   /admin/enterprise/package/edit/:id     - Update package (API)
 
-GET    /admin/donator/purchases            - Render purchases list page
-POST   /admin/donator/purchase/approve/:id - Approve purchase + grant credits
-POST   /admin/donator/purchase/reject/:id  - Reject purchase
+GET    /admin/enterprise/purchases            - Render purchases list page
+POST   /admin/enterprise/purchase/approve/:id - Approve purchase + grant credits
+POST   /admin/enterprise/purchase/reject/:id  - Reject purchase
 
-GET    /admin/donator/operators            - Render operators list page
-GET    /admin/donator/operator/create      - Render create operator form
-POST   /admin/donator/operator/create      - Create operator (API)
-POST   /admin/donator/operator/activate/:id    - Activate operator
-POST   /admin/donator/operator/deactivate/:id  - Deactivate operator
-POST   /admin/donator/operator/add-credits/:id - Manually add credits
+GET    /admin/enterprise/operators            - Render operators list page
+GET    /admin/enterprise/operator/create      - Render create operator form
+POST   /admin/enterprise/operator/create      - Create operator (API)
+POST   /admin/enterprise/operator/activate/:id    - Activate operator
+POST   /admin/enterprise/operator/deactivate/:id  - Deactivate operator
+POST   /admin/enterprise/operator/add-credits/:id - Manually add credits
 ```
 
 ---
@@ -136,10 +136,10 @@ POST   /admin/donator/operator/add-credits/:id - Manually add credits
 
 ### Indexes Created
 
-- `DonatorPackage`: name, status
-- `DonatorPurchase`: transactionId (unique), operator, status+createdAt
+- `EnterprisePackage`: name, status
+- `EnterprisePurchase`: transactionId (unique), operator, status+createdAt
 - `Operator`: email (unique), token
-- `DonatorAudit`: actorId, entityType+entityId, createdAt
+- `EnterpriseAudit`: actorId, entityType+entityId, createdAt
 
 ### Atomic Operations
 
@@ -153,7 +153,7 @@ POST   /admin/donator/operator/add-credits/:id - Manually add credits
 
 ### Created Employees
 
-- Automatically get `paymentBy=7` (Donator code)
+- Automatically get `paymentBy=7` (Enterprise code)
 - `startdate` = today
 - `enddate` = today + 1 year (employee membership is fixed to 1 year)
 - Existing `Utils/membershipCron.js` handles daily expiry checks
@@ -180,7 +180,7 @@ POST   /admin/donator/operator/add-credits/:id - Manually add credits
 
 5. **Unique Constraints**:
    - Email: unique on Operator model
-   - TransactionId: unique sparse on DonatorPurchase
+   - TransactionId: unique sparse on EnterprisePurchase
    - Username/freeUsername: application-level collision handling
 
 ---
@@ -190,7 +190,7 @@ POST   /admin/donator/operator/add-credits/:id - Manually add credits
 ### 1. Admin: Create a Package
 
 ```
-POST /admin/donator/package/create
+POST /admin/enterprise/package/create
 Body:
 {
   "name": "Basic Package",
@@ -203,7 +203,7 @@ Body:
 ### 2. Operator: Register
 
 ```
-POST /donator/operator/register
+POST /enterprise/operator/register
 Body:
 {
   "name": "Test Operator",
@@ -216,7 +216,7 @@ Body:
 ### 3. Operator: Login
 
 ```
-POST /donator/operator/login
+POST /enterprise/operator/login
 Body:
 {
   "email": "test@operator.com",
@@ -228,7 +228,7 @@ Body:
 ### 4. Operator: Buy Package
 
 ```
-POST /donator/buy
+POST /enterprise/buy
 Header: Authorization: Bearer <token>
 Body:
 {
@@ -240,14 +240,14 @@ Body:
 ### 5. Admin: Approve Purchase
 
 ```
-POST /admin/donator/purchase/approve/<purchase_id>
+POST /admin/enterprise/purchase/approve/<purchase_id>
 → Credits added to operator
 ```
 
 ### 6. Operator: Create Employee
 
 ```
-POST /donator/operator/create-employee
+POST /enterprise/operator/create-employee
 Header: Authorization: Bearer <token>
 Body:
 {
@@ -262,15 +262,15 @@ Body:
 ### 7. Operator: Get Current Credits
 
 ```
-GET /donator/operator/credits
+GET /enterprise/operator/credits
 Header: Authorization: Bearer <token>
-→ Returns available credits and operator slots
+→ Returns available credits
 ```
 
 ### 8. Operator: Get Sub-Operators List
 
 ```
-GET /donator/operator/operators
+GET /enterprise/operator/operators
 Header: Authorization: Bearer <token>
 → Returns list of operators created by this operator (if applicable)
 ```
@@ -278,7 +278,7 @@ Header: Authorization: Bearer <token>
 ### 9. Operator: Get Employees List
 
 ```
-GET /donator/operator/users
+GET /enterprise/operator/users
 Header: Authorization: Bearer <token>
 → Returns list of employees/users created using operator's credits
 ```
@@ -297,20 +297,20 @@ Three new endpoints allow operators to view their current resources:
 
 ### Implementation Details
 
-#### Get Operator Credits (GET /donator/operator/credits)
+#### Get Operator Credits (GET /enterprise/operator/credits)
 
-- Returns: `{ credits: Number, operatorSlots: Number }`
+- Returns: `{ credits: Number }`
 - Queries single operator document
 - Use case: Display dashboard widget showing remaining credits
 
-#### Get Operators List (GET /donator/operator/operators)
+#### Get Operators List (GET /enterprise/operator/operators)
 
 - Returns: Array of operators where `createdByAdmin = currentOperator._id`
 - Allows hierarchical operator structure (operator creating sub-operators)
-- Fields returned: name, email, credits, operatorSlots, isActive, createdAt
+- Fields returned: name, email, credits, isActive, createdAt
 - Use case: Multi-level operator management
 
-#### Get Employees List (GET /donator/operator/users)
+#### Get Employees List (GET /enterprise/operator/users)
 
 - Returns: Purchase records with credit allocation details
 - Calculates: Total credits used, potential users count
@@ -364,23 +364,23 @@ Three new endpoints allow operators to view their current resources:
 
 ```
 Models/
-  - DonatorPackage.js
-  - DonatorPurchase.js
+  - EnterprisePackage.js
+  - EnterprisePurchase.js
   - Operator.js
-  - DonatorAudit.js
+  - EnterpriseAudit.js
 
 Controllers/
-  - DonatorController.js (290 lines) - Main business logic
-  - DonatorAdminController.js (200 lines) - Admin views
+  - EnterpriseController.js (290 lines) - Main business logic
+  - EnterpriseAdminController.js (200 lines) - Admin views
 
 Routes/
-  - Donator.js (50 lines) - Public + operator + admin routes
-  - Admin.js (MODIFIED) - Added donator admin routes
+  - Enterprise.js (50 lines) - Public + operator + admin routes
+  - Admin.js (MODIFIED) - Added enterprise admin routes
 
 Middleware/
   - OperatorAuthentication.js (45 lines) - JWT auth for operators
 
-Views/Donator/
+Views/Enterprise/
   - PackageList.ejs
   - PackageCreate.ejs
   - PurchaseList.ejs
@@ -388,9 +388,9 @@ Views/Donator/
   - OperatorCreate.ejs
 
 Documentation/
-  - DONATOR_MODULE_API.md - Complete API reference
+  - ENTERPRISE_MODULE_API.md - Complete API reference
 
-App.js (MODIFIED) - Registered donator routes
+App.js (MODIFIED) - Registered enterprise routes
 ```
 
 **Total Lines of Code**: ~1100 (models + controllers + middleware + routes)
@@ -403,5 +403,5 @@ App.js (MODIFIED) - Registered donator routes
 2. **Configure USDT payment verification** (add wallet address validation, amount matching)
 3. **Add email notifications** (operator creation, purchase approval)
 4. **Set up SMS/Telegram notifications** for operators
-5. **Create admin dashboard widgets** for donator metrics
+5. **Create admin dashboard widgets** for enterprise metrics
 6. **Document operator on-boarding flow** for end users

@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 
-const donatorPurchaseSchema = new mongoose.Schema(
+const enterprisePurchaseSchema = new mongoose.Schema(
   {
-    donator: {
+    enterprise: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
@@ -14,7 +14,7 @@ const donatorPurchaseSchema = new mongoose.Schema(
     },
     package: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "DonatorPackage",
+      ref: "EnterprisePackage",
       required: true,
     },
     amount: { type: Number, required: true },
@@ -32,14 +32,14 @@ const donatorPurchaseSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-donatorPurchaseSchema.index({ transactionId: 1 });
-donatorPurchaseSchema.index({ donator: 1 });
-donatorPurchaseSchema.index({ operator: 1 });
-donatorPurchaseSchema.index({ status: 1, createdAt: -1 });
+enterprisePurchaseSchema.index({ transactionId: 1 });
+enterprisePurchaseSchema.index({ enterprise: 1 });
+enterprisePurchaseSchema.index({ operator: 1 });
+enterprisePurchaseSchema.index({ status: 1, createdAt: -1 });
 
-const DonatorPurchaseModel = mongoose.model(
-  "DonatorPurchase",
-  donatorPurchaseSchema,
+const EnterprisePurchaseModel = mongoose.model(
+  "EnterprisePurchase",
+  enterprisePurchaseSchema,
 );
 
-export default DonatorPurchaseModel;
+export default EnterprisePurchaseModel;

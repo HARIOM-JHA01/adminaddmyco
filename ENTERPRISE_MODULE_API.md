@@ -1,8 +1,8 @@
-# Donator Module API Documentation
+# Enterprise Module API Documentation
 
 ## Overview
 
-The Donator Module enables donators (donors) to purchase packages containing credits that allow them to create operator accounts. Operators can then create employee user accounts (premium users) who can access the AddMy.co platform.
+The Enterprise Module enables enterprises (donors) to purchase packages containing credits that allow them to create operator accounts. Operators can then create employee user accounts (premium users) who can access the AddMy.co platform.
 
 ## Architecture
 
@@ -10,11 +10,11 @@ The Donator Module enables donators (donors) to purchase packages containing cre
 
 - **Operator**: Account that purchases packages and creates employees. Has JWT token-based authentication.
 - **Employee**: Premium user account created by an operator. Gets `usertype=1`, 1-year premium membership.
-- **Donator Admin**: System admin managing packages and approving purchases.
+- **Enterprise Admin**: System admin managing packages and approving purchases.
 
 ### Payment Flow
 
-- **Operator** buys package → creates **DonatorPurchase** (pending)
+- **Operator** buys package → creates **EnterprisePurchase** (pending)
 - **Admin** approves → credits added to Operator
 - **Operator** creates employee → credits deducted, employee gets premium membership
 
@@ -22,7 +22,7 @@ The Donator Module enables donators (donors) to purchase packages containing cre
 
 ## Models
 
-### DonatorPackage
+### EnterprisePackage
 
 ```javascript
 {
@@ -37,13 +37,13 @@ The Donator Module enables donators (donors) to purchase packages containing cre
 }
 ```
 
-### DonatorPurchase
+### EnterprisePurchase
 
 ```javascript
 {
   _id: ObjectId,
   operator: ObjectId (ref: Operator, required),
-  package: ObjectId (ref: DonatorPackage, required),
+  package: ObjectId (ref: EnterprisePackage, required),
   amount: Number (required),
   currency: String (default: "USDT"),
   transactionId: String (unique, sparse), // Off-chain payment ID
@@ -78,7 +78,7 @@ The Donator Module enables donators (donors) to purchase packages containing cre
 }
 ```
 
-### DonatorAudit
+### EnterpriseAudit
 
 ```javascript
 {
@@ -87,7 +87,7 @@ The Donator Module enables donators (donors) to purchase packages containing cre
   actorId: ObjectId,
   action: String (package.create|package.update|purchase.create|purchase.approve|purchase.reject|operator.create|operator.login|employee.create),
   details: Mixed (arbitrary JSON),
-  entityType: String (DonatorPackage|DonatorPurchase|Operator|User),
+  entityType: String (EnterprisePackage|EnterprisePurchase|Operator|User),
   entityId: ObjectId,
   createdAt: Date
 }
@@ -102,10 +102,10 @@ The Donator Module enables donators (donors) to purchase packages containing cre
 #### List All Active Packages
 
 ```
-GET /donator/packages
+GET /enterprise/packages
 ```
 
-**Description**: Retrieve all active donator packages  
+**Description**: Retrieve all active enterprise packages  
 **Auth**: None  
 **Response**:
 
@@ -130,23 +130,23 @@ GET /donator/packages
 
 #### Quick Reference
 
-| Method | Endpoint                            | Purpose                 | Auth |
-| ------ | ----------------------------------- | ----------------------- | ---- |
-| POST   | `/donator/operator/register`        | Register new operator   | None |
-| POST   | `/donator/operator/login`           | Login and get JWT token | None |
-| GET    | `/donator/operator/profile`         | Get operator profile    | JWT  |
-| GET    | `/donator/operator/credits`         | Get available credits   | JWT  |
-| GET    | `/donator/operator/operators`       | Get sub-operators list  | JWT  |
-| GET    | `/donator/operator/users`           | Get employees list      | JWT  |
-| POST   | `/donator/buy`                      | Purchase package        | JWT  |
-| POST   | `/donator/operator/create-employee` | Create employee account | JWT  |
+| Method | Endpoint                               | Purpose                 | Auth |
+| ------ | -------------------------------------- | ----------------------- | ---- |
+| POST   | `/enterprise/operator/register`        | Register new operator   | None |
+| POST   | `/enterprise/operator/login`           | Login and get JWT token | None |
+| GET    | `/enterprise/operator/profile`         | Get operator profile    | JWT  |
+| GET    | `/enterprise/operator/credits`         | Get available credits   | JWT  |
+| GET    | `/enterprise/operator/operators`       | Get sub-operators list  | JWT  |
+| GET    | `/enterprise/operator/users`           | Get employees list      | JWT  |
+| POST   | `/enterprise/buy`                      | Purchase package        | JWT  |
+| POST   | `/enterprise/operator/create-employee` | Create employee account | JWT  |
 
 ---
 
 #### Operator Registration
 
 ```
-POST /donator/operator/register
+POST /enterprise/operator/register
 ```
 
 **Description**: Register a new operator account  
@@ -185,7 +185,7 @@ POST /donator/operator/register
 #### Operator Login
 
 ```
-POST /donator/operator/login
+POST /enterprise/operator/login
 ```
 
 **Description**: Authenticate operator and get JWT token  
@@ -218,7 +218,7 @@ POST /donator/operator/login
 #### Get Operator Profile
 
 ```
-GET /donator/operator/profile
+GET /enterprise/operator/profile
 Authorization: Bearer <token>
 ```
 
@@ -243,11 +243,11 @@ Authorization: Bearer <token>
 #### Get Operator Credits
 
 ```
-GET /donator/operator/credits
+GET /enterprise/operator/credits
 Authorization: Bearer <token>
 ```
 
-**Description**: Get current operator's available credits and operator slots  
+**Description**: Get current operator's available credits  
 **Auth**: Operator (Bearer JWT)  
 **Response**:
 
@@ -255,8 +255,7 @@ Authorization: Bearer <token>
 {
   "success": true,
   "data": {
-    "credits": 15,
-    "operatorSlots": 5
+    "credits": 15
   }
 }
 ```
@@ -264,7 +263,7 @@ Authorization: Bearer <token>
 #### Get Operators List
 
 ```
-GET /donator/operator/operators
+GET /enterprise/operator/operators
 Authorization: Bearer <token>
 ```
 
@@ -281,7 +280,6 @@ Authorization: Bearer <token>
       "name": "Sub Operator 1",
       "email": "subop1@example.com",
       "credits": 10,
-      "operatorSlots": 3,
       "isActive": true,
       "createdAt": "2026-01-15T08:00:00Z"
     }
@@ -293,7 +291,7 @@ Authorization: Bearer <token>
 #### Get Operator Users
 
 ```
-GET /donator/operator/users
+GET /enterprise/operator/users
 Authorization: Bearer <token>
 ```
 
@@ -323,7 +321,7 @@ Authorization: Bearer <token>
 #### Buy Package
 
 ```
-POST /donator/buy
+POST /enterprise/buy
 Authorization: Bearer <token>
 ```
 
@@ -360,7 +358,7 @@ Authorization: Bearer <token>
 #### Create Employee Account
 
 ```
-POST /donator/operator/create-employee
+POST /enterprise/operator/create-employee
 Authorization: Bearer <token>
 ```
 
@@ -389,7 +387,7 @@ Authorization: Bearer <token>
 - Membership set to 1 year from now
 - freeUsername generated (random 8-char hex)
 - username set to employeeTgid (or with suffix if collision)
-- DonatorAudit entry created
+- EnterpriseAudit entry created
 
 **Response**:
 
@@ -413,14 +411,14 @@ Authorization: Bearer <token>
 
 ### ADMIN ENDPOINTS
 
-#### Create Donator Package
+#### Create Enterprise Package
 
 ```
-POST /admin/donator/package/create
+POST /admin/enterprise/package/create
 Authorization: Session (Admin)
 ```
 
-**Description**: Create a new donator package  
+**Description**: Create a new enterprise package  
 **Auth**: Admin (`isAdmin` middleware)  
 **Request Body**:
 
@@ -453,10 +451,10 @@ Authorization: Session (Admin)
 }
 ```
 
-#### Update Donator Package
+#### Update Enterprise Package
 
 ```
-POST /admin/donator/package/edit/:id
+POST /admin/enterprise/package/edit/:id
 Authorization: Session (Admin)
 ```
 
@@ -472,7 +470,7 @@ Authorization: Session (Admin)
 #### List All Packages (Admin View)
 
 ```
-GET /admin/donator/packages
+GET /admin/enterprise/packages
 Authorization: Session (Admin)
 ```
 
@@ -483,7 +481,7 @@ Authorization: Session (Admin)
 #### List All Purchases (Admin View)
 
 ```
-GET /admin/donator/purchases
+GET /admin/enterprise/purchases
 Authorization: Session (Admin)
 ```
 
@@ -494,7 +492,7 @@ Authorization: Session (Admin)
 #### Approve Purchase
 
 ```
-POST /admin/donator/purchase/approve/:id
+POST /admin/enterprise/purchase/approve/:id
 Authorization: Session (Admin)
 ```
 
@@ -509,7 +507,7 @@ Authorization: Session (Admin)
 - Purchase status set to 1 (approved)
 - Credits added to Operator (atomic $inc)
 - Operator.credits updated
-- DonatorAudit entry created with credit transaction details
+- EnterpriseAudit entry created with credit transaction details
 
 **Response**:
 
@@ -526,7 +524,7 @@ Authorization: Session (Admin)
 #### Reject Purchase
 
 ```
-POST /admin/donator/purchase/reject/:id
+POST /admin/enterprise/purchase/reject/:id
 Authorization: Session (Admin)
 ```
 
@@ -544,7 +542,7 @@ Authorization: Session (Admin)
 
 - Purchase status set to 2 (rejected)
 - No credits granted
-- DonatorAudit entry created
+- EnterpriseAudit entry created
 
 **Response**:
 
@@ -558,7 +556,7 @@ Authorization: Session (Admin)
 #### Create Operator (Admin)
 
 ```
-POST /admin/donator/operator/create
+POST /admin/enterprise/operator/create
 Authorization: Session (Admin)
 ```
 
@@ -595,7 +593,7 @@ Authorization: Session (Admin)
 #### List Operators (Admin View)
 
 ```
-GET /admin/donator/operators
+GET /admin/enterprise/operators
 Authorization: Session (Admin)
 ```
 
@@ -606,7 +604,7 @@ Authorization: Session (Admin)
 #### Deactivate Operator
 
 ```
-POST /admin/donator/operator/deactivate/:id
+POST /admin/enterprise/operator/deactivate/:id
 Authorization: Session (Admin)
 ```
 
@@ -624,7 +622,7 @@ Authorization: Session (Admin)
 #### Activate Operator
 
 ```
-POST /admin/donator/operator/activate/:id
+POST /admin/enterprise/operator/activate/:id
 Authorization: Session (Admin)
 ```
 
@@ -642,7 +640,7 @@ Authorization: Session (Admin)
 #### Add Credits to Operator (Manual)
 
 ```
-POST /admin/donator/operator/add-credits/:id
+POST /admin/enterprise/operator/add-credits/:id
 Authorization: Session (Admin)
 ```
 
@@ -672,13 +670,13 @@ Authorization: Session (Admin)
 
 ## Admin UI Pages
 
-| Page                | URL                                            | Controller                          | View File                  |
-| ------------------- | ---------------------------------------------- | ----------------------------------- | -------------------------- |
-| Packages List       | `/admin/donator/packages`                      | DonatorAdminController.PackageList  | Donator/PackageList.ejs    |
-| Create/Edit Package | `/admin/donator/package/create` or `/edit/:id` | DonatorAdminController.PackageForm  | Donator/PackageCreate.ejs  |
-| Purchases List      | `/admin/donator/purchases`                     | DonatorAdminController.PurchaseList | Donator/PurchaseList.ejs   |
-| Operators List      | `/admin/donator/operators`                     | DonatorAdminController.OperatorList | Donator/OperatorList.ejs   |
-| Create Operator     | `/admin/donator/operator/create`               | DonatorAdminController.OperatorForm | Donator/OperatorCreate.ejs |
+| Page                | URL                                               | Controller                             | View File                     |
+| ------------------- | ------------------------------------------------- | -------------------------------------- | ----------------------------- |
+| Packages List       | `/admin/enterprise/packages`                      | EnterpriseAdminController.PackageList  | Enterprise/PackageList.ejs    |
+| Create/Edit Package | `/admin/enterprise/package/create` or `/edit/:id` | EnterpriseAdminController.PackageForm  | Enterprise/PackageCreate.ejs  |
+| Purchases List      | `/admin/enterprise/purchases`                     | EnterpriseAdminController.PurchaseList | Enterprise/PurchaseList.ejs   |
+| Operators List      | `/admin/enterprise/operators`                     | EnterpriseAdminController.OperatorList | Enterprise/OperatorList.ejs   |
+| Create Operator     | `/admin/enterprise/operator/create`               | EnterpriseAdminController.OperatorForm | Enterprise/OperatorCreate.ejs |
 
 ---
 
@@ -699,7 +697,7 @@ Authorization: Session (Admin)
    - `username` set to `tgid`, or with `-XXXX` suffix if collision
    - Always created as `usertype=1` (premium)
    - Always created as `membertype="premium"`
-   - `paymentBy=7` (Donator code)
+   - `paymentBy=7` (Enterprise code)
    - `startdate` = today, `enddate` = today + 1 year (employee membership is fixed to 1 year)
    - Membership auto-expires per `Utils/membershipCron.js` (daily check)
 
@@ -709,7 +707,7 @@ Authorization: Session (Admin)
    - Existing `freeUsername` preserved
 
 5. **Audit Trail**:
-   - All significant actions logged to DonatorAudit
+   - All significant actions logged to EnterpriseAudit
    - Tracks actor (admin/operator), action, entity, and details
 
 6. **Off-Chain USDT Payment**:

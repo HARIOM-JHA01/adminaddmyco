@@ -67,10 +67,12 @@ const userSchema = new mongoose.Schema(
       ref: "Operator",
       index: true,
     },
-    // Donator credits (for usertype=2 donators to assign to operators)
+    // Enterprise credits (for usertype=2 enterprises to assign to operators)
     credits: { type: Number, default: 0 },
-    // Date when user became a donator
-    donatorOnDate: { type: Date, default: null },
+    // Date when user became an enterprise
+    enterpriseOnDate: { type: Date, default: null },
+    // For 3-stage creation: 0 = not started, 1 = stage 1 complete (telegram), 2 = stage 2 complete (profile), 3 = stage 3 complete (company)
+    creationStage: { type: Number, default: 0 },
   },
   { timestamps: true },
 );

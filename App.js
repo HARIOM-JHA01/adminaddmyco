@@ -1,10 +1,12 @@
 import express from "express";
 import bodyParser from "body-parser";
+import path from "path";
+import { fileURLToPath } from "url";
 import connectDB from "./Db/Connectdb.js";
 import admin from "./Routes/Admin.js";
 import user from "./Routes/User.js";
 import partner from "./Routes/Partner.js";
-import donator from "./Routes/Donator.js";
+import enterprise from "./Routes/Enterprise.js";
 import advertisement from "./Routes/Advertisement.js";
 import fileUpload from "express-fileupload";
 import session from "express-session";
@@ -18,6 +20,9 @@ import { startMembershipExpiryCheck } from "./Utils/membershipCron.js";
 import { initializeDefaultRates } from "./Utils/initializeRates.js";
 import { initializeAdvertisementConfig } from "./Utils/initializeAdConfig.js";
 import moment from "moment";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 mongoose.set("strictQuery", false);
 const app = express();
@@ -42,7 +47,12 @@ app.use(
     cookie: { maxAge: 172800000 }, // 48 hours in milliseconds
   }),
 );
-app.use("/assets", express.static("assets"));
+// Serve static assets from absolute path to work correctly with PM2 and reverse proxies
+const assetsPath = path.resolve(__dirname, "assets");
+app.use("/assets", express.static(assetsPath));
+// Serve uploads folder for user-uploaded backgrounds
+const uploadsPath = path.resolve(__dirname, "uploads");
+app.use("/uploads", express.static(uploadsPath));
 app.use(cors());
 
 // Start Telegram bot
@@ -83,7 +93,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json({ extended: false }));
 app.use("/admin", admin);
 app.use("/partner", partner);
-app.use("/donator", donator);
+app.use("/enterprise", enterprise);
 app.use("/", user);
 app.use("/", advertisement);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));

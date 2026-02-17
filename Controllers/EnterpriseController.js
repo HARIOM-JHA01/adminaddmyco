@@ -7,16 +7,16 @@ import moment from "moment";
 import { validatorError } from "../Common.js";
 import { baseUrl } from "../Config.js";
 
-import DonatorPackageModel from "../Models/DonatorPackage.js";
-import DonatorPurchaseModel from "../Models/DonatorPurchase.js";
+import EnterprisePackageModel from "../Models/EnterprisePackage.js";
+import EnterprisePurchaseModel from "../Models/EnterprisePurchase.js";
 import OperatorModel from "../Models/Operator.js";
-import DonatorAuditModel from "../Models/DonatorAudit.js";
+import EnterpriseAuditModel from "../Models/EnterpriseAudit.js";
 import UserModel from "../Models/User.js";
 
 const accessTokenSecret = process.env.JWT_SECRET_KEY;
 const accessTokenLife = process.env.ACCESS_TOKEN_LIFE;
 
-class DonatorController {
+class EnterpriseController {
   // Utility to generate random username
   static generateUsername() {
     return crypto.randomBytes(4).toString("hex");
@@ -26,7 +26,7 @@ class DonatorController {
 
   /**
    * Admin: Create new operator
-   * POST /admin/donator/operator/create
+   * POST /admin/enterprise/operator/create
    */
   static CreateOperator = async (req, res) => {
     try {
@@ -37,7 +37,6 @@ class DonatorController {
         confirmPassword,
         isActive,
         initialCredits,
-        initialOperatorSlots,
       } = req.body;
 
       const validator = new Validator(
@@ -83,16 +82,13 @@ class DonatorController {
         password: hashedPassword,
         isActive: isActive !== false,
         credits: initialCredits ? parseInt(initialCredits) : 0,
-        operatorSlots: initialOperatorSlots
-          ? parseInt(initialOperatorSlots)
-          : 0,
         createdByAdmin: req.user._id,
       });
 
       const savedOperator = await operator.save();
 
       // Audit log
-      await DonatorAuditModel.create({
+      await EnterpriseAuditModel.create({
         actorType: "admin",
         actorId: req.user._id,
         action: "operator.create",
@@ -100,7 +96,6 @@ class DonatorController {
           username: savedOperator.username,
           name: savedOperator.name,
           credits: savedOperator.credits,
-          operatorSlots: savedOperator.operatorSlots,
         },
         entityType: "Operator",
         entityId: savedOperator._id,
@@ -114,7 +109,6 @@ class DonatorController {
           name: savedOperator.name,
           username: savedOperator.username,
           credits: savedOperator.credits,
-          operatorSlots: savedOperator.operatorSlots || 0,
           isActive: savedOperator.isActive,
         },
       });
@@ -129,10 +123,10 @@ class DonatorController {
   };
 
   /**
-   * Donator (owner) aggregated summary
-   * GET /donator/me/summary
+   * Enterprise (owner) aggregated summary
+   * GET /enterprise/me/summary
    */
-  static GetDonatorSummary = async (req, res) => {
+  static GetEnterpriseSummary = async (req, res) => {
     try {
       if (!req.user || req.user.usertype !== 2)
         return res.status(403).json({ success: false, message: "Forbidden" });
@@ -141,18 +135,18 @@ class DonatorController {
         "-password",
       );
 
-      // Operators created by this donator
+      // Operators created by this enterprise
       const operators = await OperatorModel.find({
-        createdByDonator: req.user._id,
-      }).select("name email credits operatorSlots isActive createdAt");
+        createdByEnterprise: req.user._id,
+      }).select("name email credits isActive createdAt");
 
       const opIds = operators.map((o) => o._id);
 
-      // Purchases: both direct purchases by donator AND purchases assigned to operators
-      const purchases = await DonatorPurchaseModel.find({
+      // Purchases: both direct purchases by enterprise AND purchases assigned to operators
+      const purchases = await EnterprisePurchaseModel.find({
         $or: [
-          { donator: req.user._id }, // Direct purchases by this donator
-          { operator: { $in: opIds } }, // Purchases assigned to operators created by this donator
+          { enterprise: req.user._id }, // Direct purchases by this enterprise
+          { operator: { $in: opIds } }, // Purchases assigned to operators created by this enterprise
         ],
       })
         .populate("package")
@@ -171,7 +165,7 @@ class DonatorController {
       );
 
       // Employee creations by those operators (via audits)
-      const audits = await DonatorAuditModel.find({
+      const audits = await EnterpriseAuditModel.find({
         actorType: "operator",
         action: "employee.create",
         actorId: { $in: opIds },
@@ -224,7 +218,7 @@ class DonatorController {
         },
       });
     } catch (err) {
-      console.error("GetDonatorSummary error:", err);
+      console.error("GetEnterpriseSummary error:", err);
       return res
         .status(500)
         .json({ success: false, message: "Server error", error: err.message });
@@ -233,7 +227,7 @@ class DonatorController {
 
   /**
    * Operator: Register/Sign up
-   * POST /donator/operator/register
+   * POST /enterprise/operator/register
    */
   static OperatorRegister = async (req, res) => {
     try {
@@ -294,7 +288,7 @@ class DonatorController {
       const savedOperator = await operator.save();
 
       // Audit log
-      await DonatorAuditModel.create({
+      await EnterpriseAuditModel.create({
         actorType: "operator",
         actorId: savedOperator._id,
         action: "operator.register",
@@ -324,7 +318,7 @@ class DonatorController {
 
   /**
    * Operator: Login
-   * POST /donator/operator/login
+   * POST /enterprise/operator/login
    */
   static OperatorLogin = async (req, res) => {
     try {
@@ -390,7 +384,7 @@ class DonatorController {
       });
 
       // Audit log
-      await DonatorAuditModel.create({
+      await EnterpriseAuditModel.create({
         actorType: "operator",
         actorId: operator._id,
         action: "operator.login",
@@ -422,7 +416,7 @@ class DonatorController {
 
   /**
    * Operator: Get own profile
-   * GET /donator/operator/profile
+   * GET /enterprise/operator/profile
    */
   static GetOperatorProfile = async (req, res) => {
     try {
@@ -446,12 +440,12 @@ class DonatorController {
 
   /**
    * Operator: Get current credits
-   * GET /donator/operator/credits
+   * GET /enterprise/operator/credits
    */
   static GetOperatorCredits = async (req, res) => {
     try {
       const operator = await OperatorModel.findById(req.operator._id).select(
-        "credits operatorSlots",
+        "credits",
       );
 
       if (!operator) {
@@ -465,7 +459,6 @@ class DonatorController {
         success: true,
         data: {
           credits: operator.credits,
-          operatorSlots: operator.operatorSlots,
         },
       });
     } catch (error) {
@@ -480,13 +473,13 @@ class DonatorController {
 
   /**
    * Operator: Get list of sub-operators (if applicable)
-   * GET /donator/operator/operators
+   * GET /enterprise/operator/operators
    */
   static GetOperatorsList = async (req, res) => {
     try {
       const operators = await OperatorModel.find({
         createdByAdmin: req.operator._id,
-      }).select("name email credits operatorSlots isActive createdAt");
+      }).select("name email credits isActive createdAt");
 
       return res.status(200).json({
         success: true,
@@ -505,7 +498,7 @@ class DonatorController {
 
   /**
    * Operator: Get list of employees created by this operator
-   * GET /donator/operator/users
+   * GET /enterprise/operator/users
    */
   static GetOperatorUsers = async (req, res) => {
     try {
@@ -517,8 +510,8 @@ class DonatorController {
         "firstname lastname username email tgid membertype memberid createdAt",
       );
 
-      // Alternative: Get users from DonatorPurchase records
-      const purchases = await DonatorPurchaseModel.find({
+      // Alternative: Get users from EnterprisePurchase records
+      const purchases = await EnterprisePurchaseModel.find({
         operator: req.operator._id,
         status: 1, // Only approved purchases
       }).populate("package");
@@ -557,7 +550,7 @@ class DonatorController {
 
   /**
    * Operator: Aggregated summary
-   * GET /donator/operator/summary
+   * GET /enterprise/operator/summary
    */
   static GetOperatorSummary = async (req, res) => {
     try {
@@ -567,9 +560,9 @@ class DonatorController {
 
       const operators = await OperatorModel.find({
         createdByAdmin: req.operator._id,
-      }).select("name email credits operatorSlots isActive createdAt");
+      }).select("name email credits isActive createdAt");
 
-      const purchases = await DonatorPurchaseModel.find({
+      const purchases = await EnterprisePurchaseModel.find({
         operator: req.operator._id,
       })
         .populate("package")
@@ -588,7 +581,6 @@ class DonatorController {
           profile,
           credits: {
             credits: profile.credits,
-            operatorSlots: profile.operatorSlots,
           },
           operators,
           usersSummary: {
@@ -620,14 +612,15 @@ class DonatorController {
     }
   };
 
-  // ======================== DONATOR (owner) - endpoints ========================
+  // ======================== ENTERPRISE (owner) - endpoints ========================
   /**
-   * Donator (usertype=2): create operator under your account
-   * POST /donator/me/operators
+   * Enterprise (usertype=2): create operator under your account
+   * POST /enterprise/me/operators
    */
-  static CreateOperatorByDonator = async (req, res) => {
+  static CreateOperatorByEnterprise = async (req, res) => {
     try {
-      if (!req.user || req.user.usertype !== 2)
+      // Allow Enterprise (usertype=2) or Donator (usertype=3) to create an operator
+      if (!req.user || !(req.user.usertype === 2 || req.user.usertype === 3))
         return res.status(403).json({ success: false, message: "Forbidden" });
 
       const { tgid, password } = req.body;
@@ -656,12 +649,30 @@ class DonatorController {
           message: "Username already registered as operator",
         });
 
+      // If creator is a donator, ensure they have >=1 credit and atomically deduct
+      if (req.user.usertype === 3) {
+        const donator = await UserModel.findByIdAndUpdate(
+          req.user._id,
+          { $inc: { credits: -1 } },
+          { new: true },
+        );
+        if ((donator.credits || 0) < 0) {
+          // Revert and abort
+          await UserModel.findByIdAndUpdate(req.user._id, {
+            $inc: { credits: 1 },
+          });
+          return res
+            .status(409)
+            .json({ success: false, message: "Insufficient credits" });
+        }
+      }
+
       // Hash password
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
 
-      // Create operator
-      const op = new OperatorModel({
+      // Build operator payload; only set createdByEnterprise for actual enterprises
+      const opData = {
         tgid: tgidClean,
         telegramId: tgidClean,
         username: tgidClean,
@@ -669,14 +680,14 @@ class DonatorController {
         password: hashedPassword,
         isActive: true,
         credits: 0,
-        operatorSlots: 0,
-        createdByDonator: req.user._id,
-      });
+      };
+      if (req.user.usertype === 2) opData.createdByEnterprise = req.user._id;
 
+      const op = new OperatorModel(opData);
       const saved = await op.save();
 
-      await DonatorAuditModel.create({
-        actorType: "donator",
+      await EnterpriseAuditModel.create({
+        actorType: req.user.usertype === 3 ? "donator" : "enterprise",
         actorId: req.user._id,
         action: "operator.create",
         details: { username: saved.username },
@@ -694,13 +705,12 @@ class DonatorController {
           telegramId: saved.telegramId,
           name: saved.name,
           credits: saved.credits,
-          operatorSlots: saved.operatorSlots,
           isActive: saved.isActive,
           createdAt: saved.createdAt,
         },
       });
     } catch (err) {
-      console.error("CreateOperatorByDonator error:", err);
+      console.error("CreateOperatorByEnterprise error:", err);
       return res.status(500).json({
         success: false,
         message: "Server error",
@@ -710,10 +720,10 @@ class DonatorController {
   };
 
   /**
-   * Donator: list operators you created
-   * GET /donator/me/operators
+   * Enterprise: list operators you created
+   * GET /enterprise/me/operators
    */
-  static GetDonatorOperators = async (req, res) => {
+  static GetEnterpriseOperators = async (req, res) => {
     try {
       if (!req.user || req.user.usertype !== 2)
         return res.status(403).json({ success: false, message: "Forbidden" });
@@ -724,7 +734,7 @@ class DonatorController {
         200,
         Math.max(1, parseInt(req.query.limit || "50")),
       );
-      const filter = { createdByDonator: req.user._id };
+      const filter = { createdByEnterprise: req.user._id };
       if (q) {
         const re = new RegExp(q.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&"), "i");
         filter.$or = [{ name: re }, { username: re }];
@@ -735,21 +745,21 @@ class DonatorController {
           .sort({ createdAt: -1 })
           .skip((page - 1) * limit)
           .limit(limit)
-          .select("name username credits operatorSlots isActive createdAt")
+          .select("name username credits isActive createdAt")
           .lean(),
       ]);
       return res
         .status(200)
         .json({ success: true, data: list, meta: { total, page, limit } });
     } catch (err) {
-      console.error("GetDonatorOperators error:", err);
+      console.error("GetEnterpriseOperators error:", err);
       return res.status(500).json({ success: false, message: "Server error" });
     }
   };
 
   /**
-   * Donator: Get detailed information about a specific operator
-   * GET /donator/me/operators/:operatorId
+   * Enterprise: Get detailed information about a specific operator
+   * GET /enterprise/me/operators/:operatorId
    */
   static GetOperatorDetails = async (req, res) => {
     try {
@@ -761,7 +771,7 @@ class DonatorController {
       // Find operator and verify ownership
       const operator = await OperatorModel.findOne({
         _id: operatorId,
-        createdByDonator: req.user._id,
+        createdByEnterprise: req.user._id,
       }).select("-password -token");
 
       if (!operator)
@@ -781,7 +791,7 @@ class DonatorController {
         .lean();
 
       // Get all purchases assigned to this operator
-      const purchases = await DonatorPurchaseModel.find({
+      const purchases = await EnterprisePurchaseModel.find({
         operator: operatorId,
       })
         .populate("package")
@@ -789,7 +799,7 @@ class DonatorController {
         .lean();
 
       // Get audit logs for this operator
-      const auditLogs = await DonatorAuditModel.find({
+      const auditLogs = await EnterpriseAuditModel.find({
         $or: [
           { actorType: "operator", actorId: operatorId },
           { entityType: "Operator", entityId: operatorId },
@@ -844,8 +854,8 @@ class DonatorController {
   };
 
   /**
-   * Donator: Delete an operator
-   * DELETE /donator/me/operators/:operatorId
+   * Enterprise: Delete an operator
+   * DELETE /enterprise/me/operators/:operatorId
    */
   static DeleteOperator = async (req, res) => {
     try {
@@ -857,7 +867,7 @@ class DonatorController {
       // Find operator and verify ownership
       const operator = await OperatorModel.findOne({
         _id: operatorId,
-        createdByDonator: req.user._id,
+        createdByEnterprise: req.user._id,
       });
 
       if (!operator)
@@ -882,8 +892,8 @@ class DonatorController {
       await OperatorModel.findByIdAndDelete(operatorId);
 
       // Create audit log
-      await DonatorAuditModel.create({
-        actorType: "donator",
+      await EnterpriseAuditModel.create({
+        actorType: "enterprise",
         actorId: req.user._id,
         action: "operator.delete",
         details: {
@@ -910,10 +920,78 @@ class DonatorController {
   };
 
   /**
-   * Donator: Buy package (credits added to donator account)
-   * POST /donator/me/buy
+   * Enterprise: Reset operator password (enterprise owner)
+   * POST /enterprise/me/operators/:operatorId/reset-password
+   * Body: { password, confirmPassword }
    */
-  static DonatorBuyPackage = async (req, res) => {
+  static ResetOperatorPasswordByEnterprise = async (req, res) => {
+    try {
+      if (!req.user || req.user.usertype !== 2)
+        return res.status(403).json({ success: false, message: "Forbidden" });
+
+      const { password, confirmPassword } = req.body;
+      const validator = new Validator(
+        { password, confirmPassword },
+        {
+          password: "required|minLength:6",
+          confirmPassword: "required|same:password",
+        },
+      );
+      if (!(await validator.check()))
+        return res
+          .status(422)
+          .json({ success: false, errors: validator.errors });
+
+      const operatorId = req.params.operatorId;
+      const operator = await OperatorModel.findOne({
+        _id: operatorId,
+        createdByEnterprise: req.user._id,
+      });
+      if (!operator)
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message: "Operator not found or not owned by you",
+          });
+
+      const salt = await bcrypt.genSalt(10);
+      const hashed = await bcrypt.hash(password, salt);
+
+      // Update password and clear token to force re-login
+      await OperatorModel.findByIdAndUpdate(operatorId, {
+        password: hashed,
+        token: null,
+      });
+
+      await EnterpriseAuditModel.create({
+        actorType: "enterprise",
+        actorId: req.user._id,
+        action: "operator.password.reset",
+        details: { operatorId: operator._id, username: operator.username },
+        entityType: "Operator",
+        entityId: operator._id,
+      });
+
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: "Operator password reset successfully",
+        });
+    } catch (err) {
+      console.error("ResetOperatorPasswordByEnterprise error:", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Server error", error: err.message });
+    }
+  };
+
+  /**
+   * Enterprise: Buy package (credits added to enterprise account)
+   * POST /enterprise/me/buy
+   */
+  static EnterpriseBuyPackage = async (req, res) => {
     try {
       if (!req.user || req.user.usertype !== 2)
         return res.status(403).json({ success: false, message: "Forbidden" });
@@ -931,20 +1009,20 @@ class DonatorController {
           .status(422)
           .json({ success: false, errors: validator.errors });
 
-      const package_ = await DonatorPackageModel.findById(packageId);
+      const package_ = await EnterprisePackageModel.findById(packageId);
       if (!package_)
         return res
           .status(404)
           .json({ success: false, message: "Package not found" });
 
-      const existing = await DonatorPurchaseModel.findOne({ transactionId });
+      const existing = await EnterprisePurchaseModel.findOne({ transactionId });
       if (existing)
         return res
           .status(422)
           .json({ success: false, message: "Transaction already exists" });
 
-      const purchase = new DonatorPurchaseModel({
-        donator: req.user._id,
+      const purchase = new EnterprisePurchaseModel({
+        enterprise: req.user._id,
         package: packageId,
         amount: package_.price,
         currency: package_.currency,
@@ -955,12 +1033,12 @@ class DonatorController {
       });
       const saved = await purchase.save();
 
-      await DonatorAuditModel.create({
-        actorType: "donator",
+      await EnterpriseAuditModel.create({
+        actorType: "enterprise",
         actorId: req.user._id,
         action: "purchase.create",
         details: { packageId, transactionId, walletAddress },
-        entityType: "DonatorPurchase",
+        entityType: "EnterprisePurchase",
         entityId: saved._id,
       });
 
@@ -975,16 +1053,16 @@ class DonatorController {
         },
       });
     } catch (err) {
-      console.error("DonatorBuyPackage error:", err);
+      console.error("EnterpriseBuyPackage error:", err);
       return res.status(500).json({ success: false, message: "Server error" });
     }
   };
 
   /**
-   * Donator: Get purchase history
-   * GET /donator/purchases
+   * Enterprise: Get purchase history
+   * GET /enterprise/purchases
    */
-  static GetDonatorPurchases = async (req, res) => {
+  static GetEnterprisePurchases = async (req, res) => {
     try {
       if (!req.user || req.user.usertype !== 2)
         return res.status(403).json({ success: false, message: "Forbidden" });
@@ -996,14 +1074,14 @@ class DonatorController {
       );
       const status = req.query.status ? parseInt(req.query.status) : null;
 
-      const filter = { donator: req.user._id };
+      const filter = { enterprise: req.user._id };
       if (status !== null && !isNaN(status)) {
         filter.status = status;
       }
 
       const [total, purchases] = await Promise.all([
-        DonatorPurchaseModel.countDocuments(filter),
-        DonatorPurchaseModel.find(filter)
+        EnterprisePurchaseModel.countDocuments(filter),
+        EnterprisePurchaseModel.find(filter)
           .populate("package")
           .sort({ createdAt: -1 })
           .skip((page - 1) * limit)
@@ -1044,14 +1122,14 @@ class DonatorController {
         },
       });
     } catch (err) {
-      console.error("GetDonatorPurchases error:", err);
+      console.error("GetEnterprisePurchases error:", err);
       return res.status(500).json({ success: false, message: "Server error" });
     }
   };
 
   /**
-   * Donator: Assign employee credits to an operator
-   * POST /donator/assign-credits
+   * Enterprise: Assign employee credits to an operator
+   * POST /enterprise/assign-credits
    */
   static AssignCreditsToOperator = async (req, res) => {
     try {
@@ -1076,21 +1154,21 @@ class DonatorController {
         return res
           .status(404)
           .json({ success: false, message: "Operator not found" });
-      if (String(operator.createdByDonator) !== String(req.user._id))
+      if (String(operator.createdByEnterprise) !== String(req.user._id))
         return res
           .status(403)
           .json({ success: false, message: "Operator does not belong to you" });
 
-      const donator = await UserModel.findById(req.user._id);
-      if (!donator || (donator.credits || 0) < employeeCreditsToAssign)
+      const enterprise = await UserModel.findById(req.user._id);
+      if (!enterprise || (enterprise.credits || 0) < employeeCreditsToAssign)
         return res.status(422).json({
           success: false,
           message: "Insufficient employee credits",
-          availableEmployeeCredits: donator ? donator.credits || 0 : 0,
+          availableEmployeeCredits: enterprise ? enterprise.credits || 0 : 0,
         });
 
-      // Deduct employee credits from donator, add to operator
-      const [updatedDonator, updatedOperator] = await Promise.all([
+      // Deduct employee credits from enterprise, add to operator
+      const [updatedEnterprise, updatedOperator] = await Promise.all([
         UserModel.findByIdAndUpdate(
           req.user._id,
           { $inc: { credits: -employeeCreditsToAssign } },
@@ -1103,16 +1181,16 @@ class DonatorController {
         ),
       ]);
 
-      await DonatorAuditModel.create({
-        actorType: "donator",
+      await EnterpriseAuditModel.create({
+        actorType: "enterprise",
         actorId: req.user._id,
         action: "credits.assign",
         details: {
           operatorId,
           employeeCreditsAssigned: employeeCreditsToAssign,
-          donatorPreviousBalance:
-            (updatedDonator.credits || 0) + employeeCreditsToAssign,
-          donatorNewBalance: updatedDonator.credits || 0,
+          enterprisePreviousBalance:
+            (updatedEnterprise.credits || 0) + employeeCreditsToAssign,
+          enterpriseNewBalance: updatedEnterprise.credits || 0,
           operatorPreviousBalance:
             (updatedOperator.credits || 0) - employeeCreditsToAssign,
           operatorNewBalance: updatedOperator.credits || 0,
@@ -1125,7 +1203,7 @@ class DonatorController {
         success: true,
         message: `${employeeCreditsToAssign} employee credits assigned to operator successfully.`,
         data: {
-          donatorEmployeeCredits: updatedDonator.credits || 0,
+          enterpriseEmployeeCredits: updatedEnterprise.credits || 0,
           operatorEmployeeCredits: updatedOperator.credits || 0,
         },
       });
@@ -1136,10 +1214,10 @@ class DonatorController {
   };
 
   /**
-   * Donator: list employees created by your operators (audit-backed)
-   * GET /donator/me/employees
+   * Enterprise: list employees created by your operators (audit-backed)
+   * GET /enterprise/me/employees
    */
-  static GetDonatorEmployees = async (req, res) => {
+  static GetEnterpriseEmployees = async (req, res) => {
     try {
       if (!req.user || req.user.usertype !== 2)
         return res.status(403).json({ success: false, message: "Forbidden" });
@@ -1151,8 +1229,10 @@ class DonatorController {
         Math.max(1, parseInt(req.query.limit || "50")),
       );
 
-      // find operators owned by this donator
-      const ops = await OperatorModel.find({ createdByDonator: req.user._id })
+      // find operators owned by this enterprise
+      const ops = await OperatorModel.find({
+        createdByEnterprise: req.user._id,
+      })
         .select("_id")
         .lean();
       const opIds = ops.map((o) => o._id);
@@ -1163,7 +1243,7 @@ class DonatorController {
           .json({ success: true, data: [], meta: { total: 0, page, limit } });
 
       // Find audit records for employee.create by these operators
-      const audits = await DonatorAuditModel.find({
+      const audits = await EnterpriseAuditModel.find({
         actorType: "operator",
         action: "employee.create",
         actorId: { $in: opIds },
@@ -1199,14 +1279,14 @@ class DonatorController {
         .status(200)
         .json({ success: true, data: users, meta: { total, page, limit } });
     } catch (err) {
-      console.error("GetDonatorEmployees error:", err);
+      console.error("GetEnterpriseEmployees error:", err);
       return res.status(500).json({ success: false, message: "Server error" });
     }
   };
 
   /**
-   * Admin: Create donator package
-   * POST /admin/donator/package/create
+   * Admin: Create enterprise package
+   * POST /admin/enterprise/package/create
    */
   static CreatePackage = async (req, res) => {
     try {
@@ -1229,7 +1309,7 @@ class DonatorController {
           .json({ success: false, errors: validator.errors });
       }
 
-      const package_ = new DonatorPackageModel({
+      const package_ = new EnterprisePackageModel({
         name: name.trim(),
         employeeCredits: parseInt(employeeCredits),
         operatorCredits: parseInt(operatorCredits),
@@ -1240,7 +1320,7 @@ class DonatorController {
       const savedPackage = await package_.save();
 
       // Audit log
-      await DonatorAuditModel.create({
+      await EnterpriseAuditModel.create({
         actorType: "admin",
         actorId: req.user._id,
         action: "package.create",
@@ -1250,7 +1330,7 @@ class DonatorController {
           operatorCredits: savedPackage.operatorCredits,
           price: savedPackage.price,
         },
-        entityType: "DonatorPackage",
+        entityType: "EnterprisePackage",
         entityId: savedPackage._id,
       });
 
@@ -1270,8 +1350,8 @@ class DonatorController {
   };
 
   /**
-   * Admin: Update donator package
-   * POST /admin/donator/package/edit/:id
+   * Admin: Update enterprise package
+   * POST /admin/enterprise/package/edit/:id
    */
   static UpdatePackage = async (req, res) => {
     try {
@@ -1288,7 +1368,7 @@ class DonatorController {
       if (price !== undefined) updateData.price = parseFloat(price);
       if (status !== undefined) updateData.status = parseInt(status);
 
-      const updatedPackage = await DonatorPackageModel.findByIdAndUpdate(
+      const updatedPackage = await EnterprisePackageModel.findByIdAndUpdate(
         id,
         updateData,
         { new: true },
@@ -1302,12 +1382,12 @@ class DonatorController {
       }
 
       // Audit log
-      await DonatorAuditModel.create({
+      await EnterpriseAuditModel.create({
         actorType: "admin",
         actorId: req.user._id,
         action: "package.update",
         details: updateData,
-        entityType: "DonatorPackage",
+        entityType: "EnterprisePackage",
         entityId: updatedPackage._id,
       });
 
@@ -1327,14 +1407,14 @@ class DonatorController {
   };
 
   /**
-   * Admin: Delete donator package
-   * DELETE /admin/donator/package/:id
+   * Admin: Delete enterprise package
+   * DELETE /admin/enterprise/package/:id
    */
   static DeletePackage = async (req, res) => {
     try {
       const { id } = req.params;
 
-      const deletedPackage = await DonatorPackageModel.findByIdAndDelete(id);
+      const deletedPackage = await EnterprisePackageModel.findByIdAndDelete(id);
 
       if (!deletedPackage) {
         return res.status(404).json({
@@ -1344,7 +1424,7 @@ class DonatorController {
       }
 
       // Audit log
-      await DonatorAuditModel.create({
+      await EnterpriseAuditModel.create({
         actorType: "admin",
         actorId: req.user._id,
         action: "package.delete",
@@ -1354,7 +1434,7 @@ class DonatorController {
           operatorCredits: deletedPackage.operatorCredits,
           price: deletedPackage.price,
         },
-        entityType: "DonatorPackage",
+        entityType: "EnterprisePackage",
         entityId: deletedPackage._id,
       });
 
@@ -1375,11 +1455,11 @@ class DonatorController {
 
   /**
    * Public: List all active packages
-   * GET /donator/packages
+   * GET /enterprise/packages
    */
   static ListPackages = async (req, res) => {
     try {
-      const packages = await DonatorPackageModel.find({ status: 1 }).sort({
+      const packages = await EnterprisePackageModel.find({ status: 1 }).sort({
         price: 1,
       });
 
@@ -1408,7 +1488,7 @@ class DonatorController {
 
   /**
    * Operator: Buy a package
-   * POST /donator/buy
+   * POST /enterprise/buy
    */
   static BuyPackage = async (req, res) => {
     try {
@@ -1430,7 +1510,7 @@ class DonatorController {
       }
 
       // Check package exists
-      const package_ = await DonatorPackageModel.findById(packageId);
+      const package_ = await EnterprisePackageModel.findById(packageId);
       if (!package_) {
         return res.status(404).json({
           success: false,
@@ -1439,7 +1519,7 @@ class DonatorController {
       }
 
       // Check transaction ID uniqueness
-      const existingPurchase = await DonatorPurchaseModel.findOne({
+      const existingPurchase = await EnterprisePurchaseModel.findOne({
         transactionId,
       });
       if (existingPurchase) {
@@ -1450,7 +1530,7 @@ class DonatorController {
       }
 
       // Create purchase record (pending)
-      const purchase = new DonatorPurchaseModel({
+      const purchase = new EnterprisePurchaseModel({
         operator: req.operator._id,
         package: packageId,
         amount: package_.price,
@@ -1463,7 +1543,7 @@ class DonatorController {
       const savedPurchase = await purchase.save();
 
       // Audit log
-      await DonatorAuditModel.create({
+      await EnterpriseAuditModel.create({
         actorType: "operator",
         actorId: req.operator._id,
         action: "purchase.create",
@@ -1472,7 +1552,7 @@ class DonatorController {
           amount: package_.price,
           transactionId,
         },
-        entityType: "DonatorPurchase",
+        entityType: "EnterprisePurchase",
         entityId: savedPurchase._id,
       });
 
@@ -1497,14 +1577,14 @@ class DonatorController {
 
   /**
    * Admin: Approve purchase and grant credits
-   * POST /admin/donator/purchase/approve/:id
+   * POST /admin/enterprise/purchase/approve/:id
    */
   static ApprovePurchase = async (req, res) => {
     try {
       const { id } = req.params;
 
       const purchase =
-        await DonatorPurchaseModel.findById(id).populate("package");
+        await EnterprisePurchaseModel.findById(id).populate("package");
       if (!purchase) {
         return res.status(404).json({
           success: false,
@@ -1522,10 +1602,10 @@ class DonatorController {
       const employeeCreditsToAdd = purchase.package.employeeCredits || 0;
       const operatorCreditsToAdd = purchase.package.operatorCredits || 0;
 
-      // Get donator and add credits to donator account
-      const donatorId = purchase.donator;
-      const updatedDonator = await UserModel.findByIdAndUpdate(
-        donatorId,
+      // Get enterprise and add credits to enterprise account
+      const enterpriseId = purchase.enterprise;
+      const updatedEnterprise = await UserModel.findByIdAndUpdate(
+        enterpriseId,
         {
           $inc: { credits: employeeCreditsToAdd },
         },
@@ -1533,7 +1613,7 @@ class DonatorController {
       );
 
       // Update purchase
-      await DonatorPurchaseModel.findByIdAndUpdate(id, {
+      await EnterprisePurchaseModel.findByIdAndUpdate(id, {
         status: 1, // approved
         creditsGrantedEmployee: employeeCreditsToAdd,
         creditsGrantedOperator: operatorCreditsToAdd,
@@ -1542,25 +1622,26 @@ class DonatorController {
       });
 
       // Audit log
-      await DonatorAuditModel.create({
+      await EnterpriseAuditModel.create({
         actorType: "admin",
         actorId: req.user._id,
         action: "purchase.approve",
         details: {
-          donatorId,
+          enterpriseId,
           creditsAdded: employeeCreditsToAdd,
-          previousBalance: (updatedDonator.credits || 0) - employeeCreditsToAdd,
-          newBalance: updatedDonator.credits || 0,
+          previousBalance:
+            (updatedEnterprise.credits || 0) - employeeCreditsToAdd,
+          newBalance: updatedEnterprise.credits || 0,
         },
-        entityType: "DonatorPurchase",
+        entityType: "EnterprisePurchase",
         entityId: purchase._id,
       });
 
       return res.status(200).json({
         success: true,
-        message: `Purchase approved. ${employeeCreditsToAdd} credits added to donator account.`,
+        message: `Purchase approved. ${employeeCreditsToAdd} credits added to enterprise account.`,
         data: {
-          donatorCredits: updatedDonator.credits || 0,
+          enterpriseCredits: updatedEnterprise.credits || 0,
         },
       });
     } catch (error) {
@@ -1575,14 +1656,14 @@ class DonatorController {
 
   /**
    * Admin: Reject purchase
-   * POST /admin/donator/purchase/reject/:id
+   * POST /admin/enterprise/purchase/reject/:id
    */
   static RejectPurchase = async (req, res) => {
     try {
       const { id } = req.params;
       const { rejectionReason } = req.body;
 
-      const purchase = await DonatorPurchaseModel.findById(id);
+      const purchase = await EnterprisePurchaseModel.findById(id);
       if (!purchase) {
         return res.status(404).json({
           success: false,
@@ -1597,20 +1678,20 @@ class DonatorController {
         });
       }
 
-      await DonatorPurchaseModel.findByIdAndUpdate(id, {
+      await EnterprisePurchaseModel.findByIdAndUpdate(id, {
         status: 2, // rejected
         rejectionReason: rejectionReason || "No reason provided",
       });
 
       // Audit log
-      await DonatorAuditModel.create({
+      await EnterpriseAuditModel.create({
         actorType: "admin",
         actorId: req.user._id,
         action: "purchase.reject",
         details: {
           reason: rejectionReason,
         },
-        entityType: "DonatorPurchase",
+        entityType: "EnterprisePurchase",
         entityId: purchase._id,
       });
 
@@ -1632,7 +1713,7 @@ class DonatorController {
 
   /**
    * Operator: Create employee user account
-   * POST /donator/operator/create-employee
+   * POST /enterprise/operator/create-employee
    */
   static CreateEmployee = async (req, res) => {
     try {
@@ -1682,7 +1763,7 @@ class DonatorController {
       }
 
       // Generate freeUsername (unique random)
-      let generatedUsername = DonatorController.generateUsername();
+      let generatedUsername = EnterpriseController.generateUsername();
       let isUnique = false;
       while (!isUnique) {
         const conflict = await UserModel.findOne({
@@ -1691,7 +1772,7 @@ class DonatorController {
         if (!conflict) {
           isUnique = true;
         } else {
-          generatedUsername = DonatorController.generateUsername();
+          generatedUsername = EnterpriseController.generateUsername();
         }
       }
 
@@ -1706,7 +1787,7 @@ class DonatorController {
       }
 
       // Calculate membership dates
-      const package_ = await DonatorPurchaseModel.findOne({
+      const package_ = await EnterprisePurchaseModel.findOne({
         operator: req.operator._id,
         status: 1,
       }).populate("package");
@@ -1729,9 +1810,9 @@ class DonatorController {
         startdate: startDate,
         enddate: endDate,
         paymentstatus: 1,
-        paymentBy: 7, // Donator code
+        paymentBy: 7, // Enterprise code
         country: "", // Can be updated later
-        memberid: await DonatorController.generateMemberId(),
+        memberid: await EnterpriseController.generateMemberId(),
         // link to the operator who created this employee
         createdByOperator: req.operator?._id || null,
       });
@@ -1751,7 +1832,7 @@ class DonatorController {
       await UserModel.findByIdAndUpdate(savedEmployee._id, { token });
 
       // Audit log
-      await DonatorAuditModel.create({
+      await EnterpriseAuditModel.create({
         actorType: "operator",
         actorId: req.operator._id,
         action: "employee.create",
@@ -1790,13 +1871,1131 @@ class DonatorController {
   };
 
   /**
+   * Enterprise (owner): Create employee user account
+   * POST /enterprise/me/employees (protected)
+   */
+  static CreateEmployeeByEnterprise = async (req, res) => {
+    try {
+      const { employeeTgid, employeeEmail, employeeName } = req.body;
+
+      const validator = new Validator(
+        { employeeTgid, employeeEmail },
+        {
+          employeeTgid: "required|string",
+          employeeEmail: "email",
+        },
+      );
+
+      if (!(await validator.check())) {
+        return res
+          .status(422)
+          .json({ success: false, errors: validator.errors });
+      }
+
+      // Check if tgid already exists
+      const existingUser = await UserModel.findOne({ tgid: employeeTgid });
+      if (existingUser) {
+        return res.status(422).json({
+          success: false,
+          message: "User with this Telegram ID already exists",
+        });
+      }
+
+      // Determine creator (enterprise or donator) and atomically deduct 1 credit
+      let creatorId = null;
+      let actorType = null;
+
+      if (req.enterprise && req.enterprise.usertype === 2) {
+        creatorId = req.enterprise._id;
+        actorType = "enterprise";
+      } else if (req.user && req.user.usertype === 3) {
+        creatorId = req.user._id;
+        actorType = "donator";
+      } else {
+        return res.status(403).json({ success: false, message: "Forbidden" });
+      }
+
+      const creatorDoc = await UserModel.findByIdAndUpdate(
+        creatorId,
+        { $inc: { credits: -1 } },
+        { new: true },
+      );
+
+      if ((creatorDoc.credits || 0) < 0) {
+        // Revert the decrement
+        await UserModel.findByIdAndUpdate(creatorId, {
+          $inc: { credits: 1 },
+        });
+
+        return res
+          .status(409)
+          .json({ success: false, message: "Insufficient credits" });
+      }
+
+      // Generate freeUsername (unique random)
+      let generatedUsername = EnterpriseController.generateUsername();
+      let isUnique = false;
+      while (!isUnique) {
+        const conflict = await UserModel.findOne({
+          freeUsername: generatedUsername,
+        });
+        if (!conflict) isUnique = true;
+        else generatedUsername = EnterpriseController.generateUsername();
+      }
+
+      // Set username to tgid with collision handling
+      let activeUsername = employeeTgid;
+      const usernameConflict = await UserModel.findOne({
+        username: employeeTgid,
+      });
+      if (usernameConflict) {
+        activeUsername =
+          employeeTgid + "-" + crypto.randomBytes(2).toString("hex");
+      }
+
+      // Calculate membership dates (try to use an approved enterprise purchase if available)
+      const package_ = req.enterprise
+        ? await EnterprisePurchaseModel.findOne({
+            enterprise: req.enterprise._id,
+            status: 1,
+          }).populate("package")
+        : null;
+      const validityYears = 1; // default
+      const startDate = moment().format("YYYY-MM-DD");
+      const endDate = moment().add(validityYears, "years").format("YYYY-MM-DD");
+
+      // Create employee user (created directly by enterprise)
+      const employee = new UserModel({
+        username: activeUsername,
+        freeUsername: generatedUsername,
+        tgid: employeeTgid,
+        email: employeeEmail || null,
+        firstname: employeeName || "Employee",
+        usertype: 1, // Premium
+        membertype: "premium",
+        membershiperiod: validityYears * 12, // In months
+        startdate: startDate,
+        enddate: endDate,
+        paymentstatus: 1,
+        paymentBy: 7, // Enterprise code
+        country: "",
+        memberid: await EnterpriseController.generateMemberId(),
+        // Not created by an operator
+        createdByOperator: null,
+      });
+
+      const savedEmployee = await employee.save();
+
+      // Generate token for the new employee
+      const payload = { id: savedEmployee._id, username: activeUsername };
+      const token = jwt.sign(payload, accessTokenSecret, {
+        algorithm: "HS256",
+        expiresIn: accessTokenLife,
+      });
+      await UserModel.findByIdAndUpdate(savedEmployee._id, { token });
+
+      // Audit log (actor may be enterprise or donator)
+      await EnterpriseAuditModel.create({
+        actorType: actorType || "enterprise",
+        actorId: creatorId || (req.enterprise && req.enterprise._id),
+        action: "employee.create",
+        details: {
+          tgid: employeeTgid,
+          email: employeeEmail,
+          name: employeeName,
+          username: activeUsername,
+          freeUsername: generatedUsername,
+        },
+        entityType: "User",
+        entityId: savedEmployee._id,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Employee account created successfully",
+        data: {
+          userId: savedEmployee._id,
+          username: activeUsername,
+          freeUsername: generatedUsername,
+          tgid: employeeTgid,
+          email: employeeEmail,
+          membershipEnd: endDate,
+          token,
+        },
+      });
+    } catch (error) {
+      console.error("CreateEmployeeByEnterprise error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
    * Helper: Generate unique member ID
    */
   static generateMemberId = async () => {
     const count = await UserModel.countDocuments();
-    const id = "DONATOR-" + (count + 1).toString().padStart(8, "0");
+    const id = "ENTERPRISE-" + (count + 1).toString().padStart(8, "0");
     return id;
+  };
+
+  // ======================== 3-STAGE CREATION PROCESS ========================
+
+  /**
+   * Stage 1: Initialize Employee with Telegram Username
+   * POST /enterprise/operator/three-stage/employee/stage1
+   * Body: { telegramUsername }
+   */
+  static EmployeeStage1 = async (req, res) => {
+    try {
+      const { telegramUsername } = req.body;
+
+      const validator = new Validator(
+        { telegramUsername },
+        {
+          telegramUsername: "required|string|minLength:3",
+        },
+      );
+
+      if (!(await validator.check())) {
+        return res.status(422).json({
+          success: false,
+          errors: validator.errors,
+        });
+      }
+
+      // Check if telegram username already exists
+      const existingUser = await UserModel.findOne({ tgid: telegramUsername });
+      if (existingUser) {
+        return res.status(409).json({
+          success: false,
+          message: "Telegram username already registered",
+        });
+      }
+
+      // Deduct one credit
+      const operator = await OperatorModel.findByIdAndUpdate(
+        req.operator._id,
+        { $inc: { credits: -1 } },
+        { new: true },
+      );
+
+      if (operator.credits < 0) {
+        await OperatorModel.findByIdAndUpdate(req.operator._id, {
+          $inc: { credits: 1 },
+        });
+        return res.status(409).json({
+          success: false,
+          message: "Insufficient credits",
+        });
+      }
+
+      // Generate free username
+      let generatedUsername = EnterpriseController.generateUsername();
+      let isUnique = false;
+      while (!isUnique) {
+        const conflict = await UserModel.findOne({
+          freeUsername: generatedUsername,
+        });
+        if (!conflict) {
+          isUnique = true;
+        } else {
+          generatedUsername = EnterpriseController.generateUsername();
+        }
+      }
+
+      // Set username to telegram ID with collision handling
+      let activeUsername = telegramUsername;
+      const usernameConflict = await UserModel.findOne({
+        username: telegramUsername,
+      });
+      if (usernameConflict) {
+        activeUsername =
+          telegramUsername + "-" + crypto.randomBytes(2).toString("hex");
+      }
+
+      // Create employee at stage 1
+      const employee = new UserModel({
+        username: activeUsername,
+        freeUsername: generatedUsername,
+        tgid: telegramUsername,
+        usertype: 1,
+        createdByOperator: req.operator._id,
+        creationStage: 1, // Stage 1 complete
+        date: new Date(),
+      });
+
+      const savedEmployee = await employee.save();
+
+      // Log audit
+      await EnterpriseAuditModel.create({
+        actorType: "operator",
+        actorId: req.operator._id,
+        action: "employee.stage1",
+        details: {
+          tgid: telegramUsername,
+          username: activeUsername,
+          freeUsername: generatedUsername,
+        },
+        entityType: "User",
+        entityId: savedEmployee._id,
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: "Stage 1 complete: Telegram username registered",
+        data: {
+          userId: savedEmployee._id,
+          username: activeUsername,
+          freeUsername: generatedUsername,
+          tgid: telegramUsername,
+          stage: 1,
+          nextStage: "Profile Information",
+        },
+      });
+    } catch (error) {
+      console.error("EmployeeStage1 error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
+   * Stage 2: Update Employee Profile Information
+   * PUT /enterprise/operator/three-stage/employee/:userId/stage2
+   * Body: {
+   *   owner_name_english, owner_name_chinese, contact, whatsapp,
+   *   address1, address2, address3, email, instagram, linkedin,
+   *   youtube, facebook, wechat, twitter, line, tiktok
+   * }
+   */
+  static EmployeeStage2 = async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const {
+        owner_name_english,
+        owner_name_chinese,
+        contact,
+        whatsapp,
+        address1,
+        address2,
+        address3,
+        email,
+        instagram,
+        linkedin,
+        youtube,
+        facebook,
+        wechat,
+        twitter,
+        line,
+        tiktok,
+      } = req.body;
+
+      const validator = new Validator(req.body, {
+        owner_name_english: "required|string",
+        owner_name_chinese: "required|string",
+        contact: "required|string",
+      });
+
+      if (!(await validator.check())) {
+        return res.status(422).json({
+          success: false,
+          errors: validator.errors,
+        });
+      }
+
+      // Verify employee exists and belongs to this operator
+      const employee = await UserModel.findById(userId);
+      if (
+        !employee ||
+        employee.createdByOperator.toString() !== req.operator._id.toString()
+      ) {
+        return res.status(404).json({
+          success: false,
+          message: "Employee not found",
+        });
+      }
+
+      // Update profile information
+      const updatedEmployee = await UserModel.findByIdAndUpdate(
+        userId,
+        {
+          owner_name_english,
+          owner_name_chinese,
+          contact,
+          WhatsApp: whatsapp,
+          address1,
+          address2,
+          address3,
+          email,
+          Instagram: instagram,
+          Linkedin: linkedin,
+          Youtube: youtube,
+          Facebook: facebook,
+          WeChat: wechat,
+          Twitter: twitter,
+          Line: line,
+          TikTok: tiktok,
+          creationStage: 2, // Stage 2 complete
+          profilestatus: 1, // Mark profile as completed
+        },
+        { new: true },
+      );
+
+      // Log audit
+      await EnterpriseAuditModel.create({
+        actorType: "operator",
+        actorId: req.operator._id,
+        action: "employee.stage2",
+        details: {
+          userId,
+          name: owner_name_english,
+          nameChina: owner_name_chinese,
+        },
+        entityType: "User",
+        entityId: userId,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Stage 2 complete: Profile information saved",
+        data: {
+          userId: updatedEmployee._id,
+          stage: 2,
+          nextStage: "Company Information",
+          profile: {
+            nameEnglish: updatedEmployee.owner_name_english,
+            nameChinese: updatedEmployee.owner_name_chinese,
+            contact: updatedEmployee.contact,
+          },
+        },
+      });
+    } catch (error) {
+      console.error("EmployeeStage2 error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
+   * Stage 3: Update Employee Company Information
+   * PUT /enterprise/operator/three-stage/employee/:userId/stage3
+   * Supports file uploads for videos
+   * Body: {
+   *   company_name_english, company_name_chinese, designation,
+   *   description, website, telegram_link, facebook, instagram,
+   *   youtube, display_order, videos (file uploads)
+   * }
+   */
+  static EmployeeStage3 = async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const {
+        company_name_english,
+        company_name_chinese,
+        designation,
+        description,
+        website,
+        telegram_link,
+        facebook,
+        instagram,
+        youtube,
+        display_order,
+      } = req.body;
+
+      const validator = new Validator(req.body, {
+        company_name_english: "required|string",
+        company_name_chinese: "required|string",
+        designation: "required|string",
+      });
+
+      if (!(await validator.check())) {
+        return res.status(422).json({
+          success: false,
+          errors: validator.errors,
+        });
+      }
+
+      // Verify employee exists and belongs to this operator
+      const employee = await UserModel.findById(userId);
+      if (
+        !employee ||
+        employee.createdByOperator.toString() !== req.operator._id.toString()
+      ) {
+        return res.status(404).json({
+          success: false,
+          message: "Employee not found",
+        });
+      }
+
+      // Update company information
+      const updateData = {
+        company_name_english,
+        company_name_chinese,
+        companydesignation: designation,
+        description,
+        website,
+        telegramId: telegram_link,
+        Facebook: facebook,
+        Instagram: instagram,
+        Youtube: youtube,
+        company_order: display_order || 1,
+        creationStage: 3, // Stage 3 complete
+        companystatus: 1, // Mark company as completed
+      };
+
+      // Handle video uploads if present
+      if (req.files && req.files.videos) {
+        const videos = Array.isArray(req.files.videos)
+          ? req.files.videos
+          : [req.files.videos];
+        updateData.videos = videos.map((v) => v.filename);
+        if (videos.length > 0) {
+          updateData.video = videos[0].filename;
+        }
+      }
+
+      const updatedEmployee = await UserModel.findByIdAndUpdate(
+        userId,
+        updateData,
+        { new: true },
+      );
+
+      // Log audit
+      await EnterpriseAuditModel.create({
+        actorType: "operator",
+        actorId: req.operator._id,
+        action: "employee.stage3",
+        details: {
+          userId,
+          companyName: company_name_english,
+          designation,
+        },
+        entityType: "User",
+        entityId: userId,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Stage 3 complete: Employee account fully created",
+        data: {
+          userId: updatedEmployee._id,
+          stage: 3,
+          status: "Complete",
+          company: {
+            nameEnglish: updatedEmployee.company_name_english,
+            nameChinese: updatedEmployee.company_name_chinese,
+            designation: updatedEmployee.companydesignation,
+          },
+        },
+      });
+    } catch (error) {
+      console.error("EmployeeStage3 error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
+   * Stage 1: Initialize Donator with Telegram Username
+   * POST /enterprise/operator/three-stage/donator/stage1
+   */
+  static DonatorStage1 = async (req, res) => {
+    try {
+      const { telegramUsername } = req.body;
+
+      const validator = new Validator(
+        { telegramUsername },
+        {
+          telegramUsername: "required|string|minLength:3",
+        },
+      );
+
+      if (!(await validator.check())) {
+        return res.status(422).json({
+          success: false,
+          errors: validator.errors,
+        });
+      }
+
+      // Check if telegram username already exists
+      const existingUser = await UserModel.findOne({ tgid: telegramUsername });
+      if (existingUser) {
+        return res.status(409).json({
+          success: false,
+          message: "Telegram username already registered",
+        });
+      }
+
+      // Deduct one credit
+      const operator = await OperatorModel.findByIdAndUpdate(
+        req.operator._id,
+        { $inc: { credits: -1 } },
+        { new: true },
+      );
+
+      if (operator.credits < 0) {
+        await OperatorModel.findByIdAndUpdate(req.operator._id, {
+          $inc: { credits: 1 },
+        });
+        return res.status(409).json({
+          success: false,
+          message: "Insufficient credits",
+        });
+      }
+
+      // Generate free username
+      let generatedUsername = EnterpriseController.generateUsername();
+      let isUnique = false;
+      while (!isUnique) {
+        const conflict = await UserModel.findOne({
+          freeUsername: generatedUsername,
+        });
+        if (!conflict) {
+          isUnique = true;
+        } else {
+          generatedUsername = EnterpriseController.generateUsername();
+        }
+      }
+
+      let activeUsername = telegramUsername;
+      const usernameConflict = await UserModel.findOne({
+        username: telegramUsername,
+      });
+      if (usernameConflict) {
+        activeUsername =
+          telegramUsername + "-" + crypto.randomBytes(2).toString("hex");
+      }
+
+      // Create donator at stage 1
+      const donator = new UserModel({
+        username: activeUsername,
+        freeUsername: generatedUsername,
+        tgid: telegramUsername,
+        usertype: 3, // Donator type
+        createdByOperator: req.operator._id,
+        creationStage: 1,
+        date: new Date(),
+      });
+
+      const savedDonator = await donator.save();
+
+      await EnterpriseAuditModel.create({
+        actorType: "operator",
+        actorId: req.operator._id,
+        action: "donator.stage1",
+        details: {
+          tgid: telegramUsername,
+          username: activeUsername,
+        },
+        entityType: "User",
+        entityId: savedDonator._id,
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: "Stage 1 complete: Telegram username registered",
+        data: {
+          userId: savedDonator._id,
+          username: activeUsername,
+          freeUsername: generatedUsername,
+          tgid: telegramUsername,
+          stage: 1,
+          type: "donator",
+        },
+      });
+    } catch (error) {
+      console.error("DonatorStage1 error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
+   * Stage 2: Update Donator Profile Information
+   * PUT /enterprise/operator/three-stage/donator/:userId/stage2
+   */
+  static DonatorStage2 = async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const {
+        owner_name_english,
+        owner_name_chinese,
+        contact,
+        whatsapp,
+        address1,
+        address2,
+        address3,
+        email,
+        instagram,
+        linkedin,
+        youtube,
+        facebook,
+        wechat,
+        twitter,
+        line,
+        tiktok,
+      } = req.body;
+
+      const validator = new Validator(req.body, {
+        owner_name_english: "required|string",
+        owner_name_chinese: "required|string",
+        contact: "required|string",
+      });
+
+      if (!(await validator.check())) {
+        return res.status(422).json({
+          success: false,
+          errors: validator.errors,
+        });
+      }
+
+      const donator = await UserModel.findById(userId);
+      if (
+        !donator ||
+        donator.createdByOperator.toString() !== req.operator._id.toString()
+      ) {
+        return res.status(404).json({
+          success: false,
+          message: "Donator not found",
+        });
+      }
+
+      const updatedDonator = await UserModel.findByIdAndUpdate(
+        userId,
+        {
+          owner_name_english,
+          owner_name_chinese,
+          contact,
+          WhatsApp: whatsapp,
+          address1,
+          address2,
+          address3,
+          email,
+          Instagram: instagram,
+          Linkedin: linkedin,
+          Youtube: youtube,
+          Facebook: facebook,
+          WeChat: wechat,
+          Twitter: twitter,
+          Line: line,
+          TikTok: tiktok,
+          creationStage: 2,
+          profilestatus: 1,
+        },
+        { new: true },
+      );
+
+      await EnterpriseAuditModel.create({
+        actorType: "operator",
+        actorId: req.operator._id,
+        action: "donator.stage2",
+        details: { userId, name: owner_name_english },
+        entityType: "User",
+        entityId: userId,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Stage 2 complete: Profile information saved",
+        data: {
+          userId: updatedDonator._id,
+          stage: 2,
+          type: "donator",
+        },
+      });
+    } catch (error) {
+      console.error("DonatorStage2 error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
+   * Stage 3: Update Donator Company Information
+   * PUT /enterprise/operator/three-stage/donator/:userId/stage3
+   */
+  static DonatorStage3 = async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const {
+        company_name_english,
+        company_name_chinese,
+        designation,
+        description,
+        website,
+        telegram_link,
+        facebook,
+        instagram,
+        youtube,
+        display_order,
+      } = req.body;
+
+      const validator = new Validator(req.body, {
+        company_name_english: "required|string",
+        company_name_chinese: "required|string",
+        designation: "required|string",
+      });
+
+      if (!(await validator.check())) {
+        return res.status(422).json({
+          success: false,
+          errors: validator.errors,
+        });
+      }
+
+      const donator = await UserModel.findById(userId);
+      if (
+        !donator ||
+        donator.createdByOperator.toString() !== req.operator._id.toString()
+      ) {
+        return res.status(404).json({
+          success: false,
+          message: "Donator not found",
+        });
+      }
+
+      const updateData = {
+        company_name_english,
+        company_name_chinese,
+        companydesignation: designation,
+        description,
+        website,
+        telegramId: telegram_link,
+        Facebook: facebook,
+        Instagram: instagram,
+        Youtube: youtube,
+        company_order: display_order || 1,
+        creationStage: 3,
+        companystatus: 1,
+      };
+
+      if (req.files && req.files.videos) {
+        const videos = Array.isArray(req.files.videos)
+          ? req.files.videos
+          : [req.files.videos];
+        updateData.videos = videos.map((v) => v.filename);
+        if (videos.length > 0) {
+          updateData.video = videos[0].filename;
+        }
+      }
+
+      const updatedDonator = await UserModel.findByIdAndUpdate(
+        userId,
+        updateData,
+        { new: true },
+      );
+
+      await EnterpriseAuditModel.create({
+        actorType: "operator",
+        actorId: req.operator._id,
+        action: "donator.stage3",
+        details: {
+          userId,
+          companyName: company_name_english,
+        },
+        entityType: "User",
+        entityId: userId,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Stage 3 complete: Donator account fully created",
+        data: {
+          userId: updatedDonator._id,
+          stage: 3,
+          status: "Complete",
+          type: "donator",
+        },
+      });
+    } catch (error) {
+      console.error("DonatorStage3 error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
+   * Stage 1: Initialize Operator with Telegram Username
+   * POST /enterprise/me/three-stage/operator/stage1
+   */
+  static OperatorStage1 = async (req, res) => {
+    try {
+      const { telegramUsername } = req.body;
+
+      const validator = new Validator(
+        { telegramUsername },
+        {
+          telegramUsername: "required|string|minLength:3",
+        },
+      );
+
+      if (!(await validator.check())) {
+        return res.status(422).json({
+          success: false,
+          errors: validator.errors,
+        });
+      }
+
+      // Check if telegram username already exists
+      const existingOperator = await OperatorModel.findOne({
+        tgid: telegramUsername,
+      });
+      if (existingOperator) {
+        return res.status(409).json({
+          success: false,
+          message: "Telegram username already registered",
+        });
+      }
+
+      let activeUsername = telegramUsername;
+      const usernameConflict = await OperatorModel.findOne({
+        username: telegramUsername,
+      });
+      if (usernameConflict) {
+        activeUsername =
+          telegramUsername + "-" + crypto.randomBytes(2).toString("hex");
+      }
+
+      // Create operator at stage 1
+      const operator = new OperatorModel({
+        username: activeUsername,
+        tgid: telegramUsername,
+        role: "operator",
+        isActive: true,
+        createdByEnterprise: req.enterprise._id,
+        creationStage: 1,
+      });
+
+      const savedOperator = await operator.save();
+
+      await EnterpriseAuditModel.create({
+        actorType: "enterprise",
+        actorId: req.enterprise._id,
+        action: "operator.stage1",
+        details: {
+          tgid: telegramUsername,
+          username: activeUsername,
+        },
+        entityType: "Operator",
+        entityId: savedOperator._id,
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: "Stage 1 complete: Telegram username registered",
+        data: {
+          operatorId: savedOperator._id,
+          username: activeUsername,
+          tgid: telegramUsername,
+          stage: 1,
+          type: "operator",
+        },
+      });
+    } catch (error) {
+      console.error("OperatorStage1 error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
+   * Stage 2: Update Operator Profile Information
+   * PUT /enterprise/me/three-stage/operator/:operatorId/stage2
+   */
+  static OperatorStage2 = async (req, res) => {
+    try {
+      const { operatorId } = req.params;
+      const {
+        name,
+        contact,
+        whatsapp,
+        address1,
+        address2,
+        address3,
+        email,
+        instagram,
+        linkedin,
+        youtube,
+        facebook,
+        wechat,
+        twitter,
+        line,
+        tiktok,
+      } = req.body;
+
+      const validator = new Validator(req.body, {
+        name: "required|string",
+        contact: "required|string",
+      });
+
+      if (!(await validator.check())) {
+        return res.status(422).json({
+          success: false,
+          errors: validator.errors,
+        });
+      }
+
+      const operator = await OperatorModel.findById(operatorId);
+      if (
+        !operator ||
+        operator.createdByEnterprise.toString() !==
+          req.enterprise._id.toString()
+      ) {
+        return res.status(404).json({
+          success: false,
+          message: "Operator not found",
+        });
+      }
+
+      // Since OperatorModel doesn't have all profile fields, we store them as best as possible
+      const updatedOperator = await OperatorModel.findByIdAndUpdate(
+        operatorId,
+        {
+          name,
+          creationStage: 2,
+        },
+        { new: true },
+      );
+
+      await EnterpriseAuditModel.create({
+        actorType: "enterprise",
+        actorId: req.enterprise._id,
+        action: "operator.stage2",
+        details: { operatorId, name },
+        entityType: "Operator",
+        entityId: operatorId,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Stage 2 complete: Profile information saved",
+        data: {
+          operatorId: updatedOperator._id,
+          stage: 2,
+          type: "operator",
+        },
+      });
+    } catch (error) {
+      console.error("OperatorStage2 error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
+   * Stage 3: Update Operator Company Information
+   * PUT /enterprise/me/three-stage/operator/:operatorId/stage3
+   */
+  static OperatorStage3 = async (req, res) => {
+    try {
+      const { operatorId } = req.params;
+      const {
+        company_name_english,
+        company_name_chinese,
+        designation,
+        description,
+        website,
+        telegram_link,
+        facebook,
+        instagram,
+        youtube,
+        display_order,
+      } = req.body;
+
+      const validator = new Validator(req.body, {
+        company_name_english: "required|string",
+        company_name_chinese: "required|string",
+        designation: "required|string",
+      });
+
+      if (!(await validator.check())) {
+        return res.status(422).json({
+          success: false,
+          errors: validator.errors,
+        });
+      }
+
+      const operator = await OperatorModel.findById(operatorId);
+      if (
+        !operator ||
+        operator.createdByEnterprise.toString() !==
+          req.enterprise._id.toString()
+      ) {
+        return res.status(404).json({
+          success: false,
+          message: "Operator not found",
+        });
+      }
+
+      const updateData = {
+        creationStage: 3,
+      };
+
+      const updatedOperator = await OperatorModel.findByIdAndUpdate(
+        operatorId,
+        updateData,
+        { new: true },
+      );
+
+      await EnterpriseAuditModel.create({
+        actorType: "enterprise",
+        actorId: req.enterprise._id,
+        action: "operator.stage3",
+        details: {
+          operatorId,
+          companyName: company_name_english,
+        },
+        entityType: "Operator",
+        entityId: operatorId,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Stage 3 complete: Operator account fully created",
+        data: {
+          operatorId: updatedOperator._id,
+          stage: 3,
+          status: "Complete",
+          type: "operator",
+        },
+      });
+    } catch (error) {
+      console.error("OperatorStage3 error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
   };
 }
 
-export default DonatorController;
+export default EnterpriseController;

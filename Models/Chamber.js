@@ -24,6 +24,7 @@ const chamberSchema = new mongoose.Schema({
   SnapChat: { type: String },
   Skype: { type: String },
   TikTok: { type: String },
+  isTemplate: { type: Boolean, default: true },
   date: { type: Date, default: Date.now },
   usertype: { type: Number, default: 0 },
 });

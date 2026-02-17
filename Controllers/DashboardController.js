@@ -204,12 +204,14 @@ class DashboardController {
     });
   };
 
-  static DonatedUser = async (req, res) => {
+  static EnterpriseUser = async (req, res) => {
     let query = { usertype: 2 };
     if (req.query.country && req.query.country !== "") {
       query.country = req.query.country;
     }
-    let donateduser = await UserModel.find(query).sort({ donatorOnDate: -1 });
+    let enterpriseuser = await UserModel.find(query).sort({
+      enterpriseOnDate: -1,
+    });
     let country1 = await UserModel.aggregate([
       {
         $match: {
@@ -225,35 +227,35 @@ class DashboardController {
         $sort: { startdate: -1 },
       },
     ]);
-    res.render("User/Donated", {
+    res.render("User/Enterprise", {
       baseUrl,
-      donateduser: donateduser,
+      enterpriseuser: enterpriseuser,
       country1: country1,
       selectedCountry: req.query.country || "",
-      path: "donateduser",
+      path: "enterpriseuser",
       session: req.session,
       moment: moment,
       loginUser: req.user,
     });
   };
 
-  static ViewDonator = async (req, res) => {
+  static ViewEnterprise = async (req, res) => {
     try {
       const id = req.params.id || req.query.id;
 
-      // Get donator information
-      const donator = await UserModel.findById(id).lean();
-      if (!donator || donator.usertype !== 2) {
+      // Get enterprise information
+      const enterprise = await UserModel.findById(id).lean();
+      if (!enterprise || enterprise.usertype !== 2) {
         return res.status(404).render("Error", {
           baseUrl,
-          error: "Donator not found",
+          error: "Enterprise not found",
         });
       }
 
-      // Get all operators created by this donator
+      // Get all operators created by this enterprise
       const OperatorModel = (await import("../Models/Operator.js")).default;
       const operators = await OperatorModel.find({
-        createdByDonator: id,
+        createdByEnterprise: id,
       })
         .sort({ createdAt: -1 })
         .lean();
@@ -267,15 +269,16 @@ class DashboardController {
         .sort({ createdAt: -1 })
         .lean();
 
-      // Get all purchases made by this donator
-      const DonatorPurchaseModel = (
-        await import("../Models/DonatorPurchase.js")
+      // Get all purchases made by this enterprise
+      const EnterprisePurchaseModel = (
+        await import("../Models/EnterprisePurchase.js")
       ).default;
-      const DonatorPackageModel = (await import("../Models/DonatorPackage.js"))
-        .default;
+      const EnterprisePackageModel = (
+        await import("../Models/EnterprisePackage.js")
+      ).default;
 
-      const purchases = await DonatorPurchaseModel.find({
-        donator: id,
+      const purchases = await EnterprisePurchaseModel.find({
+        enterprise: id,
       })
         .populate("operator", "name email tgid")
         .populate("package", "name employeeCredits operatorCredits price")
@@ -303,20 +306,20 @@ class DashboardController {
         totalEmployeeCredits,
       };
 
-      res.render("User/DonatorView", {
+      res.render("User/EnterpriseView", {
         baseUrl,
-        donator,
+        enterprise,
         operators,
         employees,
         purchases,
         stats,
-        path: "donateduser",
+        path: "enterpriseuser",
         session: req.session,
         moment: moment,
         loginUser: req.user,
       });
     } catch (error) {
-      console.error("ViewDonator error:", error);
+      console.error("ViewEnterprise error:", error);
       res.status(500).render("Error", {
         baseUrl,
         error: error.message,

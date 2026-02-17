@@ -6,7 +6,7 @@
     <div class="page-title mb-3">
       <div class="row">
         <div class="col-12 col-md-6 order-md-1 order-last">
-          <h3><a href="<%= baseUrl %>admin/donator/packages" class="text-primary"><i class="fas fa-arrow-left me-2"></i></a><%= isEdit ? 'Edit' : 'Create' %> Package</h3>
+          <h3><a href="<%= baseUrl %>admin/enterprise/packages" class="text-primary"><i class="fas fa-arrow-left me-2"></i></a><%= isEdit ? 'Edit' : 'Create' %> Package</h3>
         </div>
       </div>
     </div>
@@ -57,7 +57,7 @@
               <button type="submit" class="btn btn-primary">
                 <i class="bi bi-check-circle"></i> <%= isEdit ? 'Update' : 'Create' %>
               </button>
-              <a href="<%= baseUrl %>admin/donator/packages" class="btn btn-secondary">Cancel</a>
+              <a href="<%= baseUrl %>admin/enterprise/packages" class="btn btn-secondary">Cancel</a>
             </div>
           </form>
         </div>
@@ -82,8 +82,8 @@
 <script>
   const serverData = JSON.parse(document.getElementById('server-data').textContent);
   const baseUrl = serverData.baseUrl;
-  const donatorIsEdit = serverData.isEdit;
-  const donatorPackageId = serverData.packageId;
+  const enterpriseIsEdit = serverData.isEdit;
+  const enterprisePackageId = serverData.packageId;
 
   document.getElementById('packageForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -97,9 +97,9 @@
     };
 
     try {
-      const url = donatorIsEdit 
-        ? baseUrl + 'admin/donator/package/edit/' + donatorPackageId
-        : baseUrl + 'admin/donator/package/create';
+      const url = enterpriseIsEdit 
+        ? baseUrl + 'admin/enterprise/package/edit/' + enterprisePackageId
+        : baseUrl + 'admin/enterprise/package/create';
 
       const response = await fetch(url, {
         method: 'POST',
@@ -115,10 +115,10 @@
         // Show success modal
         Swal.fire(
           'Success!',
-          result.message || (donatorIsEdit ? 'Package updated successfully!' : 'Package created successfully!'),
+          result.message || (enterpriseIsEdit ? 'Package updated successfully!' : 'Package created successfully!'),
           'success'
         ).then(() => {
-          window.location.href = baseUrl + 'admin/donator/packages';
+          window.location.href = baseUrl + 'admin/enterprise/packages';
         });
       } else {
         Swal.fire(

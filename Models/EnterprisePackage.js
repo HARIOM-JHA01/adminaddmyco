@@ -6,7 +6,7 @@ import mongoose from "mongoose";
 // - operatorCredits: number of operator accounts/slots granted
 // - price (USDT)
 // - status (active)
-const donatorPackageSchema = new mongoose.Schema(
+const enterprisePackageSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     employeeCredits: { type: Number, required: true, default: 0 },
@@ -18,12 +18,12 @@ const donatorPackageSchema = new mongoose.Schema(
 );
 
 // Indexes for common queries
-donatorPackageSchema.index({ name: 1 });
-donatorPackageSchema.index({ status: 1 });
+enterprisePackageSchema.index({ name: 1 });
+enterprisePackageSchema.index({ status: 1 });
 
-const DonatorPackageModel = mongoose.model(
-  "DonatorPackage",
-  donatorPackageSchema,
+const EnterprisePackageModel = mongoose.model(
+  "EnterprisePackage",
+  enterprisePackageSchema,
 );
 
-export default DonatorPackageModel;
+export default EnterprisePackageModel;

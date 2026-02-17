@@ -35,7 +35,7 @@ user.delete(
 // ..........................USERS[FREE,PRIMIUMUSER,DONATED]...................
 user.post("/freeuser", UserController.FreeUser);
 user.post("/premiumuser", isUser, UserController.PremiumUser);
-user.post("/donateduser", isUser, UserController.DonatedUser);
+user.post("/enterpriseuser", isUser, UserController.EnterpriseUser);
 
 // ..........................PURCHASE MEMBERSHIP...............................
 user.get("/purchasemembership", UserController.PurchaseMembership);
@@ -109,7 +109,7 @@ user.post("/country", UserController.Country);
 // ......................USERS[FREE,PRIMIUMUSER,DONATED].......................
 user.post("/freeuser", UserController.FreeUser);
 user.post("/premiumuser", UserController.PremiumUser);
-user.post("/donateduser", UserController.DonatedUser);
+user.post("/enterpriseuser", UserController.EnterpriseUser);
 
 // ...............................MEMBERSHIP...................................
 user.get("/membershiptenure", UserController.membershiptenure);
@@ -183,7 +183,34 @@ user.post("/getusercompanies", UserController.GetUserCompanies);
 user.post("/getuserchambers", UserController.GetUserChambers);
 user.post("/getbackgroundbyusername", UserController.GetUserBackground);
 
-// ...............................CREATE DONATOR.......................................
-user.post("/create-donator", UserController.CreateDonator);
+// ...............................CREATE ENTERPRISE.......................................
+user.post("/create-enterprise", UserController.CreateEnterprise);
+
+// ...............................TEMPLATES & EMPLOYEE NAMECARDS.......................................
+// Get accessible company templates (for dropdown selection)
+user.get("/company-templates", isUser, UserController.getCompanyTemplates);
+
+// Get accessible chamber templates (for dropdown selection)
+user.get("/chamber-templates", isUser, UserController.getChamberTemplates);
+
+// Create employee namecard with template selection
+user.post("/employee-namecard", isUser, UserController.createEmployeeNamecard);
+
+// Get all employee namecards for authenticated user
+user.get("/employee-namecards", isUser, UserController.getEmployeeNamecards);
+
+// Update employee namecard
+user.post(
+  "/update-employee-namecard",
+  isUser,
+  UserController.updateEmployeeNamecard,
+);
+
+// Delete employee namecard
+user.delete(
+  "/employee-namecard/:id",
+  isUser,
+  UserController.deleteEmployeeNamecard,
+);
 
 export default user;

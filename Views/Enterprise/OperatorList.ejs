@@ -10,7 +10,7 @@
           <h3><a href="<%= baseUrl %>admin/dashboard" class="text-primary"><i class="fas fa-arrow-left me-2"></i></a>Operators</h3>
         </div>
         <div class="col-12 col-md-6 order-md-2 order-first">
-          <a href="<%= baseUrl %>admin/donator/operator/create" class="btn btn-primary float-end">
+          <a href="<%= baseUrl %>admin/enterprise/operator/create" class="btn btn-primary float-end">
             <i class="bi bi-plus-circle"></i> New Operator
           </a>
         </div>
@@ -27,7 +27,6 @@
                   <th>Name</th>
                   <th>Email</th>
                   <th>Employee Credits</th>
-                  <th>Operator Slots</th>
                   <th>Status</th>
                   <th>Last Login</th>
                   <th>Created</th>
@@ -41,7 +40,6 @@
                     <td><strong><%= op.name %></strong></td>
                     <td><%= op.email %></td>
                     <td><span class="badge bg-info"><%= op.credits %> credits</span></td>
-                    <td><span class="badge bg-primary"><%= op.operatorSlots || 0 %> slots</span></td>
                     <td>
                       <% if (op.isActive) { %>
                         <span class="badge bg-success">Active</span>
@@ -92,7 +90,7 @@ $(document).ready(function() {
 });
 
 function editOperator(id) {
-  window.location.href = '<%= baseUrl %>admin/donator/operator/edit/' + id;
+  window.location.href = '<%= baseUrl %>admin/enterprise/operator/edit/' + id;
 }
 
 $(document).on('click', '.deactivate-operator', function() {
@@ -112,7 +110,7 @@ $(document).on('click', '.deactivate-operator', function() {
     if (confirm) {
       $.ajax({
         type: "POST",
-        url: baseUrl + 'admin/donator/operator/' + action + '/' + id,
+        url: baseUrl + 'admin/enterprise/operator/' + action + '/' + id,
         dataType: "json",
         success: function(response) {
           if (response.success) {

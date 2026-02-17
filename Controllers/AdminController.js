@@ -12,7 +12,7 @@ import AdminModel from "../Models/Admin.js";
 import UserModel from "../Models/User.js";
 import mongoose from "mongoose";
 import OperatorModel from "../Models/Operator.js";
-import DonatorPurchaseModel from "../Models/DonatorPurchase.js";
+import EnterprisePurchaseModel from "../Models/EnterprisePurchase.js";
 import MembershipModel from "../Models/Membership.js";
 import BannerModel from "../Models/Banner.js";
 import SystemModel from "../Models/Systemimage.js";
@@ -145,11 +145,11 @@ class AdminController {
     });
   };
 
-  // Admin: list donator operators + employees (JSON)
+  // Admin: list enterprise operators + employees (JSON)
   // - supports pagination and simple search
-  // - NOTE: employees created via the Donator flow are identified by `paymentBy: 7`
+  // - NOTE: employees created via the Enterprise flow are identified by `paymentBy: 7`
   // - accurate per-operator employee -> operator linkage requires `createdByOperator` on User (future enhancement)
-  static DonatorOperatorsEmployees = async (req, res) => {
+  static EnterpriseOperatorsEmployees = async (req, res) => {
     try {
       const operatorPage = Math.max(1, parseInt(req.query.operatorPage || "1"));
       const operatorLimit = Math.min(
@@ -172,7 +172,7 @@ class AdminController {
         operatorQuery.$or = [{ name: re }, { email: re }];
       }
 
-      const employeeQuery = { paymentBy: 7 }; // employees created via donator/operator flow
+      const employeeQuery = { paymentBy: 7 }; // employees created via enterprise/operator flow
       if (q) {
         const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
         employeeQuery.$or = [
@@ -190,9 +190,7 @@ class AdminController {
           .sort({ createdAt: -1 })
           .skip((operatorPage - 1) * operatorLimit)
           .limit(operatorLimit)
-          .select(
-            "name email credits operatorSlots isActive createdAt lastLogin",
-          )
+          .select("name email credits isActive createdAt lastLogin")
           .lean(),
       ]);
 
@@ -200,7 +198,7 @@ class AdminController {
       const operatorIds = operators.map((o) => o._id).filter(Boolean);
       let creditsByOperator = {};
       if (operatorIds.length) {
-        const agg = await DonatorPurchaseModel.aggregate([
+        const agg = await EnterprisePurchaseModel.aggregate([
           {
             $match: {
               operator: {
@@ -255,7 +253,7 @@ class AdminController {
         },
       });
     } catch (err) {
-      console.error("DonatorOperatorsEmployees error:", err);
+      console.error("EnterpriseOperatorsEmployees error:", err);
       return res.status(500).json({ success: false, message: "Server error" });
     }
   };
@@ -1032,7 +1030,7 @@ class AdminController {
       const user = await UserModel.findById(req.query.id);
       await UserModel.findByIdAndUpdate(user._id, {
         usertype: 2,
-        donatorOnDate: new Date(),
+        enterpriseOnDate: new Date(),
       });
       req.session.tostMsg = "Added Successfully...";
       req.session.tostBackground = "#0b6a3c";
@@ -1049,7 +1047,7 @@ class AdminController {
     res.render("User/Viewpremium", { baseUrl, user: user, path: "user" });
   };
 
-  static DeleteDonatedUser = async (req, res) => {
+  static DeleteEnterpriseUser = async (req, res) => {
     await UserModel.findByIdAndUpdate(req.query.id, {
       usertype: 0,
       paymentstatus: 0,
@@ -1062,13 +1060,13 @@ class AdminController {
     return res.status(200).json({
       status: true,
       message: "Deleted successfully.",
-      Url: `${baseUrl}admin/donateduser`,
+      Url: `${baseUrl}admin/enterpriseuser`,
     });
   };
 
-  static ViewDonatedUser = async (req, res) => {
+  static ViewEnterpriseUser = async (req, res) => {
     let user = await UserModel.findById(req.query.id);
-    res.render("User/Viewdonate", { baseUrl, user: user, path: "user" });
+    res.render("User/Viewenterprise", { baseUrl, user: user, path: "user" });
   };
 
   // ....................CONFIGURATION(KEY-VALUE)...................

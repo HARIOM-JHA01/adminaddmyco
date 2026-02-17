@@ -31,6 +31,7 @@ const companySchema = new mongoose.Schema({
   fanpage: { type: String },
   companystatus: { type: Number, default: 0 },
   company_order: { type: Number, default: 1 },
+  isTemplate: { type: Boolean, default: true },
   date: { type: Date, default: Date.now },
   // usertype:{type:Number,default:0},
 });

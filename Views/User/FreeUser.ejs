@@ -96,7 +96,7 @@ import session from "express-session"
                                                                 data-id="<%= v._id %>" href="#">Switched to Premium</a>
                                                         </li>
                                                         <li><a class="dropdown-item delete-data1" id="refresh"
-                                                                data-id="<%= v._id %>" href="#">Switched to Donator</a>
+                                                                data-id="<%= v._id %>" href="#">Switched to Enterprise</a>
                                                         </li>
                                                     </ul> -->
                   </div>
@@ -209,7 +209,7 @@ $("document").ready(function () {
     var baseUrl = '<%= baseUrl %>'
     swal({
         title: "Are you sure?",
-        text: "You want to upgrade your user into donator user?",
+        text: "You want to upgrade your user into enterprise user?",
         icon: "warning",
         buttons: true,
         dangerMode: true,

@@ -2565,8 +2565,8 @@ class UserController {
     } catch (error) {}
   };
 
-  // ...........................USERS[DONATED]...................
-  static DonatedUser = async (req, res) => {
+  // ...........................USERS[ENTERPRISE]...................
+  static EnterpriseUser = async (req, res) => {
     try {
       let data = req.body;
       console.log("DATA", data);
@@ -2585,14 +2585,14 @@ class UserController {
           { _id: user._id },
           {
             usertype: 2,
-            donatorOnDate: new Date(),
+            enterpriseOnDate: new Date(),
           },
         );
         var data1 = await UserModel.findById(user._id);
         return res.status(422).json({
           success: false,
           data: data1,
-          message: "This User is Donators User",
+          message: "This User is Enterprise User",
         });
       } else {
         return res.status(422).json({
@@ -2716,7 +2716,7 @@ class UserController {
   // --------------------- Upload single background image (multipart) ---------------------
   // POST /uploadBackground
   // Auth: Bearer token / session (isUser middleware)
-  // Permission: premium OR donator users (usertype === 1 or 2)
+  // Permission: premium OR enterprise users (usertype === 1 or 2)
   // Accepts: multipart/form-data { file, category?, title? }
   // Allowed MIME: image/jpeg, image/png, image/webp
   // Max size: 5 MB -> returns 413 if exceeded
@@ -2726,11 +2726,11 @@ class UserController {
       const user = req.user;
       if (!user) return res.sendStatus(401);
 
-      // Allow usertype 1 (premium) and 2 (donator)
+      // Allow usertype 1 (premium) and 2 (enterprise)
       if (user.usertype !== 1 && user.usertype !== 2) {
         return res.status(403).json({
           success: false,
-          message: "Premium/donator membership required",
+          message: "Premium/enterprise membership required",
         });
       }
 
@@ -2764,14 +2764,9 @@ class UserController {
           .json({ success: false, message: "File too large" });
       }
 
-      // Persist file to the project `assets` directory (deterministic, based on this file location)
-      // Use __dirname to ensure uploads go to the repository's ./assets, regardless of process.cwd()
-      const assetsRoot = path.resolve(__dirname, "..", "assets");
-      // Log both paths to aid troubleshooting when PM2/workdir differs
-      console.log(
-        `UploadBackground: __dirname=${__dirname}, process.cwd()=${process.cwd()}, assetsRoot=${assetsRoot}`,
-      );
-      const uploadDir = await makeDir(path.join(assetsRoot, "background"));
+      // Store file in uploads/background directory
+      const uploadsRoot = path.resolve(__dirname, "uploads");
+      const uploadDir = await makeDir(path.join(uploadsRoot, "background"));
 
       const ext =
         (file.name && file.name.split(".").pop()) ||
@@ -2781,10 +2776,7 @@ class UserController {
       const uploadPath = path.join(uploadDir, fileName);
       await file.mv(uploadPath);
 
-      // verify file was written where expected and log both assetsRoot and the saved path
-      console.log(
-        `UploadBackground: assetsRoot=${assetsRoot}, saved file to ${uploadPath}`,
-      );
+      // Verify file was written
       if (!fs.existsSync(uploadPath)) {
         console.error(
           `UploadBackground: file not found after mv(): ${uploadPath}`,
@@ -2796,27 +2788,12 @@ class UserController {
 
       // Build public URL
       const cleanBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
-      const fileUrl = `${cleanBase}/assets/background/${fileName}`;
+      const fileUrl = `${cleanBase}/uploads/background/${fileName}`;
 
-      // Update BackgroundModel -> append to Thumbnail CSV
-      const existing = await BackgroundModel.findOne({ user_id: user._id });
-      let thumbnails = [];
-      if (existing && existing.Thumbnail) {
-        // Extract only filenames (not full URLs) from existing thumbnails
-        thumbnails = existing.Thumbnail.split(",")
-          .filter(Boolean)
-          .map((item) => {
-            // If it's a full URL, extract just the filename
-            if (item.startsWith("http://") || item.startsWith("https://")) {
-              return item.split("/").pop();
-            }
-            return item;
-          });
-      }
-      thumbnails.push(fileName);
+      // Update BackgroundModel with fileUrl
       await BackgroundModel.updateOne(
         { user_id: user._id },
-        { $set: { Thumbnail: thumbnails.join(",") } },
+        { $set: { fileUrl: fileUrl } },
         { upsert: true },
       );
       const background = await BackgroundModel.findOne({ user_id: user._id });
@@ -3201,31 +3178,15 @@ class UserController {
     });
 
     // If authenticated user found, always prepend a "Your images" category
-    // (Thumbnail array will be empty if the user has no uploaded backgrounds)
+    // with the user's uploaded background
     if (authUser) {
       try {
         const bg = await BackgroundModel.findOne({ user_id: authUser._id });
-        const thumbs =
-          bg && bg.Thumbnail
-            ? bg.Thumbnail.split(",")
-                .filter(Boolean)
-                .filter((f) => {
-                  // Filter out base64 data - only keep actual filenames/URLs
-                  return !f.includes("base64") && !f.startsWith("data:");
-                })
-                .map((f) => {
-                  // If already a full URL, return as-is
-                  if (f.startsWith("http://") || f.startsWith("https://")) {
-                    return f;
-                  }
-                  // Otherwise, prepend base URL
-                  return baseUrl + "assets/background/" + f;
-                })
-            : [];
+        const fileUrls = bg && bg.fileUrl ? [bg.fileUrl] : [];
 
         const userEntry = {
           _id: `user-${authUser._id}`,
-          Thumbnail: thumbs,
+          Thumbnail: fileUrls,
           categoryname: "your-images",
           date: bg ? bg.date : null,
           __v: 0,
@@ -4638,10 +4599,10 @@ class UserController {
   };
 
   /**
-   * Create a new donator user
-   * POST /api/v1/user/create-donator
+   * Create a new enterprise user
+   * POST /api/v1/user/create-enterprise
    */
-  static CreateDonator = async (req, res) => {
+  static CreateEnterprise = async (req, res) => {
     try {
       const { tgid, country } = req.body;
 
@@ -4705,28 +4666,28 @@ class UserController {
       const memberid =
         countryCode + "-" + padding.slice(0, -sequenceStr.length) + sequenceStr;
 
-      // Create new donator user
+      // Create new enterprise user
       const newUser = new UserModel({
         tgid: tgid.trim(),
         country: country.trim(),
         freeUsername: freeUsername,
         username: tgid.trim(),
         memberid: memberid,
-        usertype: 2, // Donator type
-        membertype: "Donator",
+        usertype: 2, // Enterprise type
+        membertype: "Enterprise",
         joindate: new Date().toISOString(),
-        donatorOnDate: new Date(),
+        enterpriseOnDate: new Date(),
         date: new Date(),
         isReferral: 0,
         refstatue: 0,
-        paymentBy: 2, // Donator payment type
+        paymentBy: 2, // Enterprise payment type
       });
 
       const savedUser = await newUser.save();
 
       return res.status(200).json({
         success: true,
-        message: "Donator user created successfully",
+        message: "Enterprise user created successfully",
         data: {
           _id: savedUser._id,
           tgid: savedUser.tgid,
@@ -4737,7 +4698,722 @@ class UserController {
         },
       });
     } catch (error) {
-      console.error("CreateDonator error:", error);
+      console.error("CreateEnterprise error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  };
+
+  // ======================== TEMPLATE METHODS ========================
+
+  /**
+   * Get company templates accessible to authenticated user
+   * For regular users: only their own company templates
+   * For operators: their own + parent enterprise's company templates
+   */
+  static getCompanyTemplates = async (req, res) => {
+    try {
+      let userId = req.user?._id;
+      let operatorId = req.operator?._id;
+      let enterpriseId = null;
+
+      // Determine which user/enterprise to query
+      if (operatorId && req.operator.createdByEnterprise) {
+        enterpriseId = req.operator.createdByEnterprise;
+      } else if (!userId && !operatorId) {
+        return res.status(401).json({
+          success: false,
+          message: "Authentication required",
+        });
+      }
+
+      // Build query to get templates
+      const query = { isTemplate: true };
+      if (userId) {
+        query.user_id = userId;
+      } else if (enterpriseId) {
+        // For operators, get both their own (null user_id from operator context)
+        // and parent enterprise templates
+        query.$or = [
+          { user_id: enterpriseId },
+          // Could add operator's own companies here if needed
+        ];
+      }
+
+      const templates = await CompanyModel.find(query)
+        .select(
+          "_id company_name_english company_name_chinese companydesignation",
+        )
+        .lean()
+        .sort({ company_order: 1 });
+
+      return res.status(200).json({
+        success: true,
+        message: "Company templates retrieved successfully",
+        data: templates,
+      });
+    } catch (error) {
+      console.error("getCompanyTemplates error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
+   * Get chamber templates accessible to authenticated user
+   * For regular users: only their own chamber templates
+   * For operators: their own + parent enterprise's chamber templates
+   */
+  static getChamberTemplates = async (req, res) => {
+    try {
+      let userId = req.user?._id;
+      let operatorId = req.operator?._id;
+      let enterpriseId = null;
+
+      // Determine which user/enterprise to query
+      if (operatorId && req.operator.createdByEnterprise) {
+        enterpriseId = req.operator.createdByEnterprise;
+      } else if (!userId && !operatorId) {
+        return res.status(401).json({
+          success: false,
+          message: "Authentication required",
+        });
+      }
+
+      // Build query to get templates
+      const query = { isTemplate: true };
+      if (userId) {
+        query.user_id = userId;
+      } else if (enterpriseId) {
+        query.$or = [{ user_id: enterpriseId }];
+      }
+
+      const templates = await ChamberModel.find(query)
+        .select(
+          "_id chamber_name_english chamber_name_chinese chamberdesignation",
+        )
+        .lean()
+        .sort({ chamber_order: 1 });
+
+      return res.status(200).json({
+        success: true,
+        message: "Chamber templates retrieved successfully",
+        data: templates,
+      });
+    } catch (error) {
+      console.error("getChamberTemplates error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  };
+
+  // ======================== EMPLOYEE NAMECARD METHODS ========================
+
+  /**
+   * Create employee namecard with company/chamber template selection
+   * POST /employee-namecard
+   */
+  static createEmployeeNamecard = async (req, res) => {
+    try {
+      const {
+        name_english,
+        name_chinese,
+        telegram_username,
+        contact_number,
+        address1,
+        address2,
+        address3,
+        whatsapp_link,
+        email,
+        facebook,
+        instagram,
+        x_twitter,
+        line,
+        youtube,
+        website,
+        company_template_id,
+        chamber_template_id,
+      } = req.body;
+
+      // Validation - Required fields
+      const validator = new Validator(
+        {
+          name_english,
+          name_chinese,
+          telegram_username,
+          contact_number,
+          address1,
+          address2,
+          address3,
+          whatsapp_link,
+          company_template_id,
+        },
+        {
+          name_english: "required|string",
+          name_chinese: "required|string",
+          telegram_username: "required|string",
+          contact_number: "required|string",
+          address1: "required|string",
+          address2: "required|string",
+          address3: "required|string",
+          whatsapp_link: "required|string",
+          company_template_id: "required",
+        },
+      );
+
+      if (!(await validator.check())) {
+        return res.status(422).json({
+          success: false,
+          errors: validator.errors,
+        });
+      }
+
+      // Get user/operator context
+      const userId = req.user?._id;
+      const operatorId = req.operator?._id;
+
+      if (!userId && !operatorId) {
+        return res.status(401).json({
+          success: false,
+          message: "Authentication required",
+        });
+      }
+
+      // Verify company template exists and is accessible
+      const companyTemplate = await CompanyModel.findById(company_template_id);
+      if (!companyTemplate) {
+        return res.status(404).json({
+          success: false,
+          message: "Company template not found",
+        });
+      }
+
+      // Check permissions: user owns it or it's from their parent enterprise
+      const isTemplateAccessible =
+        companyTemplate.user_id.toString() === userId?.toString() ||
+        (operatorId &&
+          companyTemplate.user_id.toString() ===
+            req.operator.createdByEnterprise?.toString());
+
+      if (!isTemplateAccessible) {
+        return res.status(403).json({
+          success: false,
+          message: "You do not have access to this company template",
+        });
+      }
+
+      // Verify chamber template if provided
+      if (chamber_template_id) {
+        const chamberTemplate =
+          await ChamberModel.findById(chamber_template_id);
+        if (!chamberTemplate) {
+          return res.status(404).json({
+            success: false,
+            message: "Chamber template not found",
+          });
+        }
+
+        const isChamberAccessible =
+          chamberTemplate.user_id.toString() === userId?.toString() ||
+          (operatorId &&
+            chamberTemplate.user_id.toString() ===
+              req.operator.createdByEnterprise?.toString());
+
+        if (!isChamberAccessible) {
+          return res.status(403).json({
+            success: false,
+            message: "You do not have access to this chamber template",
+          });
+        }
+      }
+
+      // Handle file uploads (profile image/video)
+      const path = await makeDir("./assets/employeenamecard/");
+      let profileImage = null;
+      let profileVideo = null;
+
+      // Check if files were uploaded
+      if (req.files) {
+        const incomingFiles = [];
+        for (let i = 1; i <= 2; i++) {
+          let f = req.files?.[`file${i}`];
+          if (!f && i === 1) {
+            // Fallback to legacy field names
+            if (req.files?.profile_image) f = req.files.profile_image;
+            else if (req.files?.profile_video) f = req.files.profile_video;
+          }
+          if (!f) continue;
+          if (Array.isArray(f)) f = f[0];
+          incomingFiles.push(f);
+        }
+
+        // Process uploaded files
+        for (const file of incomingFiles) {
+          const d = new Date();
+          const safeName = file.name.replace(/\s/g, "");
+          const r = (Math.random() + 1).toString(36).substring(7);
+          const filename = d.getSeconds() + "." + r + "." + safeName;
+          const uploadPath = path + "/" + filename;
+
+          try {
+            await new Promise((resolve, reject) =>
+              file.mv(uploadPath, (err) => (err ? reject(err) : resolve())),
+            );
+          } catch (err) {
+            console.error("Failed to save uploaded file:", err);
+            return res.status(500).json({
+              success: false,
+              message: "Failed to save uploaded file",
+            });
+          }
+
+          const mtype = file.mimetype || mime.getType(safeName) || "";
+          if (String(mtype).startsWith("image")) {
+            profileImage = filename;
+          } else if (
+            String(mtype).startsWith("video") ||
+            String(mtype).includes("mp4")
+          ) {
+            profileVideo = filename;
+          }
+        }
+      }
+
+      // Validate that at least one media file was uploaded
+      if (!profileImage && !profileVideo) {
+        return res.status(422).json({
+          success: false,
+          message: "Please upload at least one profile image or video file.",
+        });
+      }
+
+      // Import EmployeeNamecard model
+      const EmployeeNamecardModel = (
+        await import("../Models/EmployeeNamecard.js")
+      ).default;
+
+      // Create employee namecard
+      const employeeNamecardData = {
+        name_english: name_english.trim(),
+        name_chinese: name_chinese.trim(),
+        telegram_username: telegram_username.trim(),
+        contact_number: contact_number.trim(),
+        address1: address1.trim(),
+        address2: address2.trim(),
+        address3: address3.trim(),
+        whatsapp_link: whatsapp_link.trim(),
+        profile_image: profileImage,
+        profile_video: profileVideo,
+        company_template: company_template_id,
+      };
+
+      // Add optional fields if provided
+      if (email) employeeNamecardData.email = email.trim();
+      if (facebook) employeeNamecardData.facebook = facebook.trim();
+      if (instagram) employeeNamecardData.instagram = instagram.trim();
+      if (x_twitter) employeeNamecardData.x_twitter = x_twitter.trim();
+      if (line) employeeNamecardData.line = line.trim();
+      if (youtube) employeeNamecardData.youtube = youtube.trim();
+      if (website) employeeNamecardData.website = website.trim();
+
+      if (chamber_template_id) {
+        employeeNamecardData.chamber_template = chamber_template_id;
+      }
+
+      if (userId) {
+        employeeNamecardData.createdByUser = userId;
+      } else if (operatorId) {
+        employeeNamecardData.createdByOperator = operatorId;
+      }
+
+      const employeeNamecard = new EmployeeNamecardModel(employeeNamecardData);
+      const savedNamecard = await employeeNamecard.save();
+
+      // Populate template details for response
+      const populatedNamecard = await EmployeeNamecardModel.findById(
+        savedNamecard._id,
+      )
+        .populate(
+          "company_template",
+          "_id company_name_english company_name_chinese companydesignation",
+        )
+        .populate(
+          "chamber_template",
+          "_id chamber_name_english chamber_name_chinese chamberdesignation",
+        );
+
+      // Create notification for enterprise/operator
+      if (userId) {
+        const currentUser =
+          await UserModel.findById(userId).select("owner_name_english");
+        const followers = await ContactModel.find({
+          contact_id: userId,
+          status: 1,
+        });
+
+        for (const follower of followers) {
+          await NotificationModel.create({
+            user_id: follower.user_id,
+            contact_id: userId,
+            message: `${currentUser?.owner_name_english || "User"} added a new employee namecard: ${name_english}`,
+            type: "employee_namecard",
+          });
+        }
+      }
+
+      return res.status(201).json({
+        success: true,
+        message: "Employee namecard created successfully",
+        data: populatedNamecard,
+      });
+    } catch (error) {
+      console.error("createEmployeeNamecard error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
+   * Get employee namecards for authenticated user/operator
+   * GET /employee-namecards
+   */
+  static getEmployeeNamecards = async (req, res) => {
+    try {
+      const userId = req.user?._id;
+      const operatorId = req.operator?._id;
+
+      if (!userId && !operatorId) {
+        return res.status(401).json({
+          success: false,
+          message: "Authentication required",
+        });
+      }
+
+      const EmployeeNamecardModel = (
+        await import("../Models/EmployeeNamecard.js")
+      ).default;
+
+      // Build query
+      const query = {};
+      if (userId) {
+        query.createdByUser = userId;
+      } else if (operatorId) {
+        query.createdByOperator = operatorId;
+      }
+
+      const namecards = await EmployeeNamecardModel.find(query)
+        .populate(
+          "company_template",
+          "_id company_name_english company_name_chinese companydesignation",
+        )
+        .populate(
+          "chamber_template",
+          "_id chamber_name_english chamber_name_chinese chamberdesignation",
+        )
+        .sort({ createdAt: -1 });
+
+      return res.status(200).json({
+        success: true,
+        message: "Employee namecards retrieved successfully",
+        data: namecards,
+      });
+    } catch (error) {
+      console.error("getEmployeeNamecards error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
+   * Update employee namecard
+   * POST /update-employee-namecard
+   */
+  static updateEmployeeNamecard = async (req, res) => {
+    try {
+      const {
+        id,
+        name_english,
+        name_chinese,
+        telegram_username,
+        contact_number,
+        address1,
+        address2,
+        address3,
+        whatsapp_link,
+        email,
+        facebook,
+        instagram,
+        x_twitter,
+        line,
+        youtube,
+        website,
+        company_template_id,
+        chamber_template_id,
+      } = req.body;
+
+      const validator = new Validator(
+        { id },
+        {
+          id: "required",
+        },
+      );
+
+      if (!(await validator.check())) {
+        return res.status(422).json({
+          success: false,
+          errors: validator.errors,
+        });
+      }
+
+      const userId = req.user?._id;
+      const operatorId = req.operator?._id;
+
+      if (!userId && !operatorId) {
+        return res.status(401).json({
+          success: false,
+          message: "Authentication required",
+        });
+      }
+
+      const EmployeeNamecardModel = (
+        await import("../Models/EmployeeNamecard.js")
+      ).default;
+
+      // Find existing namecard
+      const namecard = await EmployeeNamecardModel.findById(id);
+      if (!namecard) {
+        return res.status(404).json({
+          success: false,
+          message: "Employee namecard not found",
+        });
+      }
+
+      // Check ownership
+      if (
+        namecard.createdByUser?.toString() !== userId?.toString() &&
+        namecard.createdByOperator?.toString() !== operatorId?.toString()
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "You do not have permission to update this namecard",
+        });
+      }
+
+      // Update basic fields
+      if (name_english) namecard.name_english = name_english.trim();
+      if (name_chinese) namecard.name_chinese = name_chinese.trim();
+      if (telegram_username)
+        namecard.telegram_username = telegram_username.trim();
+      if (contact_number) namecard.contact_number = contact_number.trim();
+      if (address1) namecard.address1 = address1.trim();
+      if (address2) namecard.address2 = address2.trim();
+      if (address3) namecard.address3 = address3.trim();
+      if (whatsapp_link) namecard.whatsapp_link = whatsapp_link.trim();
+
+      // Update optional fields
+      if (email) namecard.email = email.trim();
+      if (facebook) namecard.facebook = facebook.trim();
+      if (instagram) namecard.instagram = instagram.trim();
+      if (x_twitter) namecard.x_twitter = x_twitter.trim();
+      if (line) namecard.line = line.trim();
+      if (youtube) namecard.youtube = youtube.trim();
+      if (website) namecard.website = website.trim();
+
+      // Handle file uploads if new files are provided
+      if (req.files) {
+        const path = await makeDir("./assets/employeenamecard/");
+        const incomingFiles = [];
+
+        for (let i = 1; i <= 2; i++) {
+          let f = req.files?.[`file${i}`];
+          if (!f && i === 1) {
+            if (req.files?.profile_image) f = req.files.profile_image;
+            else if (req.files?.profile_video) f = req.files.profile_video;
+          }
+          if (!f) continue;
+          if (Array.isArray(f)) f = f[0];
+          incomingFiles.push(f);
+        }
+
+        // Process uploaded files
+        for (const file of incomingFiles) {
+          const d = new Date();
+          const safeName = file.name.replace(/\s/g, "");
+          const r = (Math.random() + 1).toString(36).substring(7);
+          const filename = d.getSeconds() + "." + r + "." + safeName;
+          const uploadPath = path + "/" + filename;
+
+          try {
+            await new Promise((resolve, reject) =>
+              file.mv(uploadPath, (err) => (err ? reject(err) : resolve())),
+            );
+          } catch (err) {
+            console.error("Failed to save uploaded file:", err);
+            return res.status(500).json({
+              success: false,
+              message: "Failed to save uploaded file",
+            });
+          }
+
+          const mtype = file.mimetype || mime.getType(safeName) || "";
+          if (String(mtype).startsWith("image")) {
+            namecard.profile_image = filename;
+          } else if (
+            String(mtype).startsWith("video") ||
+            String(mtype).includes("mp4")
+          ) {
+            namecard.profile_video = filename;
+          }
+        }
+      }
+
+      // Verify and update templates if provided
+      if (company_template_id) {
+        const companyTemplate =
+          await CompanyModel.findById(company_template_id);
+        if (!companyTemplate) {
+          return res.status(404).json({
+            success: false,
+            message: "Company template not found",
+          });
+        }
+
+        const isAccessible =
+          companyTemplate.user_id.toString() === userId?.toString() ||
+          (operatorId &&
+            companyTemplate.user_id.toString() ===
+              req.operator.createdByEnterprise?.toString());
+
+        if (!isAccessible) {
+          return res.status(403).json({
+            success: false,
+            message: "You do not have access to this company template",
+          });
+        }
+
+        namecard.company_template = company_template_id;
+      }
+
+      if (chamber_template_id) {
+        const chamberTemplate =
+          await ChamberModel.findById(chamber_template_id);
+        if (!chamberTemplate) {
+          return res.status(404).json({
+            success: false,
+            message: "Chamber template not found",
+          });
+        }
+
+        const isAccessible =
+          chamberTemplate.user_id.toString() === userId?.toString() ||
+          (operatorId &&
+            chamberTemplate.user_id.toString() ===
+              req.operator.createdByEnterprise?.toString());
+
+        if (!isAccessible) {
+          return res.status(403).json({
+            success: false,
+            message: "You do not have access to this chamber template",
+          });
+        }
+
+        namecard.chamber_template = chamber_template_id;
+      }
+
+      namecard.updatedAt = new Date();
+      const updatedNamecard = await namecard.save();
+
+      const populatedNamecard = await EmployeeNamecardModel.findById(
+        updatedNamecard._id,
+      )
+        .populate(
+          "company_template",
+          "_id company_name_english company_name_chinese companydesignation",
+        )
+        .populate(
+          "chamber_template",
+          "_id chamber_name_english chamber_name_chinese chamberdesignation",
+        );
+
+      return res.status(200).json({
+        success: true,
+        message: "Employee namecard updated successfully",
+        data: populatedNamecard,
+      });
+    } catch (error) {
+      console.error("updateEmployeeNamecard error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  };
+
+  /**
+   * Delete employee namecard
+   * DELETE /employee-namecard/:id
+   */
+  static deleteEmployeeNamecard = async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const userId = req.user?._id;
+      const operatorId = req.operator?._id;
+
+      if (!userId && !operatorId) {
+        return res.status(401).json({
+          success: false,
+          message: "Authentication required",
+        });
+      }
+
+      const EmployeeNamecardModel = (
+        await import("../Models/EmployeeNamecard.js")
+      ).default;
+
+      const namecard = await EmployeeNamecardModel.findById(id);
+      if (!namecard) {
+        return res.status(404).json({
+          success: false,
+          message: "Employee namecard not found",
+        });
+      }
+
+      // Check ownership
+      if (
+        namecard.createdByUser?.toString() !== userId?.toString() &&
+        namecard.createdByOperator?.toString() !== operatorId?.toString()
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "You do not have permission to delete this namecard",
+        });
+      }
+
+      await EmployeeNamecardModel.findByIdAndDelete(id);
+
+      return res.status(200).json({
+        success: true,
+        message: "Employee namecard deleted successfully",
+      });
+    } catch (error) {
+      console.error("deleteEmployeeNamecard error:", error);
       return res.status(500).json({
         success: false,
         message: "Server error",

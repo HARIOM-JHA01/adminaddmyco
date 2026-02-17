@@ -23,18 +23,19 @@ const operatorSchema = new mongoose.Schema(
     token: { type: String },
     role: { type: String, default: "operator" }, // operator or owner
     credits: { type: Number, default: 0 }, // Remaining credits for creating employees
-    operatorSlots: { type: Number, default: 0 }, // Number of operator accounts/slots allowed (if applicable)
     isActive: { type: Boolean, default: true },
     lastLogin: { type: Date },
     createdByAdmin: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
-    // Donator (usertype=2) who created this operator (optional)
-    createdByDonator: {
+    // Enterprise (usertype=2) who created this operator (optional)
+    createdByEnterprise: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       index: true,
     },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
+    // For 3-stage creation: 0 = not started, 1 = stage 1 complete (telegram), 2 = stage 2 complete (profile), 3 = stage 3 complete (company)
+    creationStage: { type: Number, default: 0 },
   },
   { timestamps: true },
 );

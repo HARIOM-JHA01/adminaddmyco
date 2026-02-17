@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import UserModel from "../Models/User.js";
 
-const isDonator = async (req, res, next) => {
+const isEnterprise = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   const accessTokenSecret = process.env["JWT_SECRET_KEY"];
   if (!authHeader) return res.sendStatus(401);
@@ -13,20 +13,18 @@ const isDonator = async (req, res, next) => {
     if (userData.usertype !== 2)
       return res
         .status(403)
-        .json({ success: false, message: "Donator access required" });
+        .json({ success: false, message: "Enterprise access required" });
     // preserve existing req.user usage
     req.user = userData;
-    req.donator = userData;
+    req.enterprise = userData;
     next();
   } catch (err) {
-    return res
-      .status(401)
-      .json({
-        success: false,
-        message: "Token verification failed",
-        error: err.message,
-      });
+    return res.status(401).json({
+      success: false,
+      message: "Token verification failed",
+      error: err.message,
+    });
   }
 };
 
-export default isDonator;
+export default isEnterprise;

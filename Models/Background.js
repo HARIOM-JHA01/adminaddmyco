@@ -6,7 +6,7 @@ const backgroundSchema = new mongoose.Schema({
   iconcolor: { type: String, default: null },
   fontcolor: { type: String, default: null },
   backgroundcolor: { type: String, default: null },
-  Thumbnail: { type: String, default: null },
+  fileUrl: { type: String, default: null },
   date: { type: Date, default: Date.now },
 });
 

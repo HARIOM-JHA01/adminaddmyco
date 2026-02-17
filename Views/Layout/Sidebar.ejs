@@ -174,24 +174,24 @@
           </ul>
         </li>
 
-        <!-- Donator module -->
-        <li class="sidebar-item has-sub <%= (path == 'donateduser') || (path == 'donator-packages') || (path == 'donator-purchases') || (path == 'donator-operators') ? 'active' : '' %> ">
+        <!-- Enterprise module -->
+        <li class="sidebar-item has-sub <%= (path == 'enterpriseuser') || (path == 'enterprise-packages') || (path == 'enterprise-purchases') || (path == 'enterprise-operators') ? 'active' : '' %> ">
           <a href="#" class='sidebar-link'>
             <i class="bi bi-gift"></i>
-            <span>Donator Module</span>
+            <span>Enterprise Module</span>
           </a>
-          <ul class="submenu <%= (path == 'donateduser') || (path == 'donator-packages') || (path == 'donator-purchases') || (path == 'donator-operators') ? 'active' : '' %> ">
-            <li class="submenu-item <%= (path == 'donator-purchases') ? 'active' : '' %> ">
-              <a href="<%= baseUrl %>admin/donator/purchases">Payments</a>
+          <ul class="submenu <%= (path == 'enterpriseuser') || (path == 'enterprise-packages') || (path == 'enterprise-purchases') || (path == 'enterprise-operators') ? 'active' : '' %> ">
+            <li class="submenu-item <%= (path == 'enterprise-purchases') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/enterprise/purchases">Payments</a>
             </li>
-            <li class="submenu-item <%= (path == 'donateduser') ? 'active' : '' %> ">
-              <a href="<%= baseUrl %>admin/donateduser">Donator</a>
+            <li class="submenu-item <%= (path == 'enterpriseuser') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/enterpriseuser">Enterprises</a>
             </li>
-            <li class="submenu-item <%= (path == 'donator-operators') ? 'active' : '' %> ">
-              <a href="<%= baseUrl %>admin/donator/operators">Operators</a>
+            <li class="submenu-item <%= (path == 'enterprise-operators') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/enterprise/operators">Operators</a>
             </li>
-            <li class="submenu-item <%= (path == 'donator-packages') ? 'active' : '' %> ">
-              <a href="<%= baseUrl %>admin/donator/packages">Packages</a>
+            <li class="submenu-item <%= (path == 'enterprise-packages') ? 'active' : '' %> ">
+              <a href="<%= baseUrl %>admin/enterprise/packages">Packages</a>
             </li>
           </ul>
         </li>

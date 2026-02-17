@@ -7,10 +7,10 @@
     <div class="page-title mb-3">
       <div class="row">
         <div class="col-12 col-md-6 order-md-1 order-last">
-          <h3><a href="<%= baseUrl %>admin/dashboard" class="text-primary"><i class="fas fa-arrow-left me-2"></i></a>Donator Packages</h3>
+          <h3><a href="<%= baseUrl %>admin/dashboard" class="text-primary"><i class="fas fa-arrow-left me-2"></i></a>Enterprise Packages</h3>
         </div>
         <div class="col-12 col-md-6 order-md-2 order-first">
-          <a href="<%= baseUrl %>admin/donator/package/create" class="btn btn-primary float-end">
+          <a href="<%= baseUrl %>admin/enterprise/package/create" class="btn btn-primary float-end">
             <i class="bi bi-plus-circle"></i> New Package
           </a>
         </div>
@@ -50,7 +50,7 @@
                     </td>
                     <td><%= moment(pkg.createdAt).format('DD-MM-YYYY') %></td>
                     <td>
-                      <a href="<%= baseUrl %>admin/donator/package/edit/<%= pkg._id %>" class="btn btn-sm btn-warning">Edit</a>
+                      <a href="<%= baseUrl %>admin/enterprise/package/edit/<%= pkg._id %>" class="btn btn-sm btn-warning">Edit</a>
                       <button class="btn btn-sm btn-danger delete-package" data-id="<%= pkg._id %>">Delete</button>
                     </td>
                   </tr>
@@ -107,7 +107,7 @@
       confirmButtonText: "Yes, delete it!"
     }).then((result) => {
       if (result.isConfirmed) {
-        fetch(baseUrl + 'admin/donator/package/' + id, {
+        fetch(baseUrl + 'admin/enterprise/package/' + id, {
           method: "DELETE",
           headers: {
             'Content-Type': 'application/json'

@@ -6,8 +6,8 @@ import AdminController from "../Controllers/AdminController.js";
 import MasterAdminController from "../Controllers/MasterAdminController.js";
 import { isAdmin } from "../Middleware/AdminAuthentication.js";
 import PartnerAdminController from "../Controllers/PartnerAdminController.js";
-import DonatorAdminController from "../Controllers/DonatorAdminController.js";
-import DonatorController from "../Controllers/DonatorController.js";
+import EnterpriseAdminController from "../Controllers/EnterpriseAdminController.js";
+import EnterpriseController from "../Controllers/EnterpriseController.js";
 
 // .........................DASHBOARD-CONTROLLER........................
 admin.get("/", DashboardController.signIn);
@@ -22,8 +22,12 @@ admin.get("/myaccount", isAdmin, DashboardController.MyAccount);
 // .................................USERS................................
 admin.get("/freeuser", isAdmin, DashboardController.FreeUser);
 admin.get("/premium", isAdmin, DashboardController.PremiumUser);
-admin.get("/donateduser", isAdmin, DashboardController.DonatedUser);
-admin.get("/donateduser/view/:id", isAdmin, DashboardController.ViewDonator);
+admin.get("/enterpriseuser", isAdmin, DashboardController.EnterpriseUser);
+admin.get(
+  "/enterpriseuser/view/:id",
+  isAdmin,
+  DashboardController.ViewEnterprise,
+);
 
 // .............................BANNERS..................................
 admin.get("/banner", isAdmin, DashboardController.Banner);
@@ -90,8 +94,8 @@ admin.get("/updatefreeuser", AdminController.UpdateUser);
 admin.get("/deletepremiumuser", AdminController.DeletePremiumUser);
 admin.get("/updatepremiumuser", AdminController.UpdatePremiumUser);
 admin.get("/viewpremiumuser", AdminController.ViewPremiumUser);
-admin.get("/deletedonateduser", AdminController.DeleteDonatedUser);
-admin.get("/viewdonateduser", AdminController.ViewDonatedUser);
+admin.get("/deleteenterpriseuser", AdminController.DeleteEnterpriseUser);
+admin.get("/viewenterpriseuser", AdminController.ViewEnterpriseUser);
 
 // ........................TONCOIN & PAYPAL...............................
 
@@ -316,82 +320,126 @@ admin.get(
   AdminController.sponsorDetails,
 );
 
-// ======================== DONATOR MODULE ========================
-admin.get("/donator/packages", isAdmin, DonatorAdminController.PackageList);
-
+// ======================== ENTERPRISE MODULE ========================
 admin.get(
-  "/donator/package/create",
+  "/enterprise/packages",
   isAdmin,
-  DonatorAdminController.PackageForm,
+  EnterpriseAdminController.PackageList,
 );
 
 admin.get(
-  "/donator/package/edit/:id",
+  "/enterprise/package/create",
   isAdmin,
-  DonatorAdminController.PackageForm,
-);
-
-admin.post("/donator/package/create", isAdmin, DonatorController.CreatePackage);
-
-admin.post(
-  "/donator/package/edit/:id",
-  isAdmin,
-  DonatorController.UpdatePackage,
-);
-
-admin.delete("/donator/package/:id", isAdmin, DonatorController.DeletePackage);
-
-admin.get("/donator/purchases", isAdmin, DonatorAdminController.PurchaseList);
-
-admin.post(
-  "/donator/purchase/approve/:id",
-  isAdmin,
-  DonatorController.ApprovePurchase,
-);
-
-admin.post(
-  "/donator/purchase/reject/:id",
-  isAdmin,
-  DonatorController.RejectPurchase,
-);
-
-admin.get("/donator/operators", isAdmin, DonatorAdminController.OperatorList);
-
-// Admin API: get donator operators + employees (JSON)
-admin.get(
-  "/donator/operators-employees",
-  isAdmin,
-  AdminController.DonatorOperatorsEmployees,
+  EnterpriseAdminController.PackageForm,
 );
 
 admin.get(
-  "/donator/operator/create",
+  "/enterprise/package/edit/:id",
   isAdmin,
-  DonatorAdminController.OperatorForm,
+  EnterpriseAdminController.PackageForm,
 );
 
 admin.post(
-  "/donator/operator/create",
+  "/enterprise/package/create",
   isAdmin,
-  DonatorController.CreateOperator,
+  EnterpriseController.CreatePackage,
 );
 
 admin.post(
-  "/donator/operator/deactivate/:id",
+  "/enterprise/package/edit/:id",
   isAdmin,
-  DonatorAdminController.DeactivateOperator,
+  EnterpriseController.UpdatePackage,
+);
+
+admin.delete(
+  "/enterprise/package/:id",
+  isAdmin,
+  EnterpriseController.DeletePackage,
+);
+
+admin.get(
+  "/enterprise/purchases",
+  isAdmin,
+  EnterpriseAdminController.PurchaseList,
 );
 
 admin.post(
-  "/donator/operator/activate/:id",
+  "/enterprise/purchase/approve/:id",
   isAdmin,
-  DonatorAdminController.ActivateOperator,
+  EnterpriseController.ApprovePurchase,
 );
 
 admin.post(
-  "/donator/operator/add-credits/:id",
+  "/enterprise/purchase/reject/:id",
   isAdmin,
-  DonatorAdminController.AddCredits,
+  EnterpriseController.RejectPurchase,
+);
+
+admin.get(
+  "/enterprise/operators",
+  isAdmin,
+  EnterpriseAdminController.OperatorList,
+);
+
+// Admin API: get enterprise operators + employees (JSON)
+admin.get(
+  "/enterprise/operators-employees",
+  isAdmin,
+  AdminController.EnterpriseOperatorsEmployees,
+);
+
+admin.get(
+  "/enterprise/operator/create",
+  isAdmin,
+  EnterpriseAdminController.OperatorForm,
+);
+
+admin.post(
+  "/enterprise/operator/create",
+  isAdmin,
+  EnterpriseController.CreateOperator,
+);
+
+admin.post(
+  "/enterprise/operator/deactivate/:id",
+  isAdmin,
+  EnterpriseAdminController.DeactivateOperator,
+);
+
+admin.post(
+  "/enterprise/operator/activate/:id",
+  isAdmin,
+  EnterpriseAdminController.ActivateOperator,
+);
+
+admin.post(
+  "/enterprise/operator/add-credits/:id",
+  isAdmin,
+  EnterpriseAdminController.AddCredits,
+);
+
+// Admin: operator detail + delete (used on Enterprise details page)
+admin.get(
+  "/enterprise/operator/detail/:id",
+  isAdmin,
+  EnterpriseAdminController.OperatorDetail,
+);
+admin.post(
+  "/enterprise/operator/delete/:id",
+  isAdmin,
+  EnterpriseAdminController.DeleteOperator,
+);
+
+// Admin: employee detail + delete (used on Enterprise details page)
+admin.get(
+  "/enterprise/employee/detail/:id",
+  isAdmin,
+  EnterpriseAdminController.EmployeeDetail,
+);
+admin.post(
+  "/enterprise/employee/delete/:id",
+  isAdmin,
+  EnterpriseAdminController.DeleteEmployee,
 );
 
 export default admin;
