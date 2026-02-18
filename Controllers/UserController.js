@@ -27,6 +27,8 @@ import MembershipModel from "../Models/Membership.js";
 import ToncoinModel from "../Models/Toncoinpaypal.js";
 import CompanyModel from "../Models/Company.js";
 import ChamberModel from "../Models/Chamber.js";
+import CompanyTemplateModel from "../Models/CompanyTemplate.js";
+import ChamberTemplateModel from "../Models/ChamberTemplate.js";
 import BackgroundModel from "../Models/Background.js";
 import NotificationModel from "../Models/Notification.js";
 import BannerModel from "../Models/Banner.js";
@@ -1157,13 +1159,8 @@ class UserController {
         font_color: "",
       };
       if (theme) {
-        if (theme.Thumbnail && theme.Thumbnail != "") {
-          // if stored as full URL use it, otherwise prefix with assets path
-          result.background_image =
-            theme.Thumbnail.startsWith("http") ||
-            theme.Thumbnail.startsWith("/")
-              ? theme.Thumbnail
-              : baseUrl + "assets/" + theme.Thumbnail;
+        if (theme.fileUrl && theme.fileUrl != "") {
+          result.background_image = theme.fileUrl;
         }
         result.theme_color = theme.backgroundcolor || "";
         result.font_color = theme.fontcolor || "";
@@ -2666,7 +2663,7 @@ class UserController {
   static Backgroundimage = async (req, res) => {
     await BackgroundModel.updateOne(
       { user_id: req.user._id },
-      { $set: { Thumbnail: req.body.Thumbnail } },
+      { $set: { fileUrl: req.body.fileUrl } },
       { upsert: true },
     );
     const system = await SystemModel.findById(req.params.id);
@@ -2676,10 +2673,10 @@ class UserController {
 
   // ......................BACKGROUND-IMAGE........API::::::::::::::::::::::::
   static BackgroundImages = async (req, res) => {
-    if (typeof req.body.Thumbnail != "undefined") {
+    if (typeof req.body.fileUrl != "undefined") {
       await BackgroundModel.updateOne(
         { user_id: req.user._id },
-        { $set: { Thumbnail: req.body.Thumbnail } },
+        { $set: { fileUrl: req.body.fileUrl } },
         { upsert: true },
       );
     }
@@ -4730,22 +4727,24 @@ class UserController {
         });
       }
 
-      // Build query to get templates
-      const query = { isTemplate: true };
+      // Build query to get templates from CompanyTemplateModel
+      let query = {};
       if (userId) {
-        query.user_id = userId;
-      } else if (enterpriseId) {
-        // For operators, get both their own (null user_id from operator context)
-        // and parent enterprise templates
-        query.$or = [
-          { user_id: enterpriseId },
-          // Could add operator's own companies here if needed
-        ];
+        // For users: get their own templates
+        query = { owner_id: userId, owner_type: "enterprise" };
+      } else if (enterpriseId && operatorId) {
+        // For operators: get parent enterprise's templates OR own operator templates
+        query = {
+          $or: [
+            { owner_id: enterpriseId, owner_type: "enterprise" },
+            { owner_id: operatorId, owner_type: "operator" },
+          ],
+        };
       }
 
-      const templates = await CompanyModel.find(query)
+      const templates = await CompanyTemplateModel.find(query)
         .select(
-          "_id company_name_english company_name_chinese companydesignation",
+          "_id template_title company_name_english company_name_chinese companydesignation",
         )
         .lean()
         .sort({ company_order: 1 });
@@ -4786,17 +4785,24 @@ class UserController {
         });
       }
 
-      // Build query to get templates
-      const query = { isTemplate: true };
+      // Build query to get templates from ChamberTemplateModel
+      let query = {};
       if (userId) {
-        query.user_id = userId;
-      } else if (enterpriseId) {
-        query.$or = [{ user_id: enterpriseId }];
+        // For users: get their own templates
+        query = { owner_id: userId, owner_type: "enterprise" };
+      } else if (enterpriseId && operatorId) {
+        // For operators: get parent enterprise's templates OR own operator templates
+        query = {
+          $or: [
+            { owner_id: enterpriseId, owner_type: "enterprise" },
+            { owner_id: operatorId, owner_type: "operator" },
+          ],
+        };
       }
 
-      const templates = await ChamberModel.find(query)
+      const templates = await ChamberTemplateModel.find(query)
         .select(
-          "_id chamber_name_english chamber_name_chinese chamberdesignation",
+          "_id template_title chamber_name_english chamber_name_chinese chamberdesignation",
         )
         .lean()
         .sort({ chamber_order: 1 });
@@ -4889,7 +4895,8 @@ class UserController {
       }
 
       // Verify company template exists and is accessible
-      const companyTemplate = await CompanyModel.findById(company_template_id);
+      const companyTemplate =
+        await CompanyTemplateModel.findById(company_template_id);
       if (!companyTemplate) {
         return res.status(404).json({
           success: false,
@@ -4899,10 +4906,15 @@ class UserController {
 
       // Check permissions: user owns it or it's from their parent enterprise
       const isTemplateAccessible =
-        companyTemplate.user_id.toString() === userId?.toString() ||
-        (operatorId &&
-          companyTemplate.user_id.toString() ===
-            req.operator.createdByEnterprise?.toString());
+        (companyTemplate.owner_type === "enterprise" &&
+          companyTemplate.owner_id.toString() === userId?.toString()) ||
+        (companyTemplate.owner_type === "enterprise" &&
+          operatorId &&
+          companyTemplate.owner_id.toString() ===
+            req.operator.createdByEnterprise?.toString()) ||
+        (companyTemplate.owner_type === "operator" &&
+          operatorId &&
+          companyTemplate.owner_id.toString() === operatorId.toString());
 
       if (!isTemplateAccessible) {
         return res.status(403).json({
@@ -4914,7 +4926,7 @@ class UserController {
       // Verify chamber template if provided
       if (chamber_template_id) {
         const chamberTemplate =
-          await ChamberModel.findById(chamber_template_id);
+          await ChamberTemplateModel.findById(chamber_template_id);
         if (!chamberTemplate) {
           return res.status(404).json({
             success: false,
@@ -4923,10 +4935,15 @@ class UserController {
         }
 
         const isChamberAccessible =
-          chamberTemplate.user_id.toString() === userId?.toString() ||
-          (operatorId &&
-            chamberTemplate.user_id.toString() ===
-              req.operator.createdByEnterprise?.toString());
+          (chamberTemplate.owner_type === "enterprise" &&
+            chamberTemplate.owner_id.toString() === userId?.toString()) ||
+          (chamberTemplate.owner_type === "enterprise" &&
+            operatorId &&
+            chamberTemplate.owner_id.toString() ===
+              req.operator.createdByEnterprise?.toString()) ||
+          (chamberTemplate.owner_type === "operator" &&
+            operatorId &&
+            chamberTemplate.owner_id.toString() === operatorId.toString());
 
         if (!isChamberAccessible) {
           return res.status(403).json({

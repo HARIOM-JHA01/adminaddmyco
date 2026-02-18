@@ -41,37 +41,13 @@ const cleanupBackgrounds = async () => {
 
     for (const bg of backgrounds) {
       try {
-        if (bg.Thumbnail) {
-          const original = bg.Thumbnail;
-          const cleaned = bg.Thumbnail.split(",")
-            .filter(Boolean)
-            .map((item) => {
-              // If it's a full URL, extract just the filename
-              if (item.startsWith("http://") || item.startsWith("https://")) {
-                const filename = item.split("/").pop();
-                console.log(
-                  `  Converting URL to filename: ${item.substring(0, 60)}... → ${filename}`,
-                );
-                return filename;
-              }
-              return item;
-            })
-            .join(",");
-
-          // Only update if something changed
-          if (original !== cleaned) {
-            await BackgroundModel.updateOne(
-              { _id: bg._id },
-              { $set: { Thumbnail: cleaned } },
-            );
-            console.log(`✓ Updated background for user ${bg.user_id}`);
-            updated++;
-          } else {
-            console.log(`- No changes needed for user ${bg.user_id}`);
-          }
+        if (bg.fileUrl) {
+          const original = bg.fileUrl;
+          // fileUrl should already be a complete URL, no cleaning needed
+          console.log(`- fileUrl for user ${bg.user_id}: ${original}`);
         }
       } catch (err) {
-        console.error(`❌ Error updating background ${bg._id}:`, err.message);
+        console.error(`❌ Error checking background ${bg._id}:`, err.message);
         errors++;
       }
     }

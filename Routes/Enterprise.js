@@ -1,6 +1,8 @@
 import express from "express";
 import EnterpriseController from "../Controllers/EnterpriseController.js";
 import UserController from "../Controllers/UserController.js";
+import CompanyTemplateController from "../Controllers/CompanyTemplateController.js";
+import ChamberTemplateController from "../Controllers/ChamberTemplateController.js";
 import { isAdmin } from "../Middleware/AdminAuthentication.js";
 import isOperator from "../Middleware/OperatorAuthentication.js";
 import { isUser } from "../Middleware/UserAuthentication.js";
@@ -323,20 +325,6 @@ enterprise.put(
 
 // --------TEMPLATES & EMPLOYEE NAMECARDS (OPERATOR)--------
 
-// Get accessible company templates (for dropdown selection)
-enterprise.get(
-  "/operator/company-templates",
-  isOperator,
-  UserController.getCompanyTemplates,
-);
-
-// Get accessible chamber templates (for dropdown selection)
-enterprise.get(
-  "/operator/chamber-templates",
-  isOperator,
-  UserController.getChamberTemplates,
-);
-
 // Create employee namecard with template selection
 enterprise.post(
   "/operator/employee-namecard",
@@ -363,6 +351,176 @@ enterprise.delete(
   "/operator/employee-namecard/:id",
   isOperator,
   UserController.deleteEmployeeNamecard,
+);
+
+// ========================================================================
+// COMPANY TEMPLATE ROUTES
+// ========================================================================
+
+// ---- Operator: full CRUD on company templates ----
+enterprise.post(
+  "/operator/company-templates",
+  isOperator,
+  CompanyTemplateController.create,
+);
+enterprise.get(
+  "/operator/company-templates",
+  isOperator,
+  CompanyTemplateController.list,
+);
+enterprise.get(
+  "/operator/company-templates/:id",
+  isOperator,
+  CompanyTemplateController.getById,
+);
+enterprise.put(
+  "/operator/company-templates/:id",
+  isOperator,
+  CompanyTemplateController.update,
+);
+enterprise.delete(
+  "/operator/company-templates/:id",
+  isOperator,
+  CompanyTemplateController.delete,
+);
+
+// ---- Enterprise/Donator: full CRUD on company templates ----
+enterprise.post(
+  "/donator/company-templates",
+  isUser,
+  CompanyTemplateController.create,
+);
+enterprise.get(
+  "/donator/company-templates",
+  isUser,
+  CompanyTemplateController.list,
+);
+enterprise.get(
+  "/donator/company-templates/:id",
+  isUser,
+  CompanyTemplateController.getById,
+);
+enterprise.put(
+  "/donator/company-templates/:id",
+  isUser,
+  CompanyTemplateController.update,
+);
+enterprise.delete(
+  "/donator/company-templates/:id",
+  isUser,
+  CompanyTemplateController.delete,
+);
+
+// ---- Enterprise owner: full CRUD on company templates ----
+enterprise.post(
+  "/me/company-templates",
+  isEnterprise,
+  CompanyTemplateController.create,
+);
+enterprise.get(
+  "/me/company-templates",
+  isEnterprise,
+  CompanyTemplateController.list,
+);
+enterprise.get(
+  "/me/company-templates/:id",
+  isEnterprise,
+  CompanyTemplateController.getById,
+);
+enterprise.put(
+  "/me/company-templates/:id",
+  isEnterprise,
+  CompanyTemplateController.update,
+);
+enterprise.delete(
+  "/me/company-templates/:id",
+  isEnterprise,
+  CompanyTemplateController.delete,
+);
+
+// ========================================================================
+// CHAMBER TEMPLATE ROUTES
+// ========================================================================
+
+// ---- Operator: full CRUD on chamber templates ----
+enterprise.post(
+  "/operator/chamber-templates",
+  isOperator,
+  ChamberTemplateController.create,
+);
+enterprise.get(
+  "/operator/chamber-templates",
+  isOperator,
+  ChamberTemplateController.list,
+);
+enterprise.get(
+  "/operator/chamber-templates/:id",
+  isOperator,
+  ChamberTemplateController.getById,
+);
+enterprise.put(
+  "/operator/chamber-templates/:id",
+  isOperator,
+  ChamberTemplateController.update,
+);
+enterprise.delete(
+  "/operator/chamber-templates/:id",
+  isOperator,
+  ChamberTemplateController.delete,
+);
+
+// ---- Enterprise/Donator: full CRUD on chamber templates ----
+enterprise.post(
+  "/donator/chamber-templates",
+  isUser,
+  ChamberTemplateController.create,
+);
+enterprise.get(
+  "/donator/chamber-templates",
+  isUser,
+  ChamberTemplateController.list,
+);
+enterprise.get(
+  "/donator/chamber-templates/:id",
+  isUser,
+  ChamberTemplateController.getById,
+);
+enterprise.put(
+  "/donator/chamber-templates/:id",
+  isUser,
+  ChamberTemplateController.update,
+);
+enterprise.delete(
+  "/donator/chamber-templates/:id",
+  isUser,
+  ChamberTemplateController.delete,
+);
+
+// ---- Enterprise owner: full CRUD on chamber templates ----
+enterprise.post(
+  "/me/chamber-templates",
+  isEnterprise,
+  ChamberTemplateController.create,
+);
+enterprise.get(
+  "/me/chamber-templates",
+  isEnterprise,
+  ChamberTemplateController.list,
+);
+enterprise.get(
+  "/me/chamber-templates/:id",
+  isEnterprise,
+  ChamberTemplateController.getById,
+);
+enterprise.put(
+  "/me/chamber-templates/:id",
+  isEnterprise,
+  ChamberTemplateController.update,
+);
+enterprise.delete(
+  "/me/chamber-templates/:id",
+  isEnterprise,
+  ChamberTemplateController.delete,
 );
 
 export default enterprise;

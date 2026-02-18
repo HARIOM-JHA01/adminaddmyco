@@ -1,7 +1,7 @@
 <%- include('../Elements/Header') %>
 <style>
      .session-body{
-        background-image: url(<%=background.Thumbnail%>);
+        background-image: url(<%=background && background.fileUrl ? background.fileUrl : ''%>);
      }
  
 </style>
