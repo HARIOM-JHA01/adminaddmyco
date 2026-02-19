@@ -183,6 +183,10 @@ user.post("/getusercompanies", UserController.GetUserCompanies);
 user.post("/getuserchambers", UserController.GetUserChambers);
 user.post("/getbackgroundbyusername", UserController.GetUserBackground);
 
+// Public: check whether a username exists (no authentication required)
+// Example: GET /user-exists/johndoe
+user.get("/user-exists/:username", UserController.CheckUserExist);
+
 // ...............................CREATE ENTERPRISE.......................................
 user.post("/create-enterprise", UserController.CreateEnterprise);
 

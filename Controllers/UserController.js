@@ -4436,6 +4436,36 @@ class UserController {
     }
   };
 
+  // Public: Check if a username exists (no auth)
+  // GET /user-exists/:username
+  static CheckUserExist = async (req, res) => {
+    try {
+      const username = (req.params.username || "").trim();
+      if (!username) {
+        return res
+          .status(422)
+          .json({ success: false, message: "username is required" });
+      }
+
+      // Reuse existing helper (checks `username` and `freeUsername`)
+      let user = await UserController.findUserByUsername(username);
+
+      // Also check `tgid` explicitly (some places use tgid as active identifier)
+      if (!user) {
+        user = await UserModel.findOne({ tgid: username });
+      }
+
+      return res.status(200).json({
+        success: true,
+        exists: Boolean(user),
+        message: user ? "User exists" : "User not found",
+      });
+    } catch (err) {
+      console.error("CheckUserExist error:", err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+  };
+
   // Unsecured API - Get user companies only
   static GetUserCompanies = async (req, res) => {
     try {
