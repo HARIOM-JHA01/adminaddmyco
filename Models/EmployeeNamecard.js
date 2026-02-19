@@ -31,12 +31,12 @@ const employeeNamecardSchema = new mongoose.Schema(
     // Template references (company required, chamber optional)
     company_template: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "company",
+      ref: "company_template",
       required: true,
     },
     chamber_template: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "chamber",
+      ref: "chamber_template",
       default: null,
     },
 
@@ -62,8 +62,33 @@ const employeeNamecardSchema = new mongoose.Schema(
 );
 
 // Enable getters for image URL transformation
-employeeNamecardSchema.set("toObject", { getters: true });
-employeeNamecardSchema.set("toJSON", { getters: true });
+employeeNamecardSchema.set("toObject", { getters: true, virtuals: true });
+employeeNamecardSchema.set("toJSON", { getters: true, virtuals: true });
+
+// Virtual: profile_url (format: https://addmy.co/t.me/{company}/{staff})
+// - company: company_template.company_name_english (populated in queries)
+// - staff: name_english
+function slugifyForUrl(str) {
+  if (!str) return "";
+  return String(str)
+    .trim()
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/\u0300-\u036f/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+employeeNamecardSchema.virtual("profile_url").get(function () {
+  const companyName = this.company_template?.company_name_english || "";
+  const staffName = this.name_english || "";
+  const companySlug = slugifyForUrl(companyName);
+  const staffSlug = slugifyForUrl(staffName);
+  if (!companySlug || !staffSlug) return "";
+  return `https://addmy.co/t.me/${companySlug}/${staffSlug}`;
+});
 
 // Indexes for performance
 employeeNamecardSchema.index({ employee_username: 1 });

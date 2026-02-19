@@ -12,6 +12,7 @@ import EnterprisePurchaseModel from "../Models/EnterprisePurchase.js";
 import OperatorModel from "../Models/Operator.js";
 import EnterpriseAuditModel from "../Models/EnterpriseAudit.js";
 import UserModel from "../Models/User.js";
+import EmployeeNamecardModel from "../Models/EmployeeNamecard.js";
 
 const accessTokenSecret = process.env.JWT_SECRET_KEY;
 const accessTokenLife = process.env.ACCESS_TOKEN_LIFE;
@@ -164,26 +165,24 @@ class EnterpriseController {
         0,
       );
 
-      // Employee creations by those operators (via audits)
-      const audits = await EnterpriseAuditModel.find({
-        actorType: "operator",
-        action: "employee.create",
-        actorId: { $in: opIds },
-      }).sort({ createdAt: -1 });
-      const userIds = Array.from(
-        new Set(audits.map((a) => String(a.entityId))),
-      );
-
-      const recentUserIds = userIds
-        .slice(0, 50)
-        .map((id) => require("mongoose").Types.ObjectId(id));
-      const recentUsers = await UserModel.find({ _id: { $in: recentUserIds } })
-        .select("username tgid email firstname lastname createdAt")
+      // Employee namecards created by this enterprise or its operators
+      const employeeNamecards = await EmployeeNamecardModel.find({
+        $or: [
+          { createdByUser: req.user._id }, // Created directly by enterprise
+          { createdByOperator: { $in: opIds } }, // Created by enterprise's operators
+        ],
+        status: { $ne: 2 }, // Exclude deleted (status 2)
+      })
+        .select(
+          "_id name_english name_chinese telegram_username profile_image createdByUser createdByOperator createdAt",
+        )
+        .sort({ createdAt: -1 })
+        .limit(50)
         .lean();
 
       // Calculate used and left credits
       const usedCreditsOperator = operators.length; // Each operator costs 1 credit
-      const usedCreditsEmployee = userIds.length; // Total employees created
+      const usedCreditsEmployee = employeeNamecards.length; // Total employees created
       const leftCreditsOperator = totalCreditsOperator - usedCreditsOperator;
       const leftCreditsEmployee = totalCreditsEmployee - usedCreditsEmployee;
 
@@ -212,8 +211,15 @@ class EnterpriseController {
             leftCreditsEmployee,
           },
           employeesSummary: {
-            totalEmployeesCreated: userIds.length,
-            recentUsers,
+            totalEmployeesCreated: employeeNamecards.length,
+            recentEmployees: employeeNamecards.map((e) => ({
+              _id: e._id,
+              name_english: e.name_english,
+              name_chinese: e.name_chinese,
+              telegram_username: e.telegram_username,
+              profile_image: e.profile_image,
+              createdAt: e.createdAt,
+            })),
           },
         },
       });
@@ -570,28 +576,53 @@ class EnterpriseController {
         .limit(50);
 
       const approved = purchases.filter((p) => p.status === 1);
-      const creditsUsed = approved.reduce(
+      const creditsGranted = approved.reduce(
         (sum, p) => sum + (p.creditsGrantedEmployee || 0),
         0,
       );
+
+      // Count actual employee namecards created by this operator
+      const employeeNamecards = await EmployeeNamecardModel.find({
+        createdByOperator: req.operator._id,
+        status: { $ne: 2 }, // Exclude deleted (status 2)
+      })
+        .select(
+          "_id name_english name_chinese telegram_username profile_image createdAt",
+        )
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .lean();
+
+      const creditsUsed = employeeNamecards.length; // Each employee costs 1 credit
+      const creditsRemaining = (profile.credits || 0) - creditsUsed;
 
       return res.status(200).json({
         success: true,
         data: {
           profile,
           credits: {
-            credits: profile.credits,
+            total: profile.credits,
+            creditsUsed,
+            creditsRemaining,
           },
           operators,
-          usersSummary: {
-            creditsUsed,
-            potentialUsers: creditsUsed,
-            purchases: approved.map((p) => ({
-              _id: p._id,
-              packageName: p.package ? p.package.name : null,
-              creditsGranted: p.creditsGrantedEmployee,
-              createdAt: p.approvedAt || p.createdAt,
+          employeesSummary: {
+            totalEmployeesCreated: employeeNamecards.length,
+            recentEmployees: employeeNamecards.map((e) => ({
+              _id: e._id,
+              name_english: e.name_english,
+              name_chinese: e.name_chinese,
+              telegram_username: e.telegram_username,
+              profile_image: e.profile_image,
+              createdAt: e.createdAt,
             })),
+          },
+          purchasesSummary: {
+            total: purchases.length,
+            approved: approved.length,
+            creditsGranted,
+            creditsUsed,
+            creditsRemaining,
           },
           purchases: purchases.map((p) => ({
             _id: p._id,
@@ -763,22 +794,48 @@ class EnterpriseController {
    */
   static GetOperatorDetails = async (req, res) => {
     try {
-      if (!req.user || req.user.usertype !== 2)
-        return res.status(403).json({ success: false, message: "Forbidden" });
-
       const operatorId = req.params.operatorId;
 
-      // Find operator and verify ownership
-      const operator = await OperatorModel.findOne({
-        _id: operatorId,
-        createdByEnterprise: req.user._id,
-      }).select("-password -token");
+      // Support both operator viewing their own details and enterprise viewing operator details
+      let operator = null;
+      let isOwner = false;
 
-      if (!operator)
+      // Check if requester is an operator viewing their own details
+      if (req.operator) {
+        if (req.operator._id.toString() === operatorId) {
+          operator =
+            await OperatorModel.findById(operatorId).select("-password -token");
+          isOwner = true;
+        } else {
+          return res.status(403).json({
+            success: false,
+            message: "You can only view your own operator details",
+          });
+        }
+      }
+      // Check if requester is an enterprise viewing their operator
+      else if (req.user && req.user.usertype === 2) {
+        operator = await OperatorModel.findOne({
+          _id: operatorId,
+          createdByEnterprise: req.user._id,
+        }).select("-password -token");
+        isOwner = true;
+      }
+      // No valid authentication
+      else {
+        return res.status(401).json({
+          success: false,
+          message: "Authentication required",
+        });
+      }
+
+      if (!operator) {
         return res.status(404).json({
           success: false,
-          message: "Operator not found or not owned by you",
+          message:
+            "Operator not found or you do not have permission to view it",
         });
+      }
 
       // Get all employees created by this operator
       const employees = await UserModel.find({
@@ -948,12 +1005,10 @@ class EnterpriseController {
         createdByEnterprise: req.user._id,
       });
       if (!operator)
-        return res
-          .status(404)
-          .json({
-            success: false,
-            message: "Operator not found or not owned by you",
-          });
+        return res.status(404).json({
+          success: false,
+          message: "Operator not found or not owned by you",
+        });
 
       const salt = await bcrypt.genSalt(10);
       const hashed = await bcrypt.hash(password, salt);
@@ -973,12 +1028,10 @@ class EnterpriseController {
         entityId: operator._id,
       });
 
-      return res
-        .status(200)
-        .json({
-          success: true,
-          message: "Operator password reset successfully",
-        });
+      return res.status(200).json({
+        success: true,
+        message: "Operator password reset successfully",
+      });
     } catch (err) {
       console.error("ResetOperatorPasswordByEnterprise error:", err);
       return res
@@ -2758,6 +2811,17 @@ class EnterpriseController {
         });
       }
 
+      // Check if enterprise has operator credits
+      const enterprise = await UserModel.findById(req.enterprise._id);
+      if (!enterprise || (enterprise.credits || 0) < 1) {
+        return res.status(422).json({
+          success: false,
+          message:
+            "Insufficient operator credits. You need at least 1 credit to create an operator.",
+          availableCredits: enterprise ? enterprise.credits || 0 : 0,
+        });
+      }
+
       // Check if telegram username already exists
       const existingOperator = await OperatorModel.findOne({
         tgid: telegramUsername,
@@ -2790,6 +2854,13 @@ class EnterpriseController {
 
       const savedOperator = await operator.save();
 
+      // Deduct 1 operator credit from enterprise
+      const updatedEnterprise = await UserModel.findByIdAndUpdate(
+        req.enterprise._id,
+        { $inc: { credits: -1 } },
+        { new: true },
+      );
+
       await EnterpriseAuditModel.create({
         actorType: "enterprise",
         actorId: req.enterprise._id,
@@ -2797,6 +2868,8 @@ class EnterpriseController {
         details: {
           tgid: telegramUsername,
           username: activeUsername,
+          creditDeducted: 1,
+          enterpriseNewBalance: updatedEnterprise.credits || 0,
         },
         entityType: "Operator",
         entityId: savedOperator._id,
@@ -2811,6 +2884,7 @@ class EnterpriseController {
           tgid: telegramUsername,
           stage: 1,
           type: "operator",
+          enterpriseCreditsRemaining: updatedEnterprise.credits || 0,
         },
       });
     } catch (error) {

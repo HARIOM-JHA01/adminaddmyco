@@ -1,8 +1,11 @@
 import express from "express";
+import jwt from "jsonwebtoken";
 import EnterpriseController from "../Controllers/EnterpriseController.js";
 import UserController from "../Controllers/UserController.js";
 import CompanyTemplateController from "../Controllers/CompanyTemplateController.js";
 import ChamberTemplateController from "../Controllers/ChamberTemplateController.js";
+import UserModel from "../Models/User.js";
+import OperatorModel from "../Models/Operator.js";
 import { isAdmin } from "../Middleware/AdminAuthentication.js";
 import isOperator from "../Middleware/OperatorAuthentication.js";
 import { isUser } from "../Middleware/UserAuthentication.js";
@@ -92,9 +95,50 @@ enterprise.get(
 
 // Enterprise: get detailed info about a specific operator
 // GET /enterprise/me/operators/:operatorId
+// Can be called by: Enterprise (to view their operators) or Operator (to view their own details)
 enterprise.get(
   "/me/operators/:operatorId",
-  isEnterprise,
+  async (req, res, next) => {
+    try {
+      const authHeader = req.headers.authorization;
+      const token = authHeader?.split(" ")[1] || req.headers["x-access-token"];
+
+      if (!token) {
+        return res
+          .status(401)
+          .json({ success: false, message: "No token provided" });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+
+      // Try to find as enterprise user (usertype = 2)
+      const user = await UserModel.findById(decoded.id);
+      if (user && user.usertype === 2) {
+        req.user = user;
+        req.enterprise = user;
+        return next();
+      }
+
+      // Try to find as operator
+      const operator = await OperatorModel.findById(decoded.id);
+      if (operator && operator.isActive && operator.token === token) {
+        req.operator = operator;
+        return next();
+      }
+
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid authentication" });
+    } catch (error) {
+      return res
+        .status(401)
+        .json({
+          success: false,
+          message: "Token verification failed",
+          error: error.message,
+        });
+    }
+  },
   EnterpriseController.GetOperatorDetails,
 );
 

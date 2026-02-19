@@ -1,4 +1,5 @@
 import { Validator } from "node-input-validator";
+import mongoose from "mongoose";
 import CompanyTemplateModel from "../Models/CompanyTemplate.js";
 import { baseUrl } from "../Config.js";
 import path from "path";
@@ -161,10 +162,40 @@ class CompanyTemplateController {
           .json({ success: false, message: "Authentication required" });
       }
 
-      const templates = await CompanyTemplateModel.find({
-        owner_id: owner.owner_id,
-        owner_type: owner.owner_type,
-      }).sort({ company_order: 1, date: -1 });
+      // Build query based on caller type
+      let query;
+      if (req.operator && req.operator.createdByEnterprise) {
+        // Operator: include templates from operator AND the enterprise that created them
+        const operatorId = mongoose.Types.ObjectId.isValid(owner.owner_id)
+          ? owner.owner_id
+          : mongoose.Types.ObjectId(owner.owner_id);
+        const enterpriseId = mongoose.Types.ObjectId.isValid(
+          req.operator.createdByEnterprise,
+        )
+          ? req.operator.createdByEnterprise
+          : mongoose.Types.ObjectId(req.operator.createdByEnterprise);
+
+        query = {
+          $or: [
+            { owner_id: operatorId, owner_type: "operator" },
+            { owner_id: enterpriseId, owner_type: "enterprise" },
+          ],
+        };
+      } else {
+        // Enterprise: only their own templates
+        const ownerId = mongoose.Types.ObjectId.isValid(owner.owner_id)
+          ? owner.owner_id
+          : mongoose.Types.ObjectId(owner.owner_id);
+        query = {
+          owner_id: ownerId,
+          owner_type: owner.owner_type,
+        };
+      }
+
+      const templates = await CompanyTemplateModel.find(query).sort({
+        company_order: 1,
+        date: -1,
+      });
 
       return res.status(200).json({
         success: true,

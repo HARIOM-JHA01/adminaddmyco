@@ -4894,6 +4894,31 @@ class UserController {
         });
       }
 
+      // Check if user/operator has employee credits
+      let userDoc = null;
+      if (userId) {
+        userDoc = await UserModel.findById(userId);
+        if (!userDoc || (userDoc.credits || 0) < 1) {
+          return res.status(422).json({
+            success: false,
+            message:
+              "Insufficient employee credits. You need at least 1 credit to create an employee namecard.",
+            availableCredits: userDoc ? userDoc.credits || 0 : 0,
+          });
+        }
+      } else if (operatorId) {
+        const OperatorModel = (await import("../Models/Operator.js")).default;
+        userDoc = await OperatorModel.findById(operatorId);
+        if (!userDoc || (userDoc.credits || 0) < 1) {
+          return res.status(422).json({
+            success: false,
+            message:
+              "Insufficient employee credits. You need at least 1 credit to create an employee namecard.",
+            availableCredits: userDoc ? userDoc.credits || 0 : 0,
+          });
+        }
+      }
+
       // Verify company template exists and is accessible
       const companyTemplate =
         await CompanyTemplateModel.findById(company_template_id);
@@ -4995,12 +5020,12 @@ class UserController {
 
           const mtype = file.mimetype || mime.getType(safeName) || "";
           if (String(mtype).startsWith("image")) {
-            profileImage = filename;
+            profileImage = "employeenamecard/" + filename;
           } else if (
             String(mtype).startsWith("video") ||
             String(mtype).includes("mp4")
           ) {
-            profileVideo = filename;
+            profileVideo = "employeenamecard/" + filename;
           }
         }
       }
@@ -5087,10 +5112,30 @@ class UserController {
         }
       }
 
+      // Deduct 1 employee credit from user/operator
+      let creditsRemaining = 0;
+      if (userId) {
+        const updatedUser = await UserModel.findByIdAndUpdate(
+          userId,
+          { $inc: { credits: -1 } },
+          { new: true },
+        );
+        creditsRemaining = updatedUser.credits || 0;
+      } else if (operatorId) {
+        const OperatorModel = (await import("../Models/Operator.js")).default;
+        const updatedOperator = await OperatorModel.findByIdAndUpdate(
+          operatorId,
+          { $inc: { credits: -1 } },
+          { new: true },
+        );
+        creditsRemaining = updatedOperator.credits || 0;
+      }
+
       return res.status(201).json({
         success: true,
         message: "Employee namecard created successfully",
         data: populatedNamecard,
+        creditsRemaining: creditsRemaining,
       });
     } catch (error) {
       console.error("createEmployeeNamecard error:", error);
@@ -5141,10 +5186,18 @@ class UserController {
         )
         .sort({ createdAt: -1 });
 
+      // Ensure virtuals (profile_url) and getters are included in the JSON response
+      const responseData = namecards.map((n) =>
+        // convert to plain object with virtuals/getters preserved
+        typeof n.toObject === "function"
+          ? n.toObject({ getters: true, virtuals: true })
+          : n,
+      );
+
       return res.status(200).json({
         success: true,
         message: "Employee namecards retrieved successfully",
-        data: namecards,
+        data: responseData,
       });
     } catch (error) {
       console.error("getEmployeeNamecards error:", error);
@@ -5289,12 +5342,12 @@ class UserController {
 
           const mtype = file.mimetype || mime.getType(safeName) || "";
           if (String(mtype).startsWith("image")) {
-            namecard.profile_image = filename;
+            namecard.profile_image = "employeenamecard/" + filename;
           } else if (
             String(mtype).startsWith("video") ||
             String(mtype).includes("mp4")
           ) {
-            namecard.profile_video = filename;
+            namecard.profile_video = "employeenamecard/" + filename;
           }
         }
       }
@@ -5302,7 +5355,7 @@ class UserController {
       // Verify and update templates if provided
       if (company_template_id) {
         const companyTemplate =
-          await CompanyModel.findById(company_template_id);
+          await CompanyTemplateModel.findById(company_template_id);
         if (!companyTemplate) {
           return res.status(404).json({
             success: false,
@@ -5311,10 +5364,15 @@ class UserController {
         }
 
         const isAccessible =
-          companyTemplate.user_id.toString() === userId?.toString() ||
-          (operatorId &&
-            companyTemplate.user_id.toString() ===
-              req.operator.createdByEnterprise?.toString());
+          (companyTemplate.owner_type === "enterprise" &&
+            companyTemplate.owner_id.toString() === userId?.toString()) ||
+          (companyTemplate.owner_type === "enterprise" &&
+            operatorId &&
+            companyTemplate.owner_id.toString() ===
+              req.operator.createdByEnterprise?.toString()) ||
+          (companyTemplate.owner_type === "operator" &&
+            operatorId &&
+            companyTemplate.owner_id.toString() === operatorId.toString());
 
         if (!isAccessible) {
           return res.status(403).json({
@@ -5328,7 +5386,7 @@ class UserController {
 
       if (chamber_template_id) {
         const chamberTemplate =
-          await ChamberModel.findById(chamber_template_id);
+          await ChamberTemplateModel.findById(chamber_template_id);
         if (!chamberTemplate) {
           return res.status(404).json({
             success: false,
@@ -5337,10 +5395,15 @@ class UserController {
         }
 
         const isAccessible =
-          chamberTemplate.user_id.toString() === userId?.toString() ||
-          (operatorId &&
-            chamberTemplate.user_id.toString() ===
-              req.operator.createdByEnterprise?.toString());
+          (chamberTemplate.owner_type === "enterprise" &&
+            chamberTemplate.owner_id.toString() === userId?.toString()) ||
+          (chamberTemplate.owner_type === "enterprise" &&
+            operatorId &&
+            chamberTemplate.owner_id.toString() ===
+              req.operator.createdByEnterprise?.toString()) ||
+          (chamberTemplate.owner_type === "operator" &&
+            operatorId &&
+            chamberTemplate.owner_id.toString() === operatorId.toString());
 
         if (!isAccessible) {
           return res.status(403).json({
