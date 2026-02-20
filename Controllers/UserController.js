@@ -76,8 +76,21 @@ class UserController {
    * - Premium username only works when membership is active
    * - When premium expires and username reverts to freeUsername, both work
    */
-  static async findUserByUsername(usernameToFind) {
-    // First try to find by active username
+  static async findUserByUsername(usernameToFind, caseInsensitive = false) {
+    // If caseInsensitive is requested, use a case-insensitive anchored regex (escape input)
+    if (caseInsensitive) {
+      const esc = (usernameToFind || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const re = new RegExp(`^${esc}$`, "i");
+
+      // Try active username first, then freeUsername
+      let user = await UserModel.findOne({ username: re });
+      if (!user) {
+        user = await UserModel.findOne({ freeUsername: re });
+      }
+      return user;
+    }
+
+    // Default (existing) behavior: exact matches
     let user = await UserModel.findOne({ username: usernameToFind });
 
     // If not found, try freeUsername
@@ -4447,12 +4460,13 @@ class UserController {
           .json({ success: false, message: "username is required" });
       }
 
-      // Reuse existing helper (checks `username` and `freeUsername`)
-      let user = await UserController.findUserByUsername(username);
+      // Case-insensitive check for `username` and `freeUsername`
+      let user = await UserController.findUserByUsername(username, true);
 
-      // Also check `tgid` explicitly (some places use tgid as active identifier)
+      // Also check `tgid` explicitly (case-insensitive fallback)
       if (!user) {
-        user = await UserModel.findOne({ tgid: username });
+        const esc = username.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        user = await UserModel.findOne({ tgid: new RegExp(`^${esc}$`, "i") });
       }
 
       return res.status(200).json({
