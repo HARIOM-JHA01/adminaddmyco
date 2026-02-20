@@ -31,7 +31,11 @@ import session from "express-session"
                     <option value="<%= v._id.country %>" <%= selectedCountry === v._id.country ? 'selected' : '' %>><%= v._id.country %></option>
                   <% }) %>
                 </select>        
-            </label>        
+            </label>
+            <label style="margin:0;">
+              Search:
+              <input type="search" id="tableSearch" class="form-control" placeholder="Search anything..." style="display:inline-block;width:auto;min-width:220px;" />
+            </label>
           </div>
         <div class="table-responsive">
           <table class="table table-striped mb-0" id="filterTable">
@@ -159,20 +163,39 @@ $("document").ready(function () {
       });
       var table = $('#filterTable').DataTable();
 
-      // Move country filter into DataTables filter area (keeps alignment same as Free Users)
-      $("#filterTable_filter.dataTables_filter").prepend($(".category-filter"));
+      // ensure DataTables wrapper exists and find/create filter area
+      var $wrapper = $('#filterTable').closest('.dataTables_wrapper');
+      if ($wrapper.length === 0) {
+        $wrapper = $('#filterTable').wrap('<div class="dataTables_wrapper"></div>').parent();
+      }
+      var $filterArea = $wrapper.find('#filterTable_filter.dataTables_filter');
+      if ($filterArea.length === 0) {
+        $filterArea = $('<div id="filterTable_filter" class="dataTables_filter"></div>');
+        $wrapper.prepend($filterArea);
+      }
 
-      // Ensure a visible search input exists — fallback if DataTables didn't create one
-      var $dtSearchInput = $("#filterTable_filter.dataTables_filter input[type='search']");
+      // Move country filter into the filter area (keeps alignment same as Free Users)
+      $filterArea.css({ 'display': 'flex', 'align-items': 'center', 'gap': '12px' }).prepend($('.category-filter'));
+
+      // Locate any DataTables search input and force it visible; otherwise add fallback
+      var $dtSearchInput = $filterArea.find("input[type='search']");
+      if ($dtSearchInput.length === 0) {
+        $dtSearchInput = $wrapper.find("input[type='search']").first();
+      }
+
       if ($dtSearchInput.length === 0) {
         var $customSearch = $("<label style='margin:0;'>Search: <input type='search' id='tableSearch' class='form-control' placeholder='Search anything...' style='display:inline-block;width:auto;min-width:220px;' /></label>");
-        $("#filterTable_filter.dataTables_filter").append($customSearch);
-        $('#tableSearch').on('keyup search input', function() {
+        $filterArea.append($customSearch);
+      } else {
+        $dtSearchInput.attr('placeholder', 'Search anything...').css({ 'min-width': '220px', 'display': 'inline-block', 'visibility': 'visible', 'opacity': 1 });
+        $dtSearchInput.closest('.dataTables_filter').css({ 'display': 'flex', 'align-items': 'center', 'gap': '12px' });
+      }
+
+      // Always bind #tableSearch (if present in DOM) to DataTables search so the input filters correctly
+      if ($('#tableSearch').length) {
+        $('#tableSearch').off('keyup.searchInput').on('keyup.searchInput search.searchInput input.searchInput', function() {
           table.search(this.value).draw();
         });
-      } else {
-        // make sure the default search is wide/visible
-        $dtSearchInput.css({ 'min-width': '220px', 'display': 'inline-block' });
       }
 
       table.draw();
