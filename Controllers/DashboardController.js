@@ -165,9 +165,15 @@ class DashboardController {
     });
     let country = await UserModel.aggregate([
       {
+        $match: { usertype: 1 },
+      },
+      {
         $group: {
           _id: { country: "$country" },
         },
+      },
+      {
+        $sort: { "_id.country": 1 },
       },
     ]);
     Promise.all(_list).then(async (result) => {

@@ -153,15 +153,17 @@ import session from "express-session"
 
 
 <script>
-  $("document").ready(function() {
-    $("#filterTable").dataTable({
-      "searching": true
+  $(document).ready(function() {
+    var table = $('#filterTable').DataTable({
+      searching: true,
+      destroy: true
     });
-    var table = $('#filterTable').DataTable();
     $("#filterTable_filter.dataTables_filter").prepend($(".category-filter"));
+    table.draw();
+  });
 
-    var categoryIndex = 6;
-    $("#categoryFilter").change(function(e) {
+  $(document).ready(function() {
+    $("#categoryFilter").change(function() {
       var selectedCountry = $(this).val();
       var url = window.location.pathname;
       if (selectedCountry) {
@@ -170,16 +172,6 @@ import session from "express-session"
         url = window.location.pathname;
       }
       window.location.href = url;
-    });
-    table.draw();
-  });
-</script>
-
-
-<script>
-  $(document).ready(function() {
-    var table = $('#table1').DataTable({
-      "bSort": false
     });
   });
 </script>
