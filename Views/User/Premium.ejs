@@ -22,15 +22,19 @@ import session from "express-session"
     </div>
     <section class="section">
       <div class="card-body">
-        <div class="category-filter">
-          <label>
+        <div class="category-filter" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px;">
+          <label style="margin:0;">
             Country:
-            <select id="categoryFilter" class="form-control">
+            <select id="categoryFilter" class="form-control" style="display:inline-block;width:auto;min-width:140px;">
               <option value="" <%= selectedCountry === '' ? 'selected' : '' %>>Show All</option>
               <% var i=1; country.forEach(function(v) { %>
               <option value="<%= v._id.country %>" <%= selectedCountry === v._id.country ? 'selected' : '' %>><%= v._id.country %></option>
               <% }) %>
             </select>
+          </label>
+          <label style="margin:0;">
+            Search:
+            <input type="search" id="tableSearch" class="form-control" placeholder="Search anything..." style="display:inline-block;width:auto;min-width:220px;" />
           </label>
         </div>
         <div class="table-responsive">
@@ -158,8 +162,19 @@ import session from "express-session"
       searching: true,
       destroy: true
     });
-    $("#filterTable_filter.dataTables_filter").prepend($(".category-filter"));
-    table.draw();
+
+    // Wire custom search input to DataTables
+    $('#tableSearch').on('keyup search input', function() {
+      table.search(this.value).draw();
+    });
+
+    // Restore search value if present (e.g. after country filter navigation)
+    var urlParams = new URLSearchParams(window.location.search);
+    var searchVal = urlParams.get('search');
+    if (searchVal) {
+      $('#tableSearch').val(searchVal);
+      table.search(searchVal).draw();
+    }
   });
 
   $(document).ready(function() {
