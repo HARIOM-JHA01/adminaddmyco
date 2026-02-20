@@ -1799,8 +1799,18 @@ class EnterpriseController {
         });
       }
 
-      // Check if tgid already exists
-      const existingUser = await UserModel.findOne({ tgid: employeeTgid });
+      // Case-insensitive check for existing tgid
+      const _normEmpTgid = String(employeeTgid || "")
+        .trim()
+        .replace(/^@+/, "")
+        .toLowerCase();
+      let existingUser = null;
+      if (_normEmpTgid) {
+        const _esc = _normEmpTgid.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
+        existingUser = await UserModel.findOne({
+          tgid: new RegExp(`^${_esc}$`, "i"),
+        });
+      }
       if (existingUser) {
         return res.status(422).json({
           success: false,
@@ -2132,8 +2142,18 @@ class EnterpriseController {
         });
       }
 
-      // Check if telegram username already exists
-      const existingUser = await UserModel.findOne({ tgid: telegramUsername });
+      // Case-insensitive check for telegram username
+      const _normTg = String(telegramUsername || "")
+        .trim()
+        .replace(/^@+/, "")
+        .toLowerCase();
+      let existingUser = null;
+      if (_normTg) {
+        const _esc = _normTg.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
+        existingUser = await UserModel.findOne({
+          tgid: new RegExp(`^${_esc}$`, "i"),
+        });
+      }
       if (existingUser) {
         return res.status(409).json({
           success: false,
