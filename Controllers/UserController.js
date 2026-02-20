@@ -74,19 +74,17 @@ class UserController {
   }
 
   static async findUserByTelegramUsername(telegramUsername) {
-    const normalized = UserController.normalizeTelegramUsername(
-      telegramUsername,
-    );
-    const variants = Array.from(
-      new Set([
-        String(telegramUsername || "").trim(),
-        normalized,
-        `@${normalized}`,
-      ]),
-    ).filter(Boolean);
+    // Normalize then perform an anchored, case-insensitive lookup so stored
+    // tgid values like "Saivisiontech" match incoming "saivisontech".
+    const normalized =
+      UserController.normalizeTelegramUsername(telegramUsername);
+    if (!normalized) return null;
 
-    if (!variants.length) return null;
-    return UserModel.findOne({ tgid: { $in: variants } });
+    const esc = normalized.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
+    const re = new RegExp(`^${esc}$`, "i");
+    const reAt = new RegExp(`^@${esc}$`, "i");
+
+    return await UserModel.findOne({ $or: [{ tgid: re }, { tgid: reAt }] });
   }
 
   static async generateEnterpriseMemberId() {
@@ -189,7 +187,16 @@ class UserController {
           message: "This Username is Already Taken...",
         });
       }
-      let user = await UserModel.findOne({ tgid: data.tgid });
+      // Case-insensitive tgid check to avoid @/case duplicates
+      const normalizedTgid = UserController.normalizeTelegramUsername(
+        data.tgid,
+      );
+      let user = null;
+      if (normalizedTgid) {
+        const escT = normalizedTgid.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
+        const reT = new RegExp(`^${escT}$`, "i");
+        user = await UserModel.findOne({ tgid: reT });
+      }
       if (user) {
         return res.status(422).json({
           success: false,
@@ -295,7 +302,19 @@ class UserController {
     }
     let accessTokenSecret = process.env["JWT_SECRET_KEY"];
     let accessTokenLife = process.env["ACCESS_TOKEN_LIFE"];
-    let user = await UserModel.findOne({ tgid: data.username });
+    // Accept case-insensitive tgid for login (normalize + anchored regex)
+    const normalizedLoginTgid = UserController.normalizeTelegramUsername(
+      data.username,
+    );
+    let user = null;
+    if (normalizedLoginTgid) {
+      const escLogin = normalizedLoginTgid.replace(
+        /[.*+?^${}()|[\\]\\]/g,
+        "\\$&",
+      );
+      const reLogin = new RegExp(`^${escLogin}$`, "i");
+      user = await UserModel.findOne({ tgid: reLogin });
+    }
     if (!user) {
       return res.status(422).json({
         success: false,
@@ -428,7 +447,9 @@ class UserController {
         } else {
           // If tgid conflicts, append suffix
           activeUsername =
-            normalizedTelegramUsername + "-" + crypto.randomBytes(2).toString("hex");
+            normalizedTelegramUsername +
+            "-" +
+            crypto.randomBytes(2).toString("hex");
         }
       }
       let paymentBy = 10;
@@ -4123,9 +4144,15 @@ class UserController {
         error: validator.errors,
       });
     } else {
-      const userdetails = await UserModel.find({
-        tgid: doc.tgid,
-      });
+      const normalizedTgid = UserController.normalizeTelegramUsername(doc.tgid);
+      const userdetails = normalizedTgid
+        ? await UserModel.find({
+            tgid: new RegExp(
+              `^${normalizedTgid.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")}$`,
+              "i",
+            ),
+          })
+        : [];
       return res.status(200).json({
         success: true,
         username: userdetails?.[0]?.username,
@@ -4425,11 +4452,10 @@ class UserController {
         });
       }
 
-      // Find user by username
+      // Find user by username (case-insensitive) or telegram id (case-insensitive)
       let user =
-        (await UserModel.findOne({ username: req.body.username })) ||
-        (await UserModel.findOne({ freeUsername: req.body.username })) ||
-        (await UserModel.findOne({ tgid: req.body.username }));
+        (await UserController.findUserByUsername(req.body.username, true)) ||
+        (await UserController.findUserByTelegramUsername(req.body.username));
 
       if (!user) {
         return res.status(404).json({
@@ -5195,9 +5221,7 @@ class UserController {
           await UserModel.findByIdAndUpdate(linkedEmployeeUser._id, {
             token: accessToken,
           });
-        } else if (
-          linkedEmployeeUser.usertype === 1
-        ) {
+        } else if (linkedEmployeeUser.usertype === 1) {
           // Ensure legacy linked premium employee has operator mapping and 99-year tenure.
           const startDate =
             linkedEmployeeUser.startdate || moment().format("YYYY-MM-DD");
@@ -5206,7 +5230,8 @@ class UserController {
             .format("YYYY-MM-DD");
 
           await UserModel.findByIdAndUpdate(linkedEmployeeUser._id, {
-            createdByOperator: linkedEmployeeUser.createdByOperator || operatorId,
+            createdByOperator:
+              linkedEmployeeUser.createdByOperator || operatorId,
             membertype: "premium",
             membershiperiod: 99 * 12,
             startdate: startDate,
@@ -5221,9 +5246,8 @@ class UserController {
       const employeeNamecardData = {
         name_english: name_english.trim(),
         name_chinese: name_chinese.trim(),
-        telegram_username: UserController.normalizeTelegramUsername(
-          telegram_username,
-        ),
+        telegram_username:
+          UserController.normalizeTelegramUsername(telegram_username),
         contact_number: contact_number.trim(),
         address1: address1.trim(),
         address2: address2.trim(),
@@ -5356,9 +5380,9 @@ class UserController {
               ? { createdByEnterprise: userId }
               : { createdByDonator: userId };
 
-          const operators = await OperatorModel.find(operatorOwnershipFilter).select(
-            "_id",
-          );
+          const operators = await OperatorModel.find(
+            operatorOwnershipFilter,
+          ).select("_id");
           const operatorIds = operators.map((op) => op._id);
 
           query = {

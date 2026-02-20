@@ -47,11 +47,11 @@ async function generateEnterpriseMemberId() {
 
 async function findUserByTelegramUsername(telegramUsername) {
   const normalized = normalizeTelegramUsername(telegramUsername);
-  const variants = Array.from(
-    new Set([String(telegramUsername || "").trim(), normalized, `@${normalized}`]),
-  ).filter(Boolean);
-  if (!variants.length) return null;
-  return UserModel.findOne({ tgid: { $in: variants } });
+  if (!normalized) return null;
+  const esc = normalized.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
+  const re = new RegExp(`^${esc}$`, "i");
+  const reAt = new RegExp(`^@${esc}$`, "i");
+  return UserModel.findOne({ $or: [{ tgid: re }, { tgid: reAt }] });
 }
 
 async function main() {
@@ -84,7 +84,9 @@ async function main() {
     console.log(`Found ${cards.length} operator-created active namecards`);
 
     for (const card of cards) {
-      const normalizedTelegram = normalizeTelegramUsername(card.telegram_username);
+      const normalizedTelegram = normalizeTelegramUsername(
+        card.telegram_username,
+      );
       if (!normalizedTelegram) {
         stats.skippedInvalidTelegram += 1;
         continue;

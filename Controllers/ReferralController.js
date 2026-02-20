@@ -23,7 +23,7 @@ class ReferralController {
       { _id: data },
       {
         isReferral: 3,
-      }
+      },
     );
     const result1 = await UserModel.findById(data);
     return res.status(200).json({
@@ -53,7 +53,7 @@ class ReferralController {
       {
         image: "Images is necessary",
         category: "Category is necessary",
-      }
+      },
     );
     await validator.check();
     let error = validatorError(res, validator.errors);
@@ -111,7 +111,7 @@ class ReferralController {
       },
       {
         image: "Images is necessary",
-      }
+      },
     );
     await validator.check();
     let error = validatorError(res, validator.errors);
@@ -180,9 +180,20 @@ class ReferralController {
     await UserModel.updateOne(
       { tgid: req.query.id },
       { $set: { isReferral: 1 } },
-      { upsert: true }
+      { upsert: true },
     );
-    const userDetails = await UserModel.find({ tgid: req.query.id });
+    const normalized = String(req.query.id || "")
+      .trim()
+      .replace(/^@+/, "")
+      .toLowerCase();
+    const userDetails = normalized
+      ? await UserModel.find({
+          tgid: new RegExp(
+            `^${normalized.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")}$`,
+            "i",
+          ),
+        })
+      : [];
     const doc = {
       contact_id: userDetails[0].id,
       message: `congrats! You are a referral member now.`,
@@ -197,7 +208,18 @@ class ReferralController {
     try {
       // Find the user by telegram id (tgid)
       const tgid = req.query.id;
-      const user = await UserModel.findOne({ tgid: tgid });
+      const _norm = String(tgid || "")
+        .trim()
+        .replace(/^@+/, "")
+        .toLowerCase();
+      const user = _norm
+        ? await UserModel.findOne({
+            tgid: new RegExp(
+              `^${_norm.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")}$`,
+              "i",
+            ),
+          })
+        : null;
       if (!user) {
         return res.status(404).json({
           status: false,
@@ -234,7 +256,7 @@ class ReferralController {
           referralType: 0,
           paymentBy: 0,
         },
-        { new: true }
+        { new: true },
       );
 
       return res.status(200).json({ status: true, data: updated });
