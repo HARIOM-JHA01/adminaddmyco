@@ -182,9 +182,15 @@ class EnterpriseController {
 
       // Calculate used and left credits
       const usedCreditsOperator = operators.length; // Each operator costs 1 credit
-      const usedCreditsEmployee = employeeNamecards.length; // Total employees created
+      // Employee credits are consumed when used directly OR assigned to operators.
+      // Current enterprise balance already reflects both operations.
+      const enterpriseEmployeeCreditsBalance = profile?.credits || 0;
+      const usedCreditsEmployee = Math.max(
+        0,
+        totalCreditsEmployee - enterpriseEmployeeCreditsBalance,
+      );
       const leftCreditsOperator = totalCreditsOperator - usedCreditsOperator;
-      const leftCreditsEmployee = totalCreditsEmployee - usedCreditsEmployee;
+      const leftCreditsEmployee = enterpriseEmployeeCreditsBalance;
 
       return res.status(200).json({
         success: true,
@@ -702,7 +708,7 @@ class EnterpriseController {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
 
-      // Build operator payload; only set createdByEnterprise for actual enterprises
+      // Build operator payload; set ownership based on creator type
       const opData = {
         tgid: tgidClean,
         telegramId: tgidClean,
@@ -713,6 +719,7 @@ class EnterpriseController {
         credits: 0,
       };
       if (req.user.usertype === 2) opData.createdByEnterprise = req.user._id;
+      if (req.user.usertype === 3) opData.createdByDonator = req.user._id;
 
       const op = new OperatorModel(opData);
       const saved = await op.save();
@@ -1186,7 +1193,7 @@ class EnterpriseController {
    */
   static AssignCreditsToOperator = async (req, res) => {
     try {
-      if (!req.user || req.user.usertype !== 2)
+      if (!req.user || !(req.user.usertype === 2 || req.user.usertype === 3))
         return res.status(403).json({ success: false, message: "Forbidden" });
 
       const { operatorId, employeeCreditsToAssign } = req.body;
@@ -1207,10 +1214,15 @@ class EnterpriseController {
         return res
           .status(404)
           .json({ success: false, message: "Operator not found" });
-      if (String(operator.createdByEnterprise) !== String(req.user._id))
-        return res
-          .status(403)
-          .json({ success: false, message: "Operator does not belong to you" });
+      const isEnterpriseActor = req.user.usertype === 2;
+      const isOwnedByActor = isEnterpriseActor
+        ? String(operator.createdByEnterprise) === String(req.user._id)
+        : String(operator.createdByDonator) === String(req.user._id);
+      if (!isOwnedByActor)
+        return res.status(403).json({
+          success: false,
+          message: "Operator does not belong to you",
+        });
 
       const enterprise = await UserModel.findById(req.user._id);
       if (!enterprise || (enterprise.credits || 0) < employeeCreditsToAssign)
@@ -1235,7 +1247,7 @@ class EnterpriseController {
       ]);
 
       await EnterpriseAuditModel.create({
-        actorType: "enterprise",
+        actorType: isEnterpriseActor ? "enterprise" : "donator",
         actorId: req.user._id,
         action: "credits.assign",
         details: {
@@ -1845,7 +1857,7 @@ class EnterpriseController {
         status: 1,
       }).populate("package");
 
-      const validityYears = 1;
+      const validityYears = 99;
 
       const startDate = moment().format("YYYY-MM-DD");
       const endDate = moment().add(validityYears, "years").format("YYYY-MM-DD");
@@ -2013,7 +2025,7 @@ class EnterpriseController {
             status: 1,
           }).populate("package")
         : null;
-      const validityYears = 1; // default
+      const validityYears = 99; // employee premium validity
       const startDate = moment().format("YYYY-MM-DD");
       const endDate = moment().add(validityYears, "years").format("YYYY-MM-DD");
 
@@ -2170,12 +2182,23 @@ class EnterpriseController {
           telegramUsername + "-" + crypto.randomBytes(2).toString("hex");
       }
 
+      const validityYears = 99;
+      const startDate = moment().format("YYYY-MM-DD");
+      const endDate = moment().add(validityYears, "years").format("YYYY-MM-DD");
+
       // Create employee at stage 1
       const employee = new UserModel({
         username: activeUsername,
         freeUsername: generatedUsername,
         tgid: telegramUsername,
         usertype: 1,
+        membertype: "premium",
+        membershiperiod: validityYears * 12,
+        startdate: startDate,
+        enddate: endDate,
+        paymentstatus: 1,
+        paymentBy: 7,
+        memberid: await EnterpriseController.generateMemberId(),
         createdByOperator: req.operator._id,
         creationStage: 1, // Stage 1 complete
         date: new Date(),

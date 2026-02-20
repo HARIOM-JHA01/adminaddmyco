@@ -32,6 +32,12 @@ const operatorSchema = new mongoose.Schema(
       ref: "User",
       index: true,
     },
+    // Donator (usertype=3) who created this operator (optional)
+    createdByDonator: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      index: true,
+    },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
     // For 3-stage creation: 0 = not started, 1 = stage 1 complete (telegram), 2 = stage 2 complete (profile), 3 = stage 3 complete (company)

@@ -65,6 +65,35 @@ class UserController {
     return crypto.randomBytes(4).toString("hex");
   }
 
+  // Normalize Telegram handle to reduce duplicate accounts caused by @/case variants.
+  static normalizeTelegramUsername(value) {
+    return String(value || "")
+      .trim()
+      .replace(/^@+/, "")
+      .toLowerCase();
+  }
+
+  static async findUserByTelegramUsername(telegramUsername) {
+    const normalized = UserController.normalizeTelegramUsername(
+      telegramUsername,
+    );
+    const variants = Array.from(
+      new Set([
+        String(telegramUsername || "").trim(),
+        normalized,
+        `@${normalized}`,
+      ]),
+    ).filter(Boolean);
+
+    if (!variants.length) return null;
+    return UserModel.findOne({ tgid: { $in: variants } });
+  }
+
+  static async generateEnterpriseMemberId() {
+    const count = await UserModel.countDocuments();
+    return "ENTERPRISE-" + (count + 1).toString().padStart(8, "0");
+  }
+
   /**
    * Helper function to find user by username
    * Checks both 'username' and 'freeUsername' fields
@@ -320,7 +349,12 @@ class UserController {
         error: validator.errors,
       });
     }
-    let user = await UserModel.findOne({ tgid: data.telegram_username });
+    const normalizedTelegramUsername = UserController.normalizeTelegramUsername(
+      data.telegram_username,
+    );
+    let user = await UserController.findUserByTelegramUsername(
+      normalizedTelegramUsername,
+    );
     if (!user) {
       // Extract referral code if provided
       const referralCode =
@@ -387,16 +421,14 @@ class UserController {
       if (isPremium) {
         // For premium users, try to use tgid as username
         const conflict = await UserModel.findOne({
-          username: data.telegram_username,
+          username: normalizedTelegramUsername,
         });
         if (!conflict) {
-          activeUsername = data.telegram_username;
+          activeUsername = normalizedTelegramUsername;
         } else {
           // If tgid conflicts, append suffix
           activeUsername =
-            data.telegram_username +
-            "-" +
-            crypto.randomBytes(2).toString("hex");
+            normalizedTelegramUsername + "-" + crypto.randomBytes(2).toString("hex");
         }
       }
       let paymentBy = 10;
@@ -407,7 +439,7 @@ class UserController {
       const doc = new UserModel({
         username: activeUsername, // Active username (premium = tgid, free = random)
         freeUsername: generatedUsername, // Always store the random username
-        tgid: data.telegram_username,
+        tgid: normalizedTelegramUsername,
         country: data.country,
         countryCode: countryCode,
         membertype: isPremium ? "premium" : "free",
@@ -493,7 +525,7 @@ class UserController {
       // Existing user, just login
       let payload = {
         id: user._id,
-        username: data.telegram_username,
+        username: user.username || normalizedTelegramUsername,
       };
       let accessToken = await jwt.sign(payload, accessTokenSecret, {
         algorithm: "HS256",
@@ -5087,11 +5119,111 @@ class UserController {
         await import("../Models/EmployeeNamecard.js")
       ).default;
 
+      // For operator-created cards, ensure there is a linked premium employee user
+      // so admin premium listing/login resolve to the same profile.
+      if (operatorId) {
+        const normalizedTelegramUsername =
+          UserController.normalizeTelegramUsername(telegram_username);
+
+        if (!normalizedTelegramUsername) {
+          return res.status(422).json({
+            success: false,
+            message: "Invalid telegram username",
+          });
+        }
+
+        let linkedEmployeeUser =
+          await UserController.findUserByTelegramUsername(
+            normalizedTelegramUsername,
+          );
+
+        if (!linkedEmployeeUser) {
+          let generatedUsername = UserController.generateUsername();
+          let isUnique = false;
+          while (!isUnique) {
+            const conflict = await UserModel.findOne({
+              freeUsername: generatedUsername,
+            });
+            if (!conflict) isUnique = true;
+            else generatedUsername = UserController.generateUsername();
+          }
+
+          let activeUsername = normalizedTelegramUsername;
+          const usernameConflict = await UserModel.findOne({
+            username: normalizedTelegramUsername,
+          });
+          if (usernameConflict) {
+            activeUsername =
+              normalizedTelegramUsername +
+              "-" +
+              crypto.randomBytes(2).toString("hex");
+          }
+
+          const validityYears = 99;
+          const startDate = moment().format("YYYY-MM-DD");
+          const endDate = moment()
+            .add(validityYears, "years")
+            .format("YYYY-MM-DD");
+
+          const employeeUser = new UserModel({
+            username: activeUsername,
+            freeUsername: generatedUsername,
+            tgid: normalizedTelegramUsername,
+            email: email || null,
+            firstname: name_english || "Employee",
+            usertype: 1,
+            membertype: "premium",
+            membershiperiod: validityYears * 12,
+            startdate: startDate,
+            enddate: endDate,
+            paymentstatus: 1,
+            paymentBy: 7,
+            memberid: await UserController.generateEnterpriseMemberId(),
+            createdByOperator: operatorId,
+          });
+
+          linkedEmployeeUser = await employeeUser.save();
+
+          const payload = {
+            id: linkedEmployeeUser._id,
+            username: linkedEmployeeUser.username,
+          };
+          const accessToken = await jwt.sign(payload, accessTokenSecret, {
+            algorithm: "HS256",
+            expiresIn: accessTokenLife,
+          });
+          await UserModel.findByIdAndUpdate(linkedEmployeeUser._id, {
+            token: accessToken,
+          });
+        } else if (
+          linkedEmployeeUser.usertype === 1
+        ) {
+          // Ensure legacy linked premium employee has operator mapping and 99-year tenure.
+          const startDate =
+            linkedEmployeeUser.startdate || moment().format("YYYY-MM-DD");
+          const endDate = moment(startDate, "YYYY-MM-DD")
+            .add(99, "years")
+            .format("YYYY-MM-DD");
+
+          await UserModel.findByIdAndUpdate(linkedEmployeeUser._id, {
+            createdByOperator: linkedEmployeeUser.createdByOperator || operatorId,
+            membertype: "premium",
+            membershiperiod: 99 * 12,
+            startdate: startDate,
+            enddate: endDate,
+            paymentstatus: 1,
+            paymentBy: linkedEmployeeUser.paymentBy || 7,
+          });
+        }
+      }
+
       // Create employee namecard
       const employeeNamecardData = {
         name_english: name_english.trim(),
         name_chinese: name_chinese.trim(),
-        telegram_username: telegram_username.trim(),
+        telegram_username: UserController.normalizeTelegramUsername(
+          telegram_username,
+        ),
         contact_number: contact_number.trim(),
         address1: address1.trim(),
         address2: address2.trim(),
@@ -5212,9 +5344,33 @@ class UserController {
       ).default;
 
       // Build query
-      const query = {};
+      let query = { status: { $ne: 2 } };
       if (userId) {
-        query.createdByUser = userId;
+        const currentUser = await UserModel.findById(userId).select("usertype");
+
+        if (currentUser?.usertype === 2 || currentUser?.usertype === 3) {
+          // Enterprise/Donator users should see their own cards + cards created by their operators.
+          const OperatorModel = (await import("../Models/Operator.js")).default;
+          const operatorOwnershipFilter =
+            currentUser.usertype === 2
+              ? { createdByEnterprise: userId }
+              : { createdByDonator: userId };
+
+          const operators = await OperatorModel.find(operatorOwnershipFilter).select(
+            "_id",
+          );
+          const operatorIds = operators.map((op) => op._id);
+
+          query = {
+            status: { $ne: 2 },
+            $or: [
+              { createdByUser: userId },
+              { createdByOperator: { $in: operatorIds } },
+            ],
+          };
+        } else {
+          query.createdByUser = userId;
+        }
       } else if (operatorId) {
         query.createdByOperator = operatorId;
       }

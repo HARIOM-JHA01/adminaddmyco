@@ -196,6 +196,14 @@ enterprise.post(
   EnterpriseController.AssignCreditsToOperator,
 );
 
+// Donator: Assign credits to an operator created by this donator
+// POST /enterprise/donator/assign-credits
+enterprise.post(
+  "/donator/assign-credits",
+  isUser,
+  EnterpriseController.AssignCreditsToOperator,
+);
+
 // Enterprise: Get purchase history with pagination
 // GET /enterprise/purchases
 enterprise.get(
