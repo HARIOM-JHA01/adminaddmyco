@@ -77,8 +77,21 @@ class PartnerController {
         });
       }
 
-      // Check if partner exists
-      let partner = await PartnerModel.findOne({ tgid });
+      // Case-insensitive partner lookup by tgid
+      const _normPartnerTg = String(tgid || "")
+        .trim()
+        .replace(/^@+/, "")
+        .toLowerCase();
+      let partner = null;
+      if (_normPartnerTg) {
+        const _escPartner = _normPartnerTg.replace(
+          /[.*+?^${}()|[\\]\\]/g,
+          "\\$&",
+        );
+        partner = await PartnerModel.findOne({
+          tgid: new RegExp(`^${_escPartner}$`, "i"),
+        });
+      }
 
       if (!partner) {
         // Create new partner
@@ -489,7 +502,7 @@ class PartnerController {
           daysUntilExpiry: pu.membershipExpiryDate
             ? Math.ceil(
                 (new Date(pu.membershipExpiryDate) - new Date()) /
-                  (1000 * 60 * 60 * 24)
+                  (1000 * 60 * 60 * 24),
               )
             : 0,
           renewalCount: pu.renewalCount,
@@ -760,7 +773,7 @@ class PartnerController {
         partner: partnerId,
       }).populate(
         "user",
-        "username owner_name_english owner_name_chinese tgid email contact"
+        "username owner_name_english owner_name_chinese tgid email contact",
       );
 
       if (!partnerUser) {
@@ -777,7 +790,7 @@ class PartnerController {
       const daysUntilExpiry = partnerUser.membershipExpiryDate
         ? Math.ceil(
             (new Date(partnerUser.membershipExpiryDate) - new Date()) /
-              (1000 * 60 * 60 * 24)
+              (1000 * 60 * 60 * 24),
           )
         : 0;
 

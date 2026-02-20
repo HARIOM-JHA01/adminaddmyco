@@ -73,9 +73,15 @@ async function main() {
   };
 
   try {
+    const donators = await UserModel.find({ usertype: 3 }).select("_id");
+    const donatorIds = donators.map((u) => u._id);
+
     const cards = await EmployeeNamecardModel.find({
-      createdByOperator: { $ne: null },
       status: { $ne: 2 },
+      $or: [
+        { createdByOperator: { $ne: null } },
+        { createdByUser: { $in: donatorIds } },
+      ],
     }).select(
       "_id telegram_username createdByOperator name_english email updatedAt",
     );
@@ -154,7 +160,7 @@ async function main() {
         paymentstatus: 1,
         paymentBy: 7,
         memberid: await generateEnterpriseMemberId(),
-        createdByOperator: card.createdByOperator,
+        createdByOperator: card.createdByOperator || null,
       });
       await user.save();
       stats.createdUsers += 1;

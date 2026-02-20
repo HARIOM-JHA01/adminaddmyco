@@ -4721,8 +4721,18 @@ class UserController {
         });
       }
 
-      // Check if user with this tgid already exists
-      const existingUser = await UserModel.findOne({ tgid: tgid.trim() });
+      // Case-insensitive check for existing tgid
+      const _normTg = String(tgid || "")
+        .trim()
+        .replace(/^@+/, "")
+        .toLowerCase();
+      let existingUser = null;
+      if (_normTg) {
+        const _esc = _normTg.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
+        existingUser = await UserModel.findOne({
+          tgid: new RegExp(`^${_esc}$`, "i"),
+        });
+      }
       if (existingUser) {
         return res.status(422).json({
           success: false,
@@ -5145,11 +5155,36 @@ class UserController {
         await import("../Models/EmployeeNamecard.js")
       ).default;
 
-      // For operator-created cards, ensure there is a linked premium employee user
+      // For operator/donator-created cards, ensure there is a linked premium employee user
       // so admin premium listing/login resolve to the same profile.
-      if (operatorId) {
+      const shouldEnsureLinkedPremiumUser =
+        !!operatorId || (userId && userDoc?.usertype === 3);
+      if (shouldEnsureLinkedPremiumUser) {
         const normalizedTelegramUsername =
           UserController.normalizeTelegramUsername(telegram_username);
+        const linkOperatorId = operatorId || null;
+        let donatorCountry = "";
+        let donatorCountryCode = "";
+
+        // Resolve donator country:
+        // - direct donator request (usertype=3)
+        // - operator created by a donator
+        if (userDoc?.usertype === 3) {
+          donatorCountry = userDoc.country || "";
+          donatorCountryCode = userDoc.countryCode || "";
+        } else if (operatorId) {
+          const OperatorModel = (await import("../Models/Operator.js")).default;
+          const operator = await OperatorModel.findById(operatorId).select(
+            "createdByDonator",
+          );
+          if (operator?.createdByDonator) {
+            const donator = await UserModel.findById(
+              operator.createdByDonator,
+            ).select("country countryCode");
+            donatorCountry = donator?.country || "";
+            donatorCountryCode = donator?.countryCode || "";
+          }
+        }
 
         if (!normalizedTelegramUsername) {
           return res.status(422).json({
@@ -5204,8 +5239,10 @@ class UserController {
             enddate: endDate,
             paymentstatus: 1,
             paymentBy: 7,
+            country: donatorCountry,
+            countryCode: donatorCountryCode,
             memberid: await UserController.generateEnterpriseMemberId(),
-            createdByOperator: operatorId,
+            createdByOperator: linkOperatorId,
           });
 
           linkedEmployeeUser = await employeeUser.save();
@@ -5222,23 +5259,33 @@ class UserController {
             token: accessToken,
           });
         } else if (linkedEmployeeUser.usertype === 1) {
-          // Ensure legacy linked premium employee has operator mapping and 99-year tenure.
+          // Ensure legacy linked premium employee has 99-year tenure.
           const startDate =
             linkedEmployeeUser.startdate || moment().format("YYYY-MM-DD");
           const endDate = moment(startDate, "YYYY-MM-DD")
             .add(99, "years")
             .format("YYYY-MM-DD");
 
-          await UserModel.findByIdAndUpdate(linkedEmployeeUser._id, {
-            createdByOperator:
-              linkedEmployeeUser.createdByOperator || operatorId,
+          const updatePayload = {
             membertype: "premium",
             membershiperiod: 99 * 12,
             startdate: startDate,
             enddate: endDate,
             paymentstatus: 1,
             paymentBy: linkedEmployeeUser.paymentBy || 7,
-          });
+            country: donatorCountry || linkedEmployeeUser.country || "",
+            countryCode:
+              donatorCountryCode || linkedEmployeeUser.countryCode || "",
+          };
+          if (linkOperatorId) {
+            updatePayload.createdByOperator =
+              linkedEmployeeUser.createdByOperator || linkOperatorId;
+          }
+
+          await UserModel.findByIdAndUpdate(
+            linkedEmployeeUser._id,
+            updatePayload,
+          );
         }
       }
 
