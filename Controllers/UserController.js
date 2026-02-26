@@ -869,16 +869,16 @@ class UserController {
         status: 1,
         contact_id: req.user._id,
       });
-      for (var i = 0; i < usercontact1.length; i++) {
-        var contact_id = usercontact1[i].contact_id;
-        var user_id = usercontact1[i].user_id;
-        const doc = {
-          user_id: user_id,
-          contact_id: contact_id,
-          message: `${req.user.owner_name_english} has changed their Profile data`,
-        };
-        let notification = await NotificationModel.create(doc);
-      }
+      // for (var i = 0; i < usercontact1.length; i++) {
+      //   var contact_id = usercontact1[i].contact_id;
+      //   var user_id = usercontact1[i].user_id;
+      //   const doc = {
+      //     user_id: user_id,
+      //     contact_id: contact_id,
+      //     message: `${req.user.owner_name_english} has changed their Profile data`,
+      //   };
+      //   let notification = await NotificationModel.create(doc);
+      // }
       return res.status(200).json({
         success: true,
         data: user1,
@@ -1372,33 +1372,33 @@ class UserController {
       let data = await CompanyModel.findById(result._id);
 
       // Send notification to all users who have added this user to their contacts
-      try {
-        const currentUser = await UserModel.findById(req.user._id);
-        // Find all contacts where contact_id is the current user (people who added me)
-        // and user_id is NOT the current user (don't notify myself)
-        const myFollowers = await ContactModel.find({
-          contact_id: req.user._id,
-          user_id: { $ne: req.user._id },
-          status: 1,
-        });
+      // try {
+      //   const currentUser = await UserModel.findById(req.user._id);
+      //   // Find all contacts where contact_id is the current user (people who added me)
+      //   // and user_id is NOT the current user (don't notify myself)
+      //   const myFollowers = await ContactModel.find({
+      //     contact_id: req.user._id,
+      //     user_id: { $ne: req.user._id },
+      //     status: 1,
+      //   });
 
-        for (const follower of myFollowers) {
-          const notificationDoc = {
-            user_id: follower.user_id,
-            contact_id: req.user._id,
-            message: `${
-              currentUser.owner_name_english || currentUser.username
-            } has added a new company profile`,
-          };
-          await NotificationModel.create(notificationDoc);
-        }
-      } catch (notifError) {
-        console.error(
-          "Error sending company creation notifications:",
-          notifError,
-        );
-        // Don't fail the request if notification fails
-      }
+      //   for (const follower of myFollowers) {
+      //     const notificationDoc = {
+      //       user_id: follower.user_id,
+      //       contact_id: req.user._id,
+      //       message: `${
+      //         currentUser.owner_name_english || currentUser.username
+      //       } has added a new company profile`,
+      //     };
+      //     await NotificationModel.create(notificationDoc);
+      //   }
+      // } catch (notifError) {
+      //   console.error(
+      //     "Error sending company creation notifications:",
+      //     notifError,
+      //   );
+      //   // Don't fail the request if notification fails
+      // }
 
       return res.status(200).json({
         success: true,
@@ -1647,20 +1647,20 @@ class UserController {
         status: 1,
         contact_id: req.user._id,
       });
-      for (var i = 0; i < usercontact1.length; i++) {
-        var contact_id = usercontact1[i].contact_id;
-        var user_id = usercontact1[i].user_id;
-        const ndoc = {
-          user_id: user_id,
-          contact_id: contact_id,
-          message: `${req.user.owner_name_english} has changed their company data`,
-        };
-        try {
-          await NotificationModel.create(ndoc);
-        } catch (e) {
-          console.error("Failed creating company update notification:", e);
-        }
-      }
+      // for (var i = 0; i < usercontact1.length; i++) {
+      //   var contact_id = usercontact1[i].contact_id;
+      //   var user_id = usercontact1[i].user_id;
+      //   const ndoc = {
+      //     user_id: user_id,
+      //     contact_id: contact_id,
+      //     message: `${req.user.owner_name_english} has changed their company data`,
+      //   };
+      //   try {
+      //     await NotificationModel.create(ndoc);
+      //   } catch (e) {
+      //     console.error("Failed creating company update notification:", e);
+      //   }
+      // }
 
       return res
         .status(200)
@@ -1970,33 +1970,33 @@ class UserController {
 
       let result = await ChamberModel.create(doc);
       // Send notification to all users who have added this user to their contacts
-      try {
-        const currentUser = await UserModel.findById(req.user._id);
-        // Find all contacts where contact_id is the current user (people who added me)
-        // and user_id is NOT the current user (don't notify myself)
-        const myFollowers = await ContactModel.find({
-          contact_id: req.user._id,
-          user_id: { $ne: req.user._id },
-          status: 1,
-        });
+      // try {
+      //   const currentUser = await UserModel.findById(req.user._id);
+      //   // Find all contacts where contact_id is the current user (people who added me)
+      //   // and user_id is NOT the current user (don't notify myself)
+      //   const myFollowers = await ContactModel.find({
+      //     contact_id: req.user._id,
+      //     user_id: { $ne: req.user._id },
+      //     status: 1,
+      //   });
 
-        for (const follower of myFollowers) {
-          const notificationDoc = {
-            user_id: follower.user_id,
-            contact_id: req.user._id,
-            message: `${
-              currentUser.owner_name_english || currentUser.username
-            } has added a new chamber`,
-          };
-          await NotificationModel.create(notificationDoc);
-        }
-      } catch (notifError) {
-        console.error(
-          "Error sending chamber creation notifications:",
-          notifError,
-        );
-        // Don't fail the request if notification fails
-      }
+      //   for (const follower of myFollowers) {
+      //     const notificationDoc = {
+      //       user_id: follower.user_id,
+      //       contact_id: req.user._id,
+      //       message: `${
+      //         currentUser.owner_name_english || currentUser.username
+      //       } has added a new chamber`,
+      //     };
+      //     await NotificationModel.create(notificationDoc);
+      //   }
+      // } catch (notifError) {
+      //   console.error(
+      //     "Error sending chamber creation notifications:",
+      //     notifError,
+      //   );
+      //   // Don't fail the request if notification fails
+      // }
 
       return res.status(200).json({
         success: true,
@@ -2242,20 +2242,20 @@ class UserController {
         status: 1,
         contact_id: req.user._id,
       });
-      for (var i = 0; i < usercontact1.length; i++) {
-        var contact_id = usercontact1[i].contact_id;
-        var user_id = usercontact1[i].user_id;
-        const ndoc = {
-          user_id: user_id,
-          contact_id: contact_id,
-          message: `${req.user.owner_name_english} has changed their chamber data`,
-        };
-        try {
-          await NotificationModel.create(ndoc);
-        } catch (e) {
-          console.error("Failed creating chamber update notification:", e);
-        }
-      }
+      // for (var i = 0; i < usercontact1.length; i++) {
+      //   var contact_id = usercontact1[i].contact_id;
+      //   var user_id = usercontact1[i].user_id;
+      //   const ndoc = {
+      //     user_id: user_id,
+      //     contact_id: contact_id,
+      //     message: `${req.user.owner_name_english} has changed their chamber data`,
+      //   };
+      //   try {
+      //     await NotificationModel.create(ndoc);
+      //   } catch (e) {
+      //     console.error("Failed creating chamber update notification:", e);
+      //   }
+      // }
 
       return res
         .status(200)
@@ -3323,17 +3323,17 @@ class UserController {
           status: 0,
         });
         // ensure notification exists
-        const existingNotif = await NotificationModel.findOne({
-          user_id: targetId,
-          contact_id: meId,
-        });
-        if (!existingNotif) {
-          await NotificationModel.create({
-            user_id: targetId,
-            contact_id: meId,
-            message: `${me.owner_name_english} has sent you a contact request`,
-          });
-        }
+        // const existingNotif = await NotificationModel.findOne({
+        //   user_id: targetId,
+        //   contact_id: meId,
+        // });
+        // if (!existingNotif) {
+        //   await NotificationModel.create({
+        //     user_id: targetId,
+        //     contact_id: meId,
+        //     message: `${me.owner_name_english} has sent you a contact request`,
+        //   });
+        // }
         return res
           .status(200)
           .json({ success: true, message: "Contact request re-sent" });
@@ -3412,15 +3412,15 @@ class UserController {
           }
 
           // Notify target that their request was accepted
-          try {
-            await NotificationModel.create({
-              user_id: targetId,
-              contact_id: meId,
-              message: `${me.owner_name_english} accepted your contact request`,
-            });
-          } catch (e) {
-            console.error("Failed creating acceptance notification", e);
-          }
+          // try {
+          //   await NotificationModel.create({
+          //     user_id: targetId,
+          //     contact_id: meId,
+          //     message: `${me.owner_name_english} accepted your contact request`,
+          //   });
+          // } catch (e) {
+          //   console.error("Failed creating acceptance notification", e);
+          // }
 
           return res
             .status(200)
@@ -3442,21 +3442,21 @@ class UserController {
         status: 0,
       });
       // Create notification for the recipient if not already present
-      try {
-        const existingNotif = await NotificationModel.findOne({
-          user_id: targetId,
-          contact_id: meId,
-        });
-        if (!existingNotif) {
-          await NotificationModel.create({
-            user_id: targetId,
-            contact_id: meId,
-            message: `${me.owner_name_english} has sent you a contact request`,
-          });
-        }
-      } catch (e) {
-        console.error("Failed creating contact notification", e);
-      }
+      // try {
+      //   const existingNotif = await NotificationModel.findOne({
+      //     user_id: targetId,
+      //     contact_id: meId,
+      //   });
+      //   if (!existingNotif) {
+      //     await NotificationModel.create({
+      //       user_id: targetId,
+      //       contact_id: meId,
+      //       message: `${me.owner_name_english} has sent you a contact request`,
+      //     });
+      //   }
+      // } catch (e) {
+      //   console.error("Failed creating contact notification", e);
+      // }
 
       return res
         .status(200)
@@ -4043,13 +4043,13 @@ class UserController {
       });
       await ReferralReportModel.create(doc);
 
-      const _notification = {
-        freemember_id: userdetails._id,
-        contact_id: userdetails._id,
-        user_id: req.user._id,
-        message: `your profile upgraded to premium membership , now you can create custom url for your profile`,
-      };
-      await NotificationModel.create(_notification);
+      // const _notification = {
+      //   freemember_id: userdetails._id,
+      //   contact_id: userdetails._id,
+      //   user_id: req.user._id,
+      //   message: `your profile upgraded to premium membership , now you can create custom url for your profile`,
+      // };
+      // await NotificationModel.create(_notification);
 
       const AdminNotification = {
         user_id: req.user._id,
@@ -5341,23 +5341,23 @@ class UserController {
         );
 
       // Create notification for enterprise/operator
-      if (userId) {
-        const currentUser =
-          await UserModel.findById(userId).select("owner_name_english");
-        const followers = await ContactModel.find({
-          contact_id: userId,
-          status: 1,
-        });
+      // if (userId) {
+      //   const currentUser =
+      //     await UserModel.findById(userId).select("owner_name_english");
+      //   const followers = await ContactModel.find({
+      //     contact_id: userId,
+      //     status: 1,
+      //   });
 
-        for (const follower of followers) {
-          await NotificationModel.create({
-            user_id: follower.user_id,
-            contact_id: userId,
-            message: `${currentUser?.owner_name_english || "User"} added a new employee namecard: ${name_english}`,
-            type: "employee_namecard",
-          });
-        }
-      }
+      //   for (const follower of followers) {
+      //     await NotificationModel.create({
+      //       user_id: follower.user_id,
+      //       contact_id: userId,
+      //       message: `${currentUser?.owner_name_english || "User"} added a new employee namecard: ${name_english}`,
+      //       type: "employee_namecard",
+      //     });
+      //   }
+      // }
 
       // Deduct 1 employee credit from user/operator
       let creditsRemaining = 0;
