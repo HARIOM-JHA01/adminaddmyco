@@ -1225,11 +1225,21 @@ class UserController {
         font_color: "",
       };
       if (theme) {
-        if (theme.fileUrl && theme.fileUrl.length > 0) {
+        // Handle both string (old data) and array (new data) types
+        let fileUrls = [];
+        if (typeof theme.fileUrl === "string") {
+          // Old data: single string
+          fileUrls = theme.fileUrl ? [theme.fileUrl] : [];
+        } else if (Array.isArray(theme.fileUrl)) {
+          // New data: array of strings
+          fileUrls = theme.fileUrl;
+        }
+        
+        if (fileUrls.length > 0) {
           // Return the first image as the active background
-          result.background_image = theme.fileUrl[0];
+          result.background_image = fileUrls[0];
           // Also return all images as an array
-          result.background_images = theme.fileUrl;
+          result.background_images = fileUrls;
         }
         result.theme_color = theme.backgroundcolor || "";
         result.font_color = theme.fontcolor || "";
@@ -2730,12 +2740,33 @@ class UserController {
 
   // ......................BACKGROUND IMAGE.....................
   static Backgroundimage = async (req, res) => {
-    // Push to array instead of replacing (for selecting system images)
-    await BackgroundModel.updateOne(
-      { user_id: req.user._id },
-      { $push: { fileUrl: req.body.fileUrl } },
-      { upsert: true },
-    );
+    // Check existing background and handle migration in single operation
+    const existingBg = await BackgroundModel.findOne({ user_id: req.user._id });
+    const newFileUrl = req.body.fileUrl;
+    
+    if (existingBg) {
+      if (typeof existingBg.fileUrl === "string") {
+        // Old data: string field - convert to array with both old and new values
+        await BackgroundModel.updateOne(
+          { user_id: req.user._id },
+          { $set: { fileUrl: [existingBg.fileUrl, newFileUrl] } },
+        );
+      } else {
+        // New data: already an array - push new value
+        await BackgroundModel.updateOne(
+          { user_id: req.user._id },
+          { $push: { fileUrl: newFileUrl } },
+        );
+      }
+    } else {
+      // No existing background - create new with array
+      await BackgroundModel.updateOne(
+        { user_id: req.user._id },
+        { $set: { fileUrl: [newFileUrl] } },
+        { upsert: true },
+      );
+    }
+    
     const system = await SystemModel.findById(req.params.id);
     const background = await BackgroundModel.findOne({ user_id: req.user._id });
     res.redirect("Theme");
@@ -2744,12 +2775,32 @@ class UserController {
   // ......................BACKGROUND-IMAGE........API::::::::::::::::::::::::
   static BackgroundImages = async (req, res) => {
     if (typeof req.body.fileUrl != "undefined") {
-      // Push to array instead of replacing (for selecting system/URL images)
-      await BackgroundModel.updateOne(
-        { user_id: req.user._id },
-        { $push: { fileUrl: req.body.fileUrl } },
-        { upsert: true },
-      );
+      // Check existing background and handle migration in single operation
+      const existingBg = await BackgroundModel.findOne({ user_id: req.user._id });
+      const newFileUrl = req.body.fileUrl;
+      
+      if (existingBg) {
+        if (typeof existingBg.fileUrl === "string") {
+          // Old data: string field - convert to array with both old and new values
+          await BackgroundModel.updateOne(
+            { user_id: req.user._id },
+            { $set: { fileUrl: [existingBg.fileUrl, newFileUrl] } },
+          );
+        } else {
+          // New data: already an array - push new value
+          await BackgroundModel.updateOne(
+            { user_id: req.user._id },
+            { $push: { fileUrl: newFileUrl } },
+          );
+        }
+      } else {
+        // No existing background - create new with array
+        await BackgroundModel.updateOne(
+          { user_id: req.user._id },
+          { $set: { fileUrl: [newFileUrl] } },
+          { upsert: true },
+        );
+      }
     }
     if (typeof req.body.fontcolor != "undefined") {
       await BackgroundModel.updateOne(
@@ -2858,12 +2909,32 @@ class UserController {
       const cleanBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
       const fileUrl = `${cleanBase}/uploads/background/${fileName}`;
 
-      // Update BackgroundModel with fileUrl (push to array to keep multiple images)
-      await BackgroundModel.updateOne(
-        { user_id: user._id },
-        { $push: { fileUrl: fileUrl } },
-        { upsert: true },
-      );
+      // Check existing background and handle migration in single operation
+      const existingBg = await BackgroundModel.findOne({ user_id: user._id });
+      
+      if (existingBg) {
+        if (typeof existingBg.fileUrl === "string") {
+          // Old data: string field - convert to array with both old and new values
+          await BackgroundModel.updateOne(
+            { user_id: user._id },
+            { $set: { fileUrl: [existingBg.fileUrl, fileUrl] } },
+          );
+        } else {
+          // New data: already an array - push new value
+          await BackgroundModel.updateOne(
+            { user_id: user._id },
+            { $push: { fileUrl: fileUrl } },
+          );
+        }
+      } else {
+        // No existing background - create new with array
+        await BackgroundModel.updateOne(
+          { user_id: user._id },
+          { $set: { fileUrl: [fileUrl] } },
+          { upsert: true },
+        );
+      }
+      
       const background = await BackgroundModel.findOne({ user_id: user._id });
 
       return res.status(201).json({
@@ -3250,7 +3321,15 @@ class UserController {
     if (authUser) {
       try {
         const bg = await BackgroundModel.findOne({ user_id: authUser._id });
-        const fileUrls = bg && bg.fileUrl ? bg.fileUrl : [];
+        // Handle both string (old data) and array (new data) types
+        let fileUrls = [];
+        if (bg) {
+          if (typeof bg.fileUrl === "string") {
+            fileUrls = bg.fileUrl ? [bg.fileUrl] : [];
+          } else if (Array.isArray(bg.fileUrl)) {
+            fileUrls = bg.fileUrl;
+          }
+        }
 
         const userEntry = {
           _id: `user-${authUser._id}`,
