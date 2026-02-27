@@ -73,6 +73,8 @@ const userSchema = new mongoose.Schema(
     enterpriseOnDate: { type: Date, default: null },
     // For 3-stage creation: 0 = not started, 1 = stage 1 complete (telegram), 2 = stage 2 complete (profile), 3 = stage 3 complete (company)
     creationStage: { type: Number, default: 0 },
+    // User's selected background image (set via POST /backgroundimage with Thumbnail)
+    background_image: { type: String, default: null },
   },
   { timestamps: true },
 );

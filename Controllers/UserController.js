@@ -1218,32 +1218,13 @@ class UserController {
           .status(422)
           .json({ success: false, message: "User not found" });
       }
+      // Get background_image from User model, theme colors from BackgroundModel
       const theme = await BackgroundModel.findOne({ user_id: user._id });
       const result = {
-        background_image: "",
-        theme_color: "",
-        font_color: "",
+        background_image: user.background_image || "",
+        theme_color: theme?.backgroundcolor || "",
+        font_color: theme?.fontcolor || "",
       };
-      if (theme) {
-        // Handle both string (old data) and array (new data) types
-        let fileUrls = [];
-        if (typeof theme.fileUrl === "string") {
-          // Old data: single string
-          fileUrls = theme.fileUrl ? [theme.fileUrl] : [];
-        } else if (Array.isArray(theme.fileUrl)) {
-          // New data: array of strings
-          fileUrls = theme.fileUrl;
-        }
-        
-        if (fileUrls.length > 0) {
-          // Return the first image as the active background
-          result.background_image = fileUrls[0];
-          // Also return all images as an array
-          result.background_images = fileUrls;
-        }
-        result.theme_color = theme.backgroundcolor || "";
-        result.font_color = theme.fontcolor || "";
-      }
       return res.status(200).json({ success: true, data: result });
     } catch (err) {
       console.error("GetUserBackground error:", err);
@@ -2774,33 +2755,11 @@ class UserController {
 
   // ......................BACKGROUND-IMAGE........API::::::::::::::::::::::::
   static BackgroundImages = async (req, res) => {
-    if (typeof req.body.fileUrl != "undefined") {
-      // Check existing background and handle migration in single operation
-      const existingBg = await BackgroundModel.findOne({ user_id: req.user._id });
-      const newFileUrl = req.body.fileUrl;
-      
-      if (existingBg) {
-        if (typeof existingBg.fileUrl === "string") {
-          // Old data: string field - convert to array with both old and new values
-          await BackgroundModel.updateOne(
-            { user_id: req.user._id },
-            { $set: { fileUrl: [existingBg.fileUrl, newFileUrl] } },
-          );
-        } else {
-          // New data: already an array - push new value
-          await BackgroundModel.updateOne(
-            { user_id: req.user._id },
-            { $push: { fileUrl: newFileUrl } },
-          );
-        }
-      } else {
-        // No existing background - create new with array
-        await BackgroundModel.updateOne(
-          { user_id: req.user._id },
-          { $set: { fileUrl: [newFileUrl] } },
-          { upsert: true },
-        );
-      }
+    // Handle Thumbnail (background_image) - save to User model
+    if (typeof req.body.Thumbnail != "undefined") {
+      await UserModel.findByIdAndUpdate(req.user._id, {
+        $set: { background_image: req.body.Thumbnail },
+      });
     }
     if (typeof req.body.fontcolor != "undefined") {
       await BackgroundModel.updateOne(
@@ -2825,9 +2784,10 @@ class UserController {
     }
     const system = await SystemModel.findById(req.params.id);
     const background = await BackgroundModel.findOne({ user_id: req.user._id });
+    const user = await UserModel.findById(req.user._id);
     return res.status(200).json({
       success: true,
-      data: background,
+      data: { ...background?.toObject(), background_image: user.background_image },
       message: "Background Images Successfully Added...",
     });
   };
