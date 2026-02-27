@@ -1225,8 +1225,11 @@ class UserController {
         font_color: "",
       };
       if (theme) {
-        if (theme.fileUrl && theme.fileUrl != "") {
-          result.background_image = theme.fileUrl;
+        if (theme.fileUrl && theme.fileUrl.length > 0) {
+          // Return the first image as the active background
+          result.background_image = theme.fileUrl[0];
+          // Also return all images as an array
+          result.background_images = theme.fileUrl;
         }
         result.theme_color = theme.backgroundcolor || "";
         result.font_color = theme.fontcolor || "";
@@ -2727,9 +2730,10 @@ class UserController {
 
   // ......................BACKGROUND IMAGE.....................
   static Backgroundimage = async (req, res) => {
+    // Push to array instead of replacing (for selecting system images)
     await BackgroundModel.updateOne(
       { user_id: req.user._id },
-      { $set: { fileUrl: req.body.fileUrl } },
+      { $push: { fileUrl: req.body.fileUrl } },
       { upsert: true },
     );
     const system = await SystemModel.findById(req.params.id);
@@ -2740,9 +2744,10 @@ class UserController {
   // ......................BACKGROUND-IMAGE........API::::::::::::::::::::::::
   static BackgroundImages = async (req, res) => {
     if (typeof req.body.fileUrl != "undefined") {
+      // Push to array instead of replacing (for selecting system/URL images)
       await BackgroundModel.updateOne(
         { user_id: req.user._id },
-        { $set: { fileUrl: req.body.fileUrl } },
+        { $push: { fileUrl: req.body.fileUrl } },
         { upsert: true },
       );
     }
@@ -2853,10 +2858,10 @@ class UserController {
       const cleanBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
       const fileUrl = `${cleanBase}/uploads/background/${fileName}`;
 
-      // Update BackgroundModel with fileUrl
+      // Update BackgroundModel with fileUrl (push to array to keep multiple images)
       await BackgroundModel.updateOne(
         { user_id: user._id },
-        { $set: { fileUrl: fileUrl } },
+        { $push: { fileUrl: fileUrl } },
         { upsert: true },
       );
       const background = await BackgroundModel.findOne({ user_id: user._id });
@@ -3245,7 +3250,7 @@ class UserController {
     if (authUser) {
       try {
         const bg = await BackgroundModel.findOne({ user_id: authUser._id });
-        const fileUrls = bg && bg.fileUrl ? [bg.fileUrl] : [];
+        const fileUrls = bg && bg.fileUrl ? bg.fileUrl : [];
 
         const userEntry = {
           _id: `user-${authUser._id}`,
