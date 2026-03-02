@@ -1854,7 +1854,10 @@ class EnterpriseController {
       // Set username to tgid with collision handling
       let activeUsername = employeeTgid;
       const usernameConflict = await UserModel.findOne({
-        username: employeeTgid,
+        $or: [
+          { username: employeeTgid },
+          { staffUserName: employeeTgid },
+        ],
       });
       if (usernameConflict) {
         activeUsername =
@@ -1876,6 +1879,7 @@ class EnterpriseController {
       const employee = new UserModel({
         username: activeUsername,
         freeUsername: generatedUsername,
+        staffUserName: activeUsername,
         tgid: employeeTgid,
         email: employeeEmail || null,
         firstname: employeeName || "Employee",
@@ -2031,7 +2035,10 @@ class EnterpriseController {
       // Set username to tgid with collision handling
       let activeUsername = employeeTgid;
       const usernameConflict = await UserModel.findOne({
-        username: employeeTgid,
+        $or: [
+          { username: employeeTgid },
+          { staffUserName: employeeTgid },
+        ],
       });
       if (usernameConflict) {
         activeUsername =
@@ -2053,6 +2060,7 @@ class EnterpriseController {
       const employee = new UserModel({
         username: activeUsername,
         freeUsername: generatedUsername,
+        staffUserName: activeUsername,
         tgid: employeeTgid,
         email: employeeEmail || null,
         firstname: employeeName || "Employee",
@@ -2205,7 +2213,10 @@ class EnterpriseController {
       // Set username to telegram ID with collision handling
       let activeUsername = telegramUsername;
       const usernameConflict = await UserModel.findOne({
-        username: telegramUsername,
+        $or: [
+          { username: telegramUsername },
+          { staffUserName: telegramUsername },
+        ],
       });
       if (usernameConflict) {
         activeUsername =
@@ -2220,6 +2231,7 @@ class EnterpriseController {
       const employee = new UserModel({
         username: activeUsername,
         freeUsername: generatedUsername,
+        staffUserName: activeUsername,
         tgid: telegramUsername,
         usertype: 1,
         membertype: "premium",

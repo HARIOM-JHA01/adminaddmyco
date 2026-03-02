@@ -4571,6 +4571,12 @@ class UserController {
         user = await UserModel.findOne({ tgid: new RegExp(`^${esc}$`, "i") });
       }
 
+      // Also check `staffUserName` explicitly (case-insensitive fallback)
+      if (!user) {
+        const esc = username.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        user = await UserModel.findOne({ staffUserName: new RegExp(`^${esc}$`, "i") });
+      }
+
       return res.status(200).json({
         success: true,
         exists: Boolean(user),
@@ -5255,7 +5261,10 @@ class UserController {
 
           let activeUsername = normalizedTelegramUsername;
           const usernameConflict = await UserModel.findOne({
-            username: normalizedTelegramUsername,
+            $or: [
+              { username: normalizedTelegramUsername },
+              { staffUserName: normalizedTelegramUsername },
+            ],
           });
           if (usernameConflict) {
             activeUsername =
@@ -5273,6 +5282,7 @@ class UserController {
           const employeeUser = new UserModel({
             username: activeUsername,
             freeUsername: generatedUsername,
+            staffUserName: activeUsername,
             tgid: normalizedTelegramUsername,
             email: email || null,
             firstname: name_english || "Employee",
@@ -5320,6 +5330,7 @@ class UserController {
             country: donatorCountry || linkedEmployeeUser.country || "",
             countryCode:
               donatorCountryCode || linkedEmployeeUser.countryCode || "",
+            staffUserName: linkedEmployeeUser.staffUserName || linkedEmployeeUser.username,
           };
           if (linkOperatorId) {
             updatePayload.createdByOperator =
