@@ -84,7 +84,14 @@ class UserController {
     const re = new RegExp(`^${esc}$`, "i");
     const reAt = new RegExp(`^@${esc}$`, "i");
 
-    return await UserModel.findOne({ $or: [{ tgid: re }, { tgid: reAt }] });
+    return await UserModel.findOne({
+      $or: [
+        { tgid: re },
+        { tgid: reAt },
+        { staffUserName: re },
+        { staffUserName: reAt },
+      ],
+    });
   }
 
   static async generateEnterpriseMemberId() {
@@ -94,14 +101,16 @@ class UserController {
 
   /**
    * Helper function to find user by username
-   * Checks both 'username' and 'freeUsername' fields
+   * Checks 'username', 'freeUsername', and 'staffUserName' fields
    * Priority:
    * 1. Try to find by 'username' (active username)
    * 2. If not found, try 'freeUsername' (permanent username)
+   * 3. If not found, try 'staffUserName' (staff username)
    * This ensures:
    * - Free username always works
    * - Premium username only works when membership is active
    * - When premium expires and username reverts to freeUsername, both work
+   * - Staff users can be found by their staffUserName
    */
   static async findUserByUsername(usernameToFind, caseInsensitive = false) {
     // If caseInsensitive is requested, use a case-insensitive anchored regex (escape input)
@@ -109,10 +118,13 @@ class UserController {
       const esc = (usernameToFind || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const re = new RegExp(`^${esc}$`, "i");
 
-      // Try active username first, then freeUsername
+      // Try active username first, then freeUsername, then staffUserName
       let user = await UserModel.findOne({ username: re });
       if (!user) {
         user = await UserModel.findOne({ freeUsername: re });
+      }
+      if (!user) {
+        user = await UserModel.findOne({ staffUserName: re });
       }
       return user;
     }
@@ -123,6 +135,11 @@ class UserController {
     // If not found, try freeUsername
     if (!user) {
       user = await UserModel.findOne({ freeUsername: usernameToFind });
+    }
+
+    // If not found, try staffUserName
+    if (!user) {
+      user = await UserModel.findOne({ staffUserName: usernameToFind });
     }
 
     return user;
@@ -3727,11 +3744,12 @@ class UserController {
       // Build case-insensitive regex for partial matches
       const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
 
-      // Find users matching username/tgid exactly or name fields partially
+      // Find users matching username/tgid/staffUserName exactly or name fields partially
       const usersByFields = await UserModel.find({
         $or: [
           { username: q },
           { tgid: q },
+          { staffUserName: q },
           { owner_name_english: { $regex: regex } },
           { owner_name_chinese: { $regex: regex } },
           { firstname: { $regex: regex } },

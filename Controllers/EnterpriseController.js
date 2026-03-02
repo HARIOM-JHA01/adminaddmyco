@@ -1806,9 +1806,12 @@ class EnterpriseController {
         .toLowerCase();
       let existingUser = null;
       if (_normEmpTgid) {
-        const _esc = _normEmpTgid.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
+        const _esc = _normEmpTgid.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         existingUser = await UserModel.findOne({
-          tgid: new RegExp(`^${_esc}$`, "i"),
+          $or: [
+            { tgid: new RegExp(`^${_esc}$`, "i") },
+            { staffUserName: new RegExp(`^${_esc}$`, "i") },
+          ],
         });
       }
       if (existingUser) {
@@ -2167,9 +2170,12 @@ class EnterpriseController {
         .toLowerCase();
       let existingUser = null;
       if (_normTg) {
-        const _esc = _normTg.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
+        const _esc = _normTg.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         existingUser = await UserModel.findOne({
-          tgid: new RegExp(`^${_esc}$`, "i"),
+          $or: [
+            { tgid: new RegExp(`^${_esc}$`, "i") },
+            { staffUserName: new RegExp(`^${_esc}$`, "i") },
+          ],
         });
       }
       if (existingUser) {
@@ -2555,9 +2561,12 @@ class EnterpriseController {
         .toLowerCase();
       let existingUser = null;
       if (_normTg) {
-        const _esc = _normTg.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
+        const _esc = _normTg.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         existingUser = await UserModel.findOne({
-          tgid: new RegExp(`^${_esc}$`, "i"),
+          $or: [
+            { tgid: new RegExp(`^${_esc}$`, "i") },
+            { staffUserName: new RegExp(`^${_esc}$`, "i") },
+          ],
         });
       }
       if (existingUser) {
