@@ -23,6 +23,11 @@ class EnterpriseController {
     return crypto.randomBytes(4).toString("hex");
   }
 
+  // Utility to generate a 6-character alphanumeric verification code
+  static generateVerificationCode() {
+    return crypto.randomBytes(3).toString("hex").toUpperCase();
+  }
+
   // ======================== OPERATOR MANAGEMENT ========================
 
   /**
@@ -1878,6 +1883,8 @@ class EnterpriseController {
       const startDate = moment().format("YYYY-MM-DD");
       const endDate = moment().add(validityYears, "years").format("YYYY-MM-DD");
 
+      const verificationCode = EnterpriseController.generateVerificationCode();
+
       // Create employee user
       const employee = new UserModel({
         username: activeUsername,
@@ -1897,6 +1904,8 @@ class EnterpriseController {
         memberid: await EnterpriseController.generateMemberId(),
         // link to the operator who created this employee
         createdByOperator: req.operator?._id || null,
+        verificationCode: verificationCode,
+        isVerified: false,
       });
 
       const savedEmployee = await employee.save();
@@ -1940,6 +1949,7 @@ class EnterpriseController {
           email: employeeEmail,
           membershipEnd: endDate,
           token,
+          verificationCode,
         },
       });
     } catch (error) {
@@ -2059,6 +2069,8 @@ class EnterpriseController {
       const startDate = moment().format("YYYY-MM-DD");
       const endDate = moment().add(validityYears, "years").format("YYYY-MM-DD");
 
+      const verificationCode = EnterpriseController.generateVerificationCode();
+
       // Create employee user (created directly by enterprise)
       const employee = new UserModel({
         username: activeUsername,
@@ -2078,6 +2090,8 @@ class EnterpriseController {
         memberid: await EnterpriseController.generateMemberId(),
         // Not created by an operator
         createdByOperator: null,
+        verificationCode: verificationCode,
+        isVerified: false,
       });
 
       const savedEmployee = await employee.save();
@@ -2117,6 +2131,7 @@ class EnterpriseController {
           email: employeeEmail,
           membershipEnd: endDate,
           token,
+          verificationCode,
         },
       });
     } catch (error) {
@@ -2233,6 +2248,8 @@ class EnterpriseController {
       const startDate = moment().format("YYYY-MM-DD");
       const endDate = moment().add(validityYears, "years").format("YYYY-MM-DD");
 
+      const verificationCode = EnterpriseController.generateVerificationCode();
+
       // Create employee at stage 1
       const employee = new UserModel({
         username: activeUsername,
@@ -2250,6 +2267,8 @@ class EnterpriseController {
         createdByOperator: req.operator._id,
         creationStage: 1, // Stage 1 complete
         date: new Date(),
+        verificationCode: verificationCode,
+        isVerified: false,
       });
 
       const savedEmployee = await employee.save();
@@ -2278,6 +2297,7 @@ class EnterpriseController {
           tgid: telegramUsername,
           stage: 1,
           nextStage: "Profile Information",
+          verificationCode,
         },
       });
     } catch (error) {

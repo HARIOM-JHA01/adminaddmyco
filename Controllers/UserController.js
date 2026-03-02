@@ -65,6 +65,11 @@ class UserController {
     return crypto.randomBytes(4).toString("hex");
   }
 
+  // Utility to generate a 6-character alphanumeric verification code
+  static generateVerificationCode() {
+    return crypto.randomBytes(3).toString("hex").toUpperCase();
+  }
+
   // Normalize Telegram handle to reduce duplicate accounts caused by @/case variants.
   static normalizeTelegramUsername(value) {
     return String(value || "")
@@ -4606,6 +4611,105 @@ class UserController {
     }
   };
 
+  /**
+   * Staff login with verification code
+   * POST /staff/login
+   * 
+   * Flow:
+   * 1. If only staffUserName provided and isVerified is false -> return "please send verification code now"
+   * 2. If verificationCode provided -> verify and login (set isVerified = true if first time)
+   * 3. If isVerified is true -> normal login without code
+   */
+  static staffLogin = async (req, res) => {
+    try {
+      const { staffUserName, verificationCode, password } = req.body;
+
+      if (!staffUserName) {
+        return res.status(422).json({
+          success: false,
+          message: "staffUserName is required",
+        });
+      }
+
+      // Find user by staffUserName (case-insensitive)
+      const esc = staffUserName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const user = await UserModel.findOne({
+        staffUserName: new RegExp(`^${esc}$`, "i"),
+      });
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      // If user is already verified, allow normal login
+      if (user.isVerified) {
+        // Generate token
+        const payload = {
+          id: user._id,
+          username: user.staffUserName || user.username,
+        };
+        const accessToken = await jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+          algorithm: "HS256",
+          expiresIn: process.env.ACCESS_TOKEN_LIFE,
+        });
+
+        return res.status(200).json({
+          success: true,
+          message: "Login successful",
+          data: {
+            userId: user._id,
+            username: user.staffUserName || user.username,
+            token: accessToken,
+          },
+        });
+      }
+
+      // First login - verification required
+      if (!verificationCode) {
+        return res.status(200).json({
+          success: true,
+          message: "please send verification code now",
+        });
+      }
+
+      // Verify the code
+      if (user.verificationCode !== verificationCode) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid verification code",
+        });
+      }
+
+      // Code is correct - mark as verified and generate token
+      await UserModel.findByIdAndUpdate(user._id, { isVerified: true });
+
+      const payload = {
+        id: user._id,
+        username: user.staffUserName || user.username,
+      };
+      const accessToken = await jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+        algorithm: "HS256",
+        expiresIn: process.env.ACCESS_TOKEN_LIFE,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Login successful",
+        data: {
+          userId: user._id,
+          username: user.staffUserName || user.username,
+          token: accessToken,
+        },
+      });
+    } catch (err) {
+      console.error("staffLogin error:", err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+  };
+
   // Unsecured API - Get user companies only
   static GetUserCompanies = async (req, res) => {
     try {
@@ -5297,6 +5401,8 @@ class UserController {
             .add(validityYears, "years")
             .format("YYYY-MM-DD");
 
+          const verificationCode = UserController.generateVerificationCode();
+
           const employeeUser = new UserModel({
             username: activeUsername,
             freeUsername: generatedUsername,
@@ -5315,6 +5421,8 @@ class UserController {
             countryCode: donatorCountryCode,
             memberid: await UserController.generateEnterpriseMemberId(),
             createdByOperator: linkOperatorId,
+            verificationCode: verificationCode,
+            isVerified: false,
           });
 
           linkedEmployeeUser = await employeeUser.save();
@@ -5456,6 +5564,7 @@ class UserController {
         message: "Employee namecard created successfully",
         data: populatedNamecard,
         creditsRemaining: creditsRemaining,
+        verificationCode: linkedEmployeeUser ? linkedEmployeeUser.verificationCode : null,
       });
     } catch (error) {
       console.error("createEmployeeNamecard error:", error);

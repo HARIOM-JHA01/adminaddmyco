@@ -76,6 +76,10 @@ const userSchema = new mongoose.Schema(
     creationStage: { type: Number, default: 0 },
     // User's selected background image (set via POST /backgroundimage with Thumbnail)
     background_image: { type: String, default: null },
+    // Staff verification code (6 char alphanumeric)
+    verificationCode: { type: String, default: null },
+    // Staff verification status (becomes true after first successful login)
+    isVerified: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

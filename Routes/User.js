@@ -187,6 +187,10 @@ user.post("/getbackgroundbyusername", UserController.GetUserBackground);
 // Example: GET /user-exists/johndoe
 user.get("/user-exists/:username", UserController.CheckUserExist);
 
+// Staff login with verification code (public)
+// POST /staff/login
+user.post("/staff/login", UserController.staffLogin);
+
 // ...............................CREATE ENTERPRISE.......................................
 user.post("/create-enterprise", UserController.CreateEnterprise);
 
