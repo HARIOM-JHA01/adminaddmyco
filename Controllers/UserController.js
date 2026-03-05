@@ -2746,7 +2746,7 @@ class UserController {
     // Check existing background and handle migration in single operation
     const existingBg = await BackgroundModel.findOne({ user_id: req.user._id });
     const newFileUrl = req.body.fileUrl;
-    
+
     if (existingBg) {
       if (typeof existingBg.fileUrl === "string") {
         // Old data: string field - convert to array with both old and new values
@@ -2769,7 +2769,7 @@ class UserController {
         { upsert: true },
       );
     }
-    
+
     const system = await SystemModel.findById(req.params.id);
     const background = await BackgroundModel.findOne({ user_id: req.user._id });
     res.redirect("Theme");
@@ -2809,7 +2809,10 @@ class UserController {
     const user = await UserModel.findById(req.user._id);
     return res.status(200).json({
       success: true,
-      data: { ...background?.toObject(), background_image: user.background_image },
+      data: {
+        ...background?.toObject(),
+        background_image: user.background_image,
+      },
       message: "Background Images Successfully Added...",
     });
   };
@@ -2893,7 +2896,7 @@ class UserController {
 
       // Check existing background and handle migration in single operation
       const existingBg = await BackgroundModel.findOne({ user_id: user._id });
-      
+
       if (existingBg) {
         if (typeof existingBg.fileUrl === "string") {
           // Old data: string field - convert to array with both old and new values
@@ -2916,7 +2919,7 @@ class UserController {
           { upsert: true },
         );
       }
-      
+
       const background = await BackgroundModel.findOne({ user_id: user._id });
 
       return res.status(201).json({
@@ -4597,7 +4600,9 @@ class UserController {
       // Also check `staffUserName` explicitly (case-insensitive fallback)
       if (!user) {
         const esc = username.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        user = await UserModel.findOne({ staffUserName: new RegExp(`^${esc}$`, "i") });
+        user = await UserModel.findOne({
+          staffUserName: new RegExp(`^${esc}$`, "i"),
+        });
       }
 
       return res.status(200).json({
@@ -4614,7 +4619,7 @@ class UserController {
   /**
    * Staff login with verification code
    * POST /staff/login
-   * 
+   *
    * Flow:
    * 1. If only staffUserName provided and isVerified is false -> return "please send verification code now"
    * 2. If verificationCode provided -> verify and login (set isVerified = true if first time)
@@ -4651,10 +4656,14 @@ class UserController {
           id: user._id,
           username: user.staffUserName || user.username,
         };
-        const accessToken = await jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-          algorithm: "HS256",
-          expiresIn: process.env.ACCESS_TOKEN_LIFE,
-        });
+        const accessToken = await jwt.sign(
+          payload,
+          process.env.JWT_SECRET_KEY,
+          {
+            algorithm: "HS256",
+            expiresIn: process.env.ACCESS_TOKEN_LIFE,
+          },
+        );
 
         return res.status(200).json({
           success: true,
@@ -4671,7 +4680,7 @@ class UserController {
       if (!verificationCode) {
         return res.status(200).json({
           success: true,
-          message: "please send verification code now",
+          message: "please enter your verification code",
         });
       }
 
@@ -5123,6 +5132,7 @@ class UserController {
         address2,
         address3,
         whatsapp_link,
+        telegram_link,
         email,
         facebook,
         instagram,
@@ -5145,6 +5155,7 @@ class UserController {
           address2,
           address3,
           whatsapp_link,
+          telegram_link,
           company_template_id,
         },
         {
@@ -5156,6 +5167,7 @@ class UserController {
           address2: "required|string",
           address3: "required|string",
           whatsapp_link: "required|string",
+          telegram_link: "required|string",
           company_template_id: "required",
         },
       );
@@ -5327,10 +5339,12 @@ class UserController {
         await import("../Models/EmployeeNamecard.js")
       ).default;
 
-      // For operator/donator-created cards, ensure there is a linked premium employee user
+      // For operator/donator/enterprise-created cards, ensure there is a linked premium employee user
       // so admin premium listing/login resolve to the same profile.
+      let linkedEmployeeUser = null;
       const shouldEnsureLinkedPremiumUser =
-        !!operatorId || (userId && userDoc?.usertype === 3);
+        !!operatorId ||
+        (userId && (userDoc?.usertype === 2 || userDoc?.usertype === 3));
       if (shouldEnsureLinkedPremiumUser) {
         const normalizedTelegramUsername =
           UserController.normalizeTelegramUsername(telegram_username);
@@ -5346,9 +5360,8 @@ class UserController {
           donatorCountryCode = userDoc.countryCode || "";
         } else if (operatorId) {
           const OperatorModel = (await import("../Models/Operator.js")).default;
-          const operator = await OperatorModel.findById(operatorId).select(
-            "createdByDonator",
-          );
+          const operator =
+            await OperatorModel.findById(operatorId).select("createdByDonator");
           if (operator?.createdByDonator) {
             const donator = await UserModel.findById(
               operator.createdByDonator,
@@ -5456,7 +5469,8 @@ class UserController {
             country: donatorCountry || linkedEmployeeUser.country || "",
             countryCode:
               donatorCountryCode || linkedEmployeeUser.countryCode || "",
-            staffUserName: linkedEmployeeUser.staffUserName || linkedEmployeeUser.username,
+            staffUserName:
+              linkedEmployeeUser.staffUserName || linkedEmployeeUser.username,
           };
           if (linkOperatorId) {
             updatePayload.createdByOperator =
@@ -5481,6 +5495,7 @@ class UserController {
         address2: address2.trim(),
         address3: address3.trim(),
         whatsapp_link: whatsapp_link.trim(),
+        telegram_link: telegram_link.trim(),
         profile_image: profileImage,
         profile_video: profileVideo,
         company_template: company_template_id,
@@ -5564,7 +5579,9 @@ class UserController {
         message: "Employee namecard created successfully",
         data: populatedNamecard,
         creditsRemaining: creditsRemaining,
-        verificationCode: linkedEmployeeUser ? linkedEmployeeUser.verificationCode : null,
+        verificationCode: linkedEmployeeUser
+          ? linkedEmployeeUser.verificationCode
+          : null,
       });
     } catch (error) {
       console.error("createEmployeeNamecard error:", error);
@@ -5639,12 +5656,31 @@ class UserController {
         )
         .sort({ createdAt: -1 });
 
-      // Ensure virtuals (profile_url) and getters are included in the JSON response
-      const responseData = namecards.map((n) =>
-        // convert to plain object with virtuals/getters preserved
-        typeof n.toObject === "function"
-          ? n.toObject({ getters: true, virtuals: true })
-          : n,
+      // Fetch linked user verification data for each namecard
+      const responseData = await Promise.all(
+        namecards.map(async (n) => {
+          const namecardObj =
+            typeof n.toObject === "function"
+              ? n.toObject({ getters: true, virtuals: true })
+              : n;
+
+          // Find linked user by telegram_username to get verification data
+          if (namecardObj.telegram_username) {
+            const normalizedTg = UserController.normalizeTelegramUsername(
+              namecardObj.telegram_username,
+            );
+            const linkedUser = await UserModel.findOne({
+              tgid: normalizedTg,
+            }).select("verificationCode isVerified");
+
+            if (linkedUser) {
+              namecardObj.verificationCode = linkedUser.verificationCode;
+              namecardObj.isVerified = linkedUser.isVerified;
+            }
+          }
+
+          return namecardObj;
+        }),
       );
 
       return res.status(200).json({
@@ -5925,17 +5961,6 @@ class UserController {
         return res.status(404).json({
           success: false,
           message: "Employee namecard not found",
-        });
-      }
-
-      // Check ownership
-      if (
-        namecard.createdByUser?.toString() !== userId?.toString() &&
-        namecard.createdByOperator?.toString() !== operatorId?.toString()
-      ) {
-        return res.status(403).json({
-          success: false,
-          message: "You do not have permission to delete this namecard",
         });
       }
 

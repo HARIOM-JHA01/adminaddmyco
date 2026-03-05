@@ -18,6 +18,7 @@ const employeeNamecardSchema = new mongoose.Schema(
 
     // Social media - REQUIRED
     whatsapp_link: { type: String, required: true },
+    telegram_link: { type: String, required: true },
 
     // Optional fields
     email: { type: String },
