@@ -71,12 +71,12 @@ employeeNamecardSchema.set("toJSON", { getters: true, virtuals: true });
 
 employeeNamecardSchema.virtual("profile_url").get(function () {
   const companyName = this.company_template?.company_name_english || "";
-  const staffName = this.name_english || "";
+  const telegramUsername = this.telegram_username || "";
   
   const companyFirstWord = companyName.split(" ")[0] || "";
   const companySlug = companyFirstWord.toLowerCase().replace(/[^a-z0-9]/g, "");
   
-  const staffSlug = staffName.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const staffSlug = telegramUsername.toLowerCase().replace(/[^a-z0-9]/g, "");
   
   if (!companySlug || !staffSlug) return "";
   return `https://addmy.co/t.me/${companySlug}-${staffSlug}`;
