@@ -4782,6 +4782,45 @@ class UserController {
         profileData.profile_image = "";
       }
 
+      // For usertype=4 (employee), fetch EmployeeNamecard data and merge into profileData
+      if (profileData.usertype === 4) {
+        const EmployeeNamecardModel = (await import("../Models/EmployeeNamecard.js")).default;
+        
+        const namecard = await EmployeeNamecardModel.findOne({
+          $or: [
+            { createdByOperator: profileData.createdByOperator },
+            { "telegram_username": { $regex: new RegExp(`^${profileData.tgid}$`, 'i') } }
+          ],
+          status: { $ne: 2 }
+        })
+          .populate("company_template", "company_name_english company_name_chinese companydesignation")
+          .populate("chamber_template", "chamber_name_english chamber_name_chinese chamberdesignation")
+          .lean();
+
+        if (namecard) {
+          profileData.owner_name_english = namecard.name_english;
+          profileData.owner_name_chinese = namecard.name_chinese;
+          profileData.contact = namecard.contact_number;
+          profileData.email = namecard.email;
+          profileData.address1 = namecard.address1;
+          profileData.address2 = namecard.address2;
+          profileData.address3 = namecard.address3;
+          profileData.WhatsApp = namecard.whatsapp_link;
+          profileData.telegramId = namecard.telegram_link;
+          profileData.Facebook = namecard.facebook;
+          profileData.Instagram = namecard.instagram;
+          profileData.Twitter = namecard.x_twitter;
+          profileData.Line = namecard.line;
+          profileData.Youtube = namecard.youtube;
+          profileData.profile_image = namecard.profile_image;
+          profileData.video = namecard.profile_video;
+          profileData.company_template = namecard.company_template;
+          profileData.chamber_template = namecard.chamber_template;
+          profileData.profile_url = namecard.profile_url;
+          profileData.namecard_id = namecard._id;
+        }
+      }
+
       return res.status(200).json({
         success: true,
         data: profileData,
