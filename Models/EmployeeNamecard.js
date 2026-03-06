@@ -69,29 +69,17 @@ const employeeNamecardSchema = new mongoose.Schema(
 employeeNamecardSchema.set("toObject", { getters: true, virtuals: true });
 employeeNamecardSchema.set("toJSON", { getters: true, virtuals: true });
 
-// Virtual: profile_url (format: https://addmy.co/t.me/{company}/{staff})
-// - company: company_template.company_name_english (populated in queries)
-// - staff: name_english
-function slugifyForUrl(str) {
-  if (!str) return "";
-  return String(str)
-    .trim()
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/\u0300-\u036f/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
 employeeNamecardSchema.virtual("profile_url").get(function () {
   const companyName = this.company_template?.company_name_english || "";
   const staffName = this.name_english || "";
-  const companySlug = slugifyForUrl(companyName);
-  const staffSlug = slugifyForUrl(staffName);
+  
+  const companyFirstWord = companyName.split(" ")[0] || "";
+  const companySlug = companyFirstWord.toLowerCase().replace(/[^a-z0-9]/g, "");
+  
+  const staffSlug = staffName.toLowerCase().replace(/[^a-z0-9]/g, "");
+  
   if (!companySlug || !staffSlug) return "";
-  return `https://addmy.co/t.me/${companySlug}/${staffSlug}`;
+  return `https://addmy.co/t.me/${companySlug}-${staffSlug}`;
 });
 
 // Indexes for performance

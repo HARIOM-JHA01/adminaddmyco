@@ -5345,6 +5345,67 @@ class UserController {
     }
   };
 
+  // ======================== EMPLOYEE NAMECARD HELPER METHODS ========================
+
+  /**
+   * Get all operator IDs belonging to the same enterprise/donator
+   */
+  static getEnterpriseOperatorIds = async (operatorId) => {
+    const OperatorModel = (await import("../Models/Operator.js")).default;
+    const operator = await OperatorModel.findById(operatorId).lean();
+    if (!operator) return [];
+
+    const ownershipFilter = operator.createdByEnterprise
+      ? { createdByEnterprise: operator.createdByEnterprise }
+      : operator.createdByDonator
+        ? { createdByDonator: operator.createdByDonator }
+        : null;
+
+    if (!ownershipFilter) return [];
+
+    const operators = await OperatorModel.find(ownershipFilter).select("_id");
+    return operators.map((op) => op._id);
+  };
+
+  /**
+   * Check if user/operator has access to a namecard (enterprise-wide)
+   */
+  static canAccessNamecard = async (userId, operatorId, namecard) => {
+    if (userId) {
+      const user = await UserModel.findById(userId).select("usertype").lean();
+      if (!user) return false;
+
+      if (user.usertype === 2 || user.usertype === 3) {
+        const operatorIds = await UserController.getEnterpriseOperatorIdsForUser(userId, user.usertype);
+        return (
+          namecard.createdByUser?.toString() === userId.toString() ||
+          (namecard.createdByOperator && operatorIds.some(id => id.toString() === namecard.createdByOperator.toString()))
+        );
+      }
+      return namecard.createdByUser?.toString() === userId.toString();
+    }
+
+    if (operatorId) {
+      const operatorIds = await UserController.getEnterpriseOperatorIds(operatorId);
+      return operatorIds.some(id => id.toString() === namecard.createdByOperator?.toString());
+    }
+
+    return false;
+  };
+
+  /**
+   * Get operator IDs for a user (enterprise or donator)
+   */
+  static getEnterpriseOperatorIdsForUser = async (userId, usertype) => {
+    const OperatorModel = (await import("../Models/Operator.js")).default;
+    const ownershipFilter = usertype === 2
+      ? { createdByEnterprise: userId }
+      : { createdByDonator: userId };
+    
+    const operators = await OperatorModel.find(ownershipFilter).select("_id");
+    return operators.map((op) => op._id);
+  };
+
   // ======================== EMPLOYEE NAMECARD METHODS ========================
 
   /**
@@ -5869,7 +5930,11 @@ class UserController {
           query.createdByUser = userId;
         }
       } else if (operatorId) {
-        query.createdByOperator = operatorId;
+        const operatorIds = await UserController.getEnterpriseOperatorIds(operatorId);
+        query = {
+          status: { $ne: 2 },
+          createdByOperator: { $in: operatorIds },
+        };
       }
 
       const namecards = await EmployeeNamecardModel.find(query)
@@ -5989,11 +6054,9 @@ class UserController {
         });
       }
 
-      // Check ownership
-      if (
-        namecard.createdByUser?.toString() !== userId?.toString() &&
-        namecard.createdByOperator?.toString() !== operatorId?.toString()
-      ) {
+      // Check ownership - enterprise-wide access
+      const hasAccess = await UserController.canAccessNamecard(userId, operatorId, namecard);
+      if (!hasAccess) {
         return res.status(403).json({
           success: false,
           message: "You do not have permission to update this namecard",
@@ -6188,6 +6251,15 @@ class UserController {
         return res.status(404).json({
           success: false,
           message: "Employee namecard not found",
+        });
+      }
+
+      // Check ownership - enterprise-wide access
+      const hasAccess = await UserController.canAccessNamecard(userId, operatorId, namecard);
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: "You do not have permission to delete this namecard",
         });
       }
 
