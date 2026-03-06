@@ -5012,10 +5012,57 @@ class UserController {
         });
       }
 
-      // Get all companies for this user
-      let companies = await CompanyModel.find({ user_id: user._id }).sort({
-        company_order: 1,
-      });
+      let companies = [];
+
+      // For usertype=4 (employee), get company from EmployeeNamecard
+      if (user.usertype === 4) {
+        const EmployeeNamecardModel = (await import("../Models/EmployeeNamecard.js")).default;
+        
+        const namecard = await EmployeeNamecardModel.findOne({
+          $or: [
+            { createdByOperator: user.createdByOperator },
+            { telegram_username: { $regex: new RegExp(`^${user.tgid}$`, 'i') } }
+          ],
+          status: { $ne: 2 }
+        }).populate("company_template").lean();
+
+        if (namecard?.company_template) {
+          const ct = namecard.company_template;
+          companies = [{
+            _id: ct._id,
+            user_id: user._id,
+            company_name_english: ct.company_name_english,
+            company_name_chinese: ct.company_name_chinese,
+            companydesignation: ct.companydesignation,
+            company_sequence: ct.company_sequence,
+            company_order: ct.company_order,
+            image: ct.image,
+            video: ct.video,
+            address: ct.address,
+            address1: ct.address1,
+            address2: ct.address2,
+            address3: ct.address3,
+            country: ct.country,
+            countryCode: ct.countryCode,
+            contact: ct.contact,
+            email: ct.email,
+            website: ct.website,
+            whatsapp: ct.whatsapp,
+            telegram: ct.telegram,
+            facebook: ct.facebook,
+            instagram: ct.instagram,
+            twitter: ct.twitter,
+            linkedin: ct.linkedin,
+            youtube: ct.youtube,
+            date: ct.date,
+          }];
+        }
+      } else {
+        // Get all companies for this user
+        companies = await CompanyModel.find({ user_id: user._id }).sort({
+          company_order: 1,
+        });
+      }
 
       // Normalize image/video fields to public URLs.
       // If a field contains a data URI (base64) - decode, save to assets/companyprofile and update DB.
@@ -5129,8 +5176,55 @@ class UserController {
         });
       }
 
-      // Get all chambers for this user
-      let chambers = await ChamberModel.find({ user_id: user._id });
+      let chambers = [];
+
+      // For usertype=4 (employee), get chamber from EmployeeNamecard
+      if (user.usertype === 4) {
+        const EmployeeNamecardModel = (await import("../Models/EmployeeNamecard.js")).default;
+        
+        const namecard = await EmployeeNamecardModel.findOne({
+          $or: [
+            { createdByOperator: user.createdByOperator },
+            { telegram_username: { $regex: new RegExp(`^${user.tgid}$`, 'i') } }
+          ],
+          status: { $ne: 2 }
+        }).populate("chamber_template").lean();
+
+        if (namecard?.chamber_template) {
+          const ct = namecard.chamber_template;
+          chambers = [{
+            _id: ct._id,
+            user_id: user._id,
+            chamber_name_english: ct.chamber_name_english,
+            chamber_name_chinese: ct.chamber_name_chinese,
+            chamberdesignation: ct.chamberdesignation,
+            chamber_sequence: ct.chamber_sequence,
+            chamber_order: ct.chamber_order,
+            image: ct.image,
+            video: ct.video,
+            address: ct.address,
+            address1: ct.address1,
+            address2: ct.address2,
+            address3: ct.address3,
+            country: ct.country,
+            countryCode: ct.countryCode,
+            contact: ct.contact,
+            email: ct.email,
+            website: ct.website,
+            whatsapp: ct.whatsapp,
+            telegram: ct.telegram,
+            facebook: ct.facebook,
+            instagram: ct.instagram,
+            twitter: ct.twitter,
+            linkedin: ct.linkedin,
+            youtube: ct.youtube,
+            date: ct.date,
+          }];
+        }
+      } else {
+        // Get all chambers for this user
+        chambers = await ChamberModel.find({ user_id: user._id });
+      }
 
       // Return raw data without URL manipulation
 
