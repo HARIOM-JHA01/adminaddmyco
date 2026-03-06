@@ -12,6 +12,9 @@ const employeeNamecardSchema = new mongoose.Schema(
     address2: { type: String, required: true },
     address3: { type: String, required: true },
 
+    // Country - REQUIRED for member ID generation
+    country_code: { type: String, required: true },
+
     // Profile media - REQUIRED
     profile_image: { type: String, trim: true, get: setImageUrl },
     profile_video: { type: String, trim: true, get: setImageUrl },

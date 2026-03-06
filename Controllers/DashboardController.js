@@ -266,11 +266,11 @@ class DashboardController {
         .sort({ createdAt: -1 })
         .lean();
 
-      // Get all employees (users with usertype=1) created by these operators
+      // Get all employees (legacy usertype=1 + staff usertype=4) created by these operators
       const operatorIds = operators.map((op) => op._id);
       const employees = await UserModel.find({
         createdByOperator: { $in: operatorIds },
-        usertype: 1,
+        usertype: { $in: [1, 4] },
       })
         .sort({ createdAt: -1 })
         .lean();

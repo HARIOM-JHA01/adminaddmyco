@@ -1893,7 +1893,7 @@ class EnterpriseController {
         tgid: employeeTgid,
         email: employeeEmail || null,
         firstname: employeeName || "Employee",
-        usertype: 1, // Premium
+        usertype: 4, // Staff
         membertype: "premium",
         membershiperiod: validityYears * 12, // In months
         startdate: startDate,
@@ -2079,7 +2079,7 @@ class EnterpriseController {
         tgid: employeeTgid,
         email: employeeEmail || null,
         firstname: employeeName || "Employee",
-        usertype: 1, // Premium
+        usertype: 4, // Staff
         membertype: "premium",
         membershiperiod: validityYears * 12, // In months
         startdate: startDate,
@@ -2256,7 +2256,7 @@ class EnterpriseController {
         freeUsername: generatedUsername,
         staffUserName: activeUsername,
         tgid: telegramUsername,
-        usertype: 1,
+        usertype: 4,
         membertype: "premium",
         membershiperiod: validityYears * 12,
         startdate: startDate,

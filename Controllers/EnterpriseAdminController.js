@@ -261,7 +261,7 @@ class EnterpriseAdminController {
       const UserModel = (await import("../Models/User.js")).default;
       const employeeCount = await UserModel.countDocuments({
         createdByOperator: operator._id,
-        usertype: 1,
+        usertype: { $in: [1, 4] },
       });
       return res
         .status(200)

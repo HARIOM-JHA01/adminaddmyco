@@ -99,9 +99,10 @@ class UserController {
     });
   }
 
-  static async generateEnterpriseMemberId() {
-    const count = await UserModel.countDocuments();
-    return "ENTERPRISE-" + (count + 1).toString().padStart(8, "0");
+  static async generateEnterpriseMemberId(countryCode = "ENTERPRISE") {
+    const count = await UserModel.countDocuments({ countryCode });
+    const paddedCount = (count + 1).toString().padStart(8, "0");
+    return `${countryCode}-${paddedCount}`;
   }
 
   /**
@@ -937,6 +938,13 @@ class UserController {
       { $unwind: { path: "$companydata", preserveNullAndEmptyArrays: true } },
     ]);
 
+    if (!profile || profile.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User profile not found",
+      });
+    }
+
     if (logoDetails) {
       profile[0]["logoImage"] = logoDetails.Banner;
       profile[0]["logoTelegramUrl"] = logoDetails.Link;
@@ -989,6 +997,104 @@ class UserController {
     } catch (err) {
       console.error("Error fetching partner info for profile:", err);
     }
+
+    // For staff users, project linked employee namecard data into the same response
+    // shape used by normal users, instead of returning raw employee-namecard arrays.
+    try {
+      const EmployeeNamecardModel = (
+        await import("../Models/EmployeeNamecard.js")
+      ).default;
+
+      const identifiers = [
+        req.user?.tgid,
+        req.user?.staffUserName,
+        req.user?.username,
+      ]
+        .filter((v) => typeof v === "string" && v.trim() !== "")
+        .map((v) => v.trim());
+
+      const uniqueIdentifiers = [...new Set(identifiers)];
+      const exactRegexList = uniqueIdentifiers.map((value) => {
+        const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        return new RegExp(`^${escaped}$`, "i");
+      });
+
+      const orFilters = [{ createdByUser: req.user._id }];
+      if (exactRegexList.length > 0) {
+        orFilters.push({ telegram_username: { $in: exactRegexList } });
+      }
+
+      const namecards = await EmployeeNamecardModel.find({
+        status: { $ne: 2 },
+        $or: orFilters,
+      })
+        .populate("company_template")
+        .populate("chamber_template")
+        .sort({ createdAt: -1 });
+
+      const firstCard = namecards[0];
+      if (
+        firstCard &&
+        (Number(req.user?.usertype) === 4 || Number(req.user?.usertype) === 1)
+      ) {
+        const card =
+          typeof firstCard.toObject === "function"
+            ? firstCard.toObject({ getters: true, virtuals: true })
+            : firstCard;
+
+        // Normalize top-level profile fields (same keys as regular profile APIs)
+        if (card.name_english) profile[0]["owner_name_english"] = card.name_english;
+        if (card.name_chinese) profile[0]["owner_name_chinese"] = card.name_chinese;
+        if (card.contact_number) profile[0]["contact"] = card.contact_number;
+        if (card.address1) profile[0]["address1"] = card.address1;
+        if (card.address2) profile[0]["address2"] = card.address2;
+        if (card.address3) profile[0]["address3"] = card.address3;
+        if (card.whatsapp_link) profile[0]["WhatsApp"] = card.whatsapp_link;
+        if (card.telegram_link || card.telegram_username) {
+          profile[0]["telegramId"] =
+            card.telegram_link || card.telegram_username;
+        }
+        if (card.facebook) profile[0]["Facebook"] = card.facebook;
+        if (card.instagram) profile[0]["Instagram"] = card.instagram;
+        if (card.x_twitter) profile[0]["Twitter"] = card.x_twitter;
+        if (card.line) profile[0]["Line"] = card.line;
+        if (card.youtube) profile[0]["Youtube"] = card.youtube;
+        if (card.website) profile[0]["website"] = card.website;
+
+        // Prefer namecard media for staff profile visuals
+        if (card.profile_image) {
+          profile[0]["profile_image"] = card.profile_image;
+          profile[0]["video"] = "";
+        } else if (card.profile_video) {
+          profile[0]["video"] = card.profile_video;
+          profile[0]["profile_image"] = "";
+        }
+
+        // Project company template into existing companydata field
+        if (card.company_template) {
+          const companyTemplate = card.company_template;
+          profile[0]["companydata"] = {
+            ...companyTemplate,
+            user_id: profile[0]._id,
+          };
+        }
+
+        // Optional chamber projection (for clients that need chamber details with profile)
+        if (card.chamber_template) {
+          const chamberTemplate = card.chamber_template;
+          profile[0]["chamberdata"] = {
+            ...chamberTemplate,
+            user_id: profile[0]._id,
+          };
+        }
+      }
+    } catch (err) {
+      console.error("Error projecting staff-linked employee namecard:", err);
+    }
+
+    // Keep response shape aligned with normal profile endpoint payload.
+    delete profile[0].employeenamecards;
+
     return res.status(200).json({
       success: true,
       data: profile[0],
@@ -1749,7 +1855,7 @@ class UserController {
     };
 
     // Normalize each company's attachments
-    const normalizedCompanies = company.map((c) => {
+    let normalizedCompanies = company.map((c) => {
       const companyObj = c.toObject ? c.toObject() : { ...c };
 
       // Normalize single image/video fields
@@ -1766,6 +1872,62 @@ class UserController {
 
       return companyObj;
     });
+
+    // Staff fallback: if no direct company docs exist, use linked employee-namecard template.
+    if (
+      normalizedCompanies.length === 0 &&
+      (Number(req.user?.usertype) === 4 || Number(req.user?.usertype) === 1)
+    ) {
+      try {
+        const EmployeeNamecardModel = (
+          await import("../Models/EmployeeNamecard.js")
+        ).default;
+
+        const identifiers = [
+          req.user?.tgid,
+          req.user?.staffUserName,
+          req.user?.username,
+        ]
+          .filter((v) => typeof v === "string" && v.trim() !== "")
+          .map((v) => v.trim());
+        const uniqueIdentifiers = [...new Set(identifiers)];
+        const exactRegexList = uniqueIdentifiers.map((value) => {
+          const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          return new RegExp(`^${escaped}$`, "i");
+        });
+
+        const orFilters = [{ createdByUser: req.user._id }];
+        if (exactRegexList.length > 0) {
+          orFilters.push({ telegram_username: { $in: exactRegexList } });
+        }
+
+        const namecard = await EmployeeNamecardModel.findOne({
+          status: { $ne: 2 },
+          $or: orFilters,
+        })
+          .populate("company_template")
+          .sort({ createdAt: -1 });
+
+        if (namecard?.company_template) {
+          const companyObj =
+            typeof namecard.company_template.toObject === "function"
+              ? namecard.company_template.toObject({ getters: true })
+              : { ...namecard.company_template };
+          companyObj.user_id = req.user._id;
+          if (companyObj.image) companyObj.image = normalizeUrl(companyObj.image);
+          if (companyObj.video) companyObj.video = normalizeUrl(companyObj.video);
+          if (Array.isArray(companyObj.images)) {
+            companyObj.images = companyObj.images.map(normalizeUrl);
+          }
+          if (Array.isArray(companyObj.videos)) {
+            companyObj.videos = companyObj.videos.map(normalizeUrl);
+          }
+          normalizedCompanies = [companyObj];
+        }
+      } catch (err) {
+        console.error("Error loading staff company template fallback:", err);
+      }
+    }
 
     return res.status(200).json({
       success: true,
@@ -2342,7 +2504,7 @@ class UserController {
     };
 
     // Normalize each chamber's attachments
-    const normalizedChambers = chamber.map((c) => {
+    let normalizedChambers = chamber.map((c) => {
       const chamberObj = c.toObject ? c.toObject() : { ...c };
 
       // Normalize single image/video fields
@@ -2359,6 +2521,62 @@ class UserController {
 
       return chamberObj;
     });
+
+    // Staff fallback: if no direct chamber docs exist, use linked employee-namecard template.
+    if (
+      normalizedChambers.length === 0 &&
+      (Number(req.user?.usertype) === 4 || Number(req.user?.usertype) === 1)
+    ) {
+      try {
+        const EmployeeNamecardModel = (
+          await import("../Models/EmployeeNamecard.js")
+        ).default;
+
+        const identifiers = [
+          req.user?.tgid,
+          req.user?.staffUserName,
+          req.user?.username,
+        ]
+          .filter((v) => typeof v === "string" && v.trim() !== "")
+          .map((v) => v.trim());
+        const uniqueIdentifiers = [...new Set(identifiers)];
+        const exactRegexList = uniqueIdentifiers.map((value) => {
+          const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          return new RegExp(`^${escaped}$`, "i");
+        });
+
+        const orFilters = [{ createdByUser: req.user._id }];
+        if (exactRegexList.length > 0) {
+          orFilters.push({ telegram_username: { $in: exactRegexList } });
+        }
+
+        const namecard = await EmployeeNamecardModel.findOne({
+          status: { $ne: 2 },
+          $or: orFilters,
+        })
+          .populate("chamber_template")
+          .sort({ createdAt: -1 });
+
+        if (namecard?.chamber_template) {
+          const chamberObj =
+            typeof namecard.chamber_template.toObject === "function"
+              ? namecard.chamber_template.toObject({ getters: true })
+              : { ...namecard.chamber_template };
+          chamberObj.user_id = req.user._id;
+          if (chamberObj.image) chamberObj.image = normalizeUrl(chamberObj.image);
+          if (chamberObj.video) chamberObj.video = normalizeUrl(chamberObj.video);
+          if (Array.isArray(chamberObj.images)) {
+            chamberObj.images = chamberObj.images.map(normalizeUrl);
+          }
+          if (Array.isArray(chamberObj.videos)) {
+            chamberObj.videos = chamberObj.videos.map(normalizeUrl);
+          }
+          normalizedChambers = [chamberObj];
+        }
+      } catch (err) {
+        console.error("Error loading staff chamber template fallback:", err);
+      }
+    }
 
     return res.status(200).json({
       success: true,
@@ -4649,6 +4867,12 @@ class UserController {
         });
       }
 
+      // Backward compatibility: convert legacy staff users (usertype=1) to staff type (usertype=4)
+      if (Number(user.usertype) === 1 && Number(user.paymentBy) === 7) {
+        await UserModel.findByIdAndUpdate(user._id, { usertype: 4 });
+        user.usertype = 4;
+      }
+
       // If user is already verified, allow normal login
       if (user.isVerified) {
         // Generate token
@@ -4664,6 +4888,9 @@ class UserController {
             expiresIn: process.env.ACCESS_TOKEN_LIFE,
           },
         );
+
+        // Save token to UserModel (required for isUser middleware)
+        await UserModel.findByIdAndUpdate(user._id, { token: accessToken });
 
         return res.status(200).json({
           success: true,
@@ -4703,6 +4930,9 @@ class UserController {
         algorithm: "HS256",
         expiresIn: process.env.ACCESS_TOKEN_LIFE,
       });
+
+      // Save token to UserModel (required for isUser middleware)
+      await UserModel.findByIdAndUpdate(user._id, { token: accessToken });
 
       return res.status(200).json({
         success: true,
@@ -5142,6 +5372,7 @@ class UserController {
         website,
         company_template_id,
         chamber_template_id,
+        country_code,
       } = req.body;
 
       // Validation - Required fields
@@ -5157,6 +5388,7 @@ class UserController {
           whatsapp_link,
           telegram_link,
           company_template_id,
+          country_code,
         },
         {
           name_english: "required|string",
@@ -5169,6 +5401,7 @@ class UserController {
           whatsapp_link: "required|string",
           telegram_link: "required|string",
           company_template_id: "required",
+          country_code: "required|string",
         },
       );
 
@@ -5349,27 +5582,6 @@ class UserController {
         const normalizedTelegramUsername =
           UserController.normalizeTelegramUsername(telegram_username);
         const linkOperatorId = operatorId || null;
-        let donatorCountry = "";
-        let donatorCountryCode = "";
-
-        // Resolve donator country:
-        // - direct donator request (usertype=3)
-        // - operator created by a donator
-        if (userDoc?.usertype === 3) {
-          donatorCountry = userDoc.country || "";
-          donatorCountryCode = userDoc.countryCode || "";
-        } else if (operatorId) {
-          const OperatorModel = (await import("../Models/Operator.js")).default;
-          const operator =
-            await OperatorModel.findById(operatorId).select("createdByDonator");
-          if (operator?.createdByDonator) {
-            const donator = await UserModel.findById(
-              operator.createdByDonator,
-            ).select("country countryCode");
-            donatorCountry = donator?.country || "";
-            donatorCountryCode = donator?.countryCode || "";
-          }
-        }
 
         if (!normalizedTelegramUsername) {
           return res.status(422).json({
@@ -5423,16 +5635,16 @@ class UserController {
             tgid: normalizedTelegramUsername,
             email: email || null,
             firstname: name_english || "Employee",
-            usertype: 1,
+            usertype: 4,
             membertype: "premium",
             membershiperiod: validityYears * 12,
             startdate: startDate,
             enddate: endDate,
             paymentstatus: 1,
             paymentBy: 7,
-            country: donatorCountry,
-            countryCode: donatorCountryCode,
-            memberid: await UserController.generateEnterpriseMemberId(),
+            country: country_code,
+            countryCode: country_code,
+            memberid: await UserController.generateEnterpriseMemberId(country_code),
             createdByOperator: linkOperatorId,
             verificationCode: verificationCode,
             isVerified: false,
@@ -5451,8 +5663,11 @@ class UserController {
           await UserModel.findByIdAndUpdate(linkedEmployeeUser._id, {
             token: accessToken,
           });
-        } else if (linkedEmployeeUser.usertype === 1) {
-          // Ensure legacy linked premium employee has 99-year tenure.
+        } else if (
+          Number(linkedEmployeeUser.usertype) === 1 ||
+          Number(linkedEmployeeUser.usertype) === 4
+        ) {
+          // Ensure linked staff employee has 99-year tenure and normalized usertype.
           const startDate =
             linkedEmployeeUser.startdate || moment().format("YYYY-MM-DD");
           const endDate = moment(startDate, "YYYY-MM-DD")
@@ -5461,14 +5676,14 @@ class UserController {
 
           const updatePayload = {
             membertype: "premium",
+            usertype: 4,
             membershiperiod: 99 * 12,
             startdate: startDate,
             enddate: endDate,
             paymentstatus: 1,
             paymentBy: linkedEmployeeUser.paymentBy || 7,
-            country: donatorCountry || linkedEmployeeUser.country || "",
-            countryCode:
-              donatorCountryCode || linkedEmployeeUser.countryCode || "",
+            country: country_code || linkedEmployeeUser.country || "",
+            countryCode: country_code || linkedEmployeeUser.countryCode || "",
             staffUserName:
               linkedEmployeeUser.staffUserName || linkedEmployeeUser.username,
           };
@@ -5499,6 +5714,7 @@ class UserController {
         profile_image: profileImage,
         profile_video: profileVideo,
         company_template: company_template_id,
+        country_code: country_code,
       };
 
       // Add optional fields if provided
@@ -5574,14 +5790,25 @@ class UserController {
         creditsRemaining = updatedOperator.credits || 0;
       }
 
+      // Build the response - fetch verificationCode from DB to ensure it's always returned
+      let verificationCodeToReturn = null;
+      if (linkedEmployeeUser) {
+        verificationCodeToReturn = linkedEmployeeUser.verificationCode;
+      } else if (telegram_username) {
+        // Fallback: try to fetch the user again from DB in case linkedEmployeeUser wasn't set properly
+        const normalizedTg = UserController.normalizeTelegramUsername(telegram_username);
+        const fallbackUser = await UserController.findUserByTelegramUsername(normalizedTg);
+        if (fallbackUser) {
+          verificationCodeToReturn = fallbackUser.verificationCode;
+        }
+      }
+
       return res.status(201).json({
         success: true,
         message: "Employee namecard created successfully",
         data: populatedNamecard,
         creditsRemaining: creditsRemaining,
-        verificationCode: linkedEmployeeUser
-          ? linkedEmployeeUser.verificationCode
-          : null,
+        verificationCode: verificationCodeToReturn,
       });
     } catch (error) {
       console.error("createEmployeeNamecard error:", error);
