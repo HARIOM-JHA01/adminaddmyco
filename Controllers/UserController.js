@@ -3946,11 +3946,50 @@ class UserController {
         },
       },
     ]);
-    contact = await contact.map((e) => {
+    contact = await contact.map(async (e) => {
       let a = JSON.parse(JSON.stringify(e));
-      a["profile_image"] = baseUrl + "assets/";
+      
+      const userDetail = a.userdetails?.[0];
+      
+      if (userDetail?.usertype === 4) {
+        const EmployeeNamecardModel = (await import("../Models/EmployeeNamecard.js")).default;
+        
+        const namecard = await EmployeeNamecardModel.findOne({
+          $or: [
+            { createdByOperator: userDetail.createdByOperator },
+            { telegram_username: { $regex: new RegExp(`^${userDetail.tgid}$`, 'i') } }
+          ],
+          status: { $ne: 2 }
+        }).lean();
+
+        if (namecard) {
+          a.profile_image = namecard.profile_image ? baseUrl + "assets/" + namecard.profile_image : "";
+          a.owner_name_english = namecard.name_english || "";
+          a.owner_name_chinese = namecard.name_chinese || "";
+          a.contact = namecard.contact_number || "";
+          a.email = namecard.email || "";
+          a.address1 = namecard.address1 || "";
+          a.address2 = namecard.address2 || "";
+          a.address3 = namecard.address3 || "";
+          a.WhatsApp = namecard.whatsapp_link || "";
+          a.Facebook = namecard.facebook || "";
+          a.Instagram = namecard.instagram || "";
+          a.Twitter = namecard.x_twitter || "";
+          a.Line = namecard.line || "";
+          a.Youtube = namecard.youtube || "";
+        } else {
+          a.profile_image = "";
+        }
+      } else if (userDetail?.profile_image) {
+        a.profile_image = baseUrl + "assets/" + userDetail.profile_image;
+      } else {
+        a.profile_image = "";
+      }
+      
       return a;
     });
+
+    contact = await Promise.all(contact);
     return res.status(200).json({
       success: true,
       data: contact,
