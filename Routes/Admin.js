@@ -29,6 +29,12 @@ admin.get(
   DashboardController.ViewEnterprise,
 );
 
+admin.get(
+  "/enterprise/export/:id",
+  isAdmin,
+  DashboardController.ExportEnterpriseEmployees,
+);
+
 // .............................BANNERS..................................
 admin.get("/banner", isAdmin, DashboardController.Banner);
 admin.get("/addbanner", isAdmin, DashboardController.AddBanner);

@@ -21,6 +21,7 @@ import PartnerModel from "../Models/Partner.js";
 import moment from "moment";
 import USDTMembershipPaymentModel from "../Models/USDTMembershipPayment.js";
 import TelegramCoinMembershipPaymentModel from "../Models/TelegramCoinMembershipPayment.js";
+import excelJS from "exceljs";
 
 class DashboardController {
   static home = async (req, res) => {
@@ -863,6 +864,105 @@ class DashboardController {
       path: "adminuserlist",
       session: req.session,
     });
+  };
+
+  static ExportEnterpriseEmployees = async (req, res) => {
+    try {
+      const id = req.params.id;
+
+      const enterprise = await UserModel.findById(id).lean();
+      if (!enterprise || enterprise.usertype !== 2) {
+        return res.status(404).json({ success: false, message: "Enterprise not found" });
+      }
+
+      const OperatorModel = (await import("../Models/Operator.js")).default;
+      const EmployeeNamecardModel = (await import("../Models/EmployeeNamecard.js")).default;
+
+      const operators = await OperatorModel.find({ createdByEnterprise: id }).select("_id").lean();
+      const operatorIds = operators.map((op) => op._id);
+
+      const namecards = await EmployeeNamecardModel.find({
+        $or: [
+          { createdByUser: id },
+          { createdByOperator: { $in: operatorIds } },
+        ],
+        status: { $ne: 2 },
+      })
+        .populate("company_template", "company_name_english company_name_chinese companydesignation")
+        .populate("chamber_template", "chamber_name_english chamber_name_chinese chamberdesignation")
+        .lean();
+
+      const workbook = new excelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Employees");
+
+      worksheet.columns = [
+        { header: "S.No", key: "s_no", width: 8 },
+        { header: "Name (English)", key: "name_english", width: 25 },
+        { header: "Name (Chinese)", key: "name_chinese", width: 25 },
+        { header: "Telegram Username", key: "telegram_username", width: 25 },
+        { header: "Contact Number", key: "contact_number", width: 18 },
+        { header: "Email", key: "email", width: 30 },
+        { header: "Address 1", key: "address1", width: 30 },
+        { header: "Address 2", key: "address2", width: 30 },
+        { header: "Address 3", key: "address3", width: 30 },
+        { header: "WhatsApp", key: "whatsapp_link", width: 25 },
+        { header: "Facebook", key: "facebook", width: 25 },
+        { header: "Instagram", key: "instagram", width: 25 },
+        { header: "Twitter", key: "x_twitter", width: 25 },
+        { header: "Line", key: "line", width: 25 },
+        { header: "YouTube", key: "youtube", width: 25 },
+        { header: "Website", key: "website", width: 30 },
+        { header: "Profile URL", key: "profile_url", width: 35 },
+        { header: "Company", key: "company", width: 30 },
+        { header: "Chamber", key: "chamber", width: 30 },
+      ];
+
+      namecards.forEach((card, index) => {
+        const companyName = card.company_template?.company_name_english || "";
+        const companyFirstWord = companyName.split(" ")[0] || "";
+        const companySlug = companyFirstWord.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const staffSlug = (card.telegram_username || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        const profileUrl = (companySlug && staffSlug) ? `https://addmy.co/t.me/${companySlug}-${staffSlug}` : "";
+
+        worksheet.addRow({
+          s_no: index + 1,
+          name_english: card.name_english || "",
+          name_chinese: card.name_chinese || "",
+          telegram_username: card.telegram_username || "",
+          contact_number: card.contact_number || "",
+          email: card.email || "",
+          address1: card.address1 || "",
+          address2: card.address2 || "",
+          address3: card.address3 || "",
+          whatsapp_link: card.whatsapp_link || "",
+          facebook: card.facebook || "",
+          instagram: card.instagram || "",
+          x_twitter: card.x_twitter || "",
+          line: card.line || "",
+          youtube: card.youtube || "",
+          website: card.website || "",
+          profile_url: profileUrl,
+          company: card.company_template?.company_name_english || "",
+          chamber: card.chamber_template?.chamber_name_english || "",
+        });
+      });
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=Enterprise_Employees_${enterprise.username || enterprise.memberid}.xlsx`
+      );
+
+      return workbook.xlsx.write(res).then(() => {
+        res.status(200);
+      });
+    } catch (error) {
+      console.error("ExportEnterpriseEmployees error:", error);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
   };
 }
 
