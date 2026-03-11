@@ -304,6 +304,11 @@ class PartnerAdminController {
       // Ensure USER_CREDITS packages appear first by default; still sort newest first within type
       const packages = await PartnerPackageModel.aggregate([
         {
+          $match: {
+            name: { $nin: ["Admin Grant (Premium)", "Admin Grant (Renewal)"] },
+          },
+        },
+        {
           $addFields: {
             sortOrder: { $cond: [{ $eq: ["$type", "USER_CREDITS"] }, 0, 1] },
           },
