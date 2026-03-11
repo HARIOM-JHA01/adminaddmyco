@@ -42,10 +42,12 @@ class PartnerAdminController {
       const partner = await PartnerModel.findById(id).lean();
       if (!partner) return res.status(404).send("Partner not found");
 
-      const partnerUsers = await PartnerUserModel.find({ partner: partner._id })
-        .populate("user")
-        .sort({ createdAt: -1 })
-        .lean();
+      const partnerUsers = (
+        await PartnerUserModel.find({ partner: partner._id })
+          .populate("user")
+          .sort({ createdAt: -1 })
+          .lean()
+      ).filter((pu) => pu.user != null);
 
       const payments = await PartnerPaymentModel.find({ partner: partner._id })
         .populate("package")
