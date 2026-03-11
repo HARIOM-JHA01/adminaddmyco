@@ -203,7 +203,7 @@ class PartnerController {
     try {
       // Show USER_CREDITS packages first by default; still sort by price within type
       const packages = await PartnerPackageModel.aggregate([
-        { $match: { status: 1 } },
+        { $match: { status: 1, name: { $nin: ["Admin Grant (Premium)", "Admin Grant (Renewal)"] } } },
         {
           $addFields: {
             sortOrder: { $cond: [{ $eq: ["$type", "USER_CREDITS"] }, 0, 1] },
