@@ -239,6 +239,8 @@
                 <tr>
                   <th>No.</th>
                   <th>Package</th>
+                  <th>Credit Type</th>
+                  <th>Credits</th>
                   <th>Amount</th>
                   <th>Transaction ID</th>
                   <th>Status</th>
@@ -250,7 +252,15 @@
                 <% var i=1; payments.forEach(function(v) { %>
                 <tr>
                   <td><%= i %></td>
-                  <td><%= v.package.name %></td>
+                  <td><%= v.package ? v.package.name : 'N/A' %></td>
+                  <td>
+                    <% if (v.packageType === 'USER_CREDITS') { %>
+                    <span class="badge bg-info">Premium</span>
+                    <% } else { %>
+                    <span class="badge bg-success">Renewal</span>
+                    <% } %>
+                  </td>
+                  <td><%= v.credits || 0 %></td>
                   <td>$<%= v.amount %></td>
                   <td><%= v.transactionId %></td>
                   <td>
@@ -319,7 +329,7 @@
       order: [[7, "desc"]],
     });
     $("#payments_table").DataTable({
-      order: [[5, "desc"]],
+      order: [[7, "desc"]],
     });
 
     $("#submitAddCredit").on("click", function () {
