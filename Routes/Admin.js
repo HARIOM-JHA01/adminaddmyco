@@ -219,6 +219,7 @@ admin.get("/payment/list", isAdmin, PartnerAdminController.PaymentList);
 admin.get("/payment/approve", isAdmin, PartnerAdminController.ApprovePayment);
 admin.post("/payment/approve", isAdmin, PartnerAdminController.ApprovePayment);
 admin.post("/payment/reject", isAdmin, PartnerAdminController.RejectPayment);
+admin.post("/partner/add-credit", isAdmin, PartnerAdminController.AdminAddCredit);
 
 // Renewal price admin pages removed per request
 admin.get("/referralreport/:id", isAdmin, DashboardController.ReferralDetail);

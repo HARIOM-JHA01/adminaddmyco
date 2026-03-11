@@ -674,6 +674,104 @@ class PartnerAdminController {
       });
     }
   };
+
+  static AdminAddCredit = async (req, res) => {
+    try {
+      const { partnerId, packageType, credits } = req.body;
+      const adminId = req.user && req.user._id;
+
+      if (!partnerId || !packageType || !credits) {
+        return res.status(400).json({
+          success: false,
+          message: "partnerId, packageType, and credits are required",
+        });
+      }
+
+      if (!["USER_CREDITS", "RENEWAL_CREDITS"].includes(packageType)) {
+        return res.status(400).json({
+          success: false,
+          message: "packageType must be USER_CREDITS or RENEWAL_CREDITS",
+        });
+      }
+
+      const creditsNum = parseInt(credits);
+      if (isNaN(creditsNum) || creditsNum <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "credits must be a positive number",
+        });
+      }
+
+      const partner = await PartnerModel.findById(partnerId);
+      if (!partner) {
+        return res.status(404).json({ success: false, message: "Partner not found" });
+      }
+
+      // Find or create a system-level "Admin Grant" package for this type
+      // so all existing templates that access v.package.name continue to work
+      const packageLabel =
+        packageType === "USER_CREDITS" ? "Admin Grant (Premium)" : "Admin Grant (Renewal)";
+      let systemPackage = await PartnerPackageModel.findOne({
+        name: packageLabel,
+        type: packageType,
+        price: 0,
+      });
+      if (!systemPackage) {
+        systemPackage = await PartnerPackageModel.create({
+          name: packageLabel,
+          type: packageType,
+          credits: 0,
+          price: 0,
+          renewalYears: 1,
+          status: 1,
+        });
+      }
+
+      const transactionId = `ADMIN-${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2, 7)
+        .toUpperCase()}`;
+
+      await PartnerPaymentModel.create({
+        partner: partner._id,
+        package: systemPackage._id,
+        packageType,
+        amount: 0,
+        credits: creditsNum,
+        transactionId,
+        walletAddress: "ADMIN_GRANT",
+        status: 1,
+        paymentStatus: 1,
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        paymentDate: new Date(),
+      });
+
+      if (packageType === "USER_CREDITS") {
+        partner.userCredits += creditsNum;
+      } else {
+        partner.renewalCredits += creditsNum;
+      }
+
+      if (!partner.isReferralActive && (partner.userCredits > 0 || partner.renewalCredits > 0)) {
+        partner.isReferralActive = true;
+      }
+
+      await partner.save();
+
+      return res.status(200).json({
+        success: true,
+        message: `${creditsNum} ${packageType === "USER_CREDITS" ? "premium" : "renewal"} credits added successfully`,
+      });
+    } catch (err) {
+      console.error("AdminAddCredit error:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: err.message,
+      });
+    }
+  };
 }
 
 export default PartnerAdminController;
