@@ -334,7 +334,7 @@
         {
           targets: 0,
           render: function (data, type, row, meta) {
-            return meta.row + 1;
+            return meta.settings._iDisplayStart + meta.settings.aiDisplay.indexOf(meta.row) + 1;
           },
         },
       ],
