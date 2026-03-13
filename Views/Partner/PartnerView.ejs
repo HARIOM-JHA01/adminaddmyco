@@ -330,14 +330,13 @@
     });
     $("#payments_table").DataTable({
       order: [[7, "desc"]],
-      columnDefs: [
-        {
-          targets: 0,
-          render: function (data, type, row, meta) {
-            return meta.settings._iDisplayStart + meta.settings.aiDisplay.indexOf(meta.row) + 1;
-          },
-        },
-      ],
+      columnDefs: [{ targets: 0, orderable: false }],
+      drawCallback: function (settings) {
+        var api = this.api();
+        api.column(0, { order: "applied", search: "applied" }).nodes().each(function (cell, i) {
+          cell.innerHTML = settings._iDisplayStart + i + 1;
+        });
+      },
     });
 
     $("#submitAddCredit").on("click", function () {
