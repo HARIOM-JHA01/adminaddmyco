@@ -249,9 +249,9 @@
                 </tr>
               </thead>
               <tbody>
-                <% var i=1; payments.forEach(function(v) { %>
+                <% payments.forEach(function(v) { %>
                 <tr>
-                  <td><%= i %></td>
+                  <td></td>
                   <td><%= v.package ? v.package.name : 'N/A' %></td>
                   <td>
                     <% if (v.packageType === 'USER_CREDITS') { %>
@@ -272,10 +272,10 @@
                     <span class="badge bg-danger">Rejected</span>
                     <% } %>
                   </td>
-                  <td><%= moment(v.createdAt).format('DD-MM-YYYY HH:mm') %></td>
+                  <td><%= moment(v.paymentDate || v.createdAt).format('DD-MM-YYYY HH:mm') %></td>
                   <td><%= v.approvedBy ? v.approvedBy.name : 'N/A' %></td>
                 </tr>
-                <% i++ %> <% }) %>
+                <% }) %>
               </tbody>
             </table>
           </div>
@@ -330,6 +330,14 @@
     });
     $("#payments_table").DataTable({
       order: [[7, "desc"]],
+      columnDefs: [
+        {
+          targets: 0,
+          render: function (data, type, row, meta) {
+            return meta.row + 1;
+          },
+        },
+      ],
     });
 
     $("#submitAddCredit").on("click", function () {
