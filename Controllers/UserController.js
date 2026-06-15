@@ -2148,33 +2148,30 @@ class UserController {
 
       let result = await ChamberModel.create(doc);
       // Send notification to all users who have added this user to their contacts
-      // try {
-      //   const currentUser = await UserModel.findById(req.user._id);
-      //   // Find all contacts where contact_id is the current user (people who added me)
-      //   // and user_id is NOT the current user (don't notify myself)
-      //   const myFollowers = await ContactModel.find({
-      //     contact_id: req.user._id,
-      //     user_id: { $ne: req.user._id },
-      //     status: 1,
-      //   });
+      try {
+        const currentUser = await UserModel.findById(req.user._id);
+        const myFollowers = await ContactModel.find({
+          contact_id: req.user._id,
+          user_id: { $ne: req.user._id },
+          status: 1,
+        });
 
-      //   for (const follower of myFollowers) {
-      //     const notificationDoc = {
-      //       user_id: follower.user_id,
-      //       contact_id: req.user._id,
-      //       message: `${
-      //         currentUser.owner_name_english || currentUser.username
-      //       } has added a new chamber`,
-      //     };
-      //     await NotificationModel.create(notificationDoc);
-      //   }
-      // } catch (notifError) {
-      //   console.error(
-      //     "Error sending chamber creation notifications:",
-      //     notifError,
-      //   );
-      //   // Don't fail the request if notification fails
-      // }
+        for (const follower of myFollowers) {
+          const notificationDoc = {
+            user_id: follower.user_id,
+            contact_id: req.user._id,
+            message: `${
+              currentUser.owner_name_english || currentUser.username
+            } has added a new chamber`,
+          };
+          await NotificationModel.create(notificationDoc);
+        }
+      } catch (notifError) {
+        console.error(
+          "Error sending chamber creation notifications:",
+          notifError,
+        );
+      }
 
       return res.status(200).json({
         success: true,
@@ -2420,20 +2417,20 @@ class UserController {
         status: 1,
         contact_id: req.user._id,
       });
-      // for (var i = 0; i < usercontact1.length; i++) {
-      //   var contact_id = usercontact1[i].contact_id;
-      //   var user_id = usercontact1[i].user_id;
-      //   const ndoc = {
-      //     user_id: user_id,
-      //     contact_id: contact_id,
-      //     message: `${req.user.owner_name_english} has changed their chamber data`,
-      //   };
-      //   try {
-      //     await NotificationModel.create(ndoc);
-      //   } catch (e) {
-      //     console.error("Failed creating chamber update notification:", e);
-      //   }
-      // }
+      for (var i = 0; i < usercontact1.length; i++) {
+        var contact_id = usercontact1[i].contact_id;
+        var user_id = usercontact1[i].user_id;
+        const ndoc = {
+          user_id: user_id,
+          contact_id: contact_id,
+          message: `${req.user.owner_name_english} has changed their chamber data`,
+        };
+        try {
+          await NotificationModel.create(ndoc);
+        } catch (e) {
+          console.error("Failed creating chamber update notification:", e);
+        }
+      }
 
       return res
         .status(200)
