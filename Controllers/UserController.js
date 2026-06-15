@@ -930,8 +930,12 @@ class UserController {
       {
         $lookup: {
           from: "companies",
-          localField: "_id",
-          foreignField: "user_id",
+          let: { userId: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$user_id", "$$userId"] } } },
+            { $sort: { company_order: 1, _id: 1 } },
+            { $limit: 1 },
+          ],
           as: "companydata",
         },
       },
@@ -1131,8 +1135,12 @@ class UserController {
       {
         $lookup: {
           from: "companies",
-          localField: "_id",
-          foreignField: "user_id",
+          let: { userId: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$user_id", "$$userId"] } } },
+            { $sort: { company_order: 1, _id: 1 } },
+            { $limit: 1 },
+          ],
           as: "companydata",
         },
       },
@@ -1190,8 +1198,12 @@ class UserController {
       {
         $lookup: {
           from: "companies",
-          localField: "_id",
-          foreignField: "user_id",
+          let: { userId: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$user_id", "$$userId"] } } },
+            { $sort: { company_order: 1, _id: 1 } },
+            { $limit: 1 },
+          ],
           as: "companydata",
         },
       },
