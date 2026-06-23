@@ -892,16 +892,16 @@ class UserController {
         status: 1,
         contact_id: req.user._id,
       });
-      // for (var i = 0; i < usercontact1.length; i++) {
-      //   var contact_id = usercontact1[i].contact_id;
-      //   var user_id = usercontact1[i].user_id;
-      //   const doc = {
-      //     user_id: user_id,
-      //     contact_id: contact_id,
-      //     message: `${req.user.owner_name_english} has changed their Profile data`,
-      //   };
-      //   let notification = await NotificationModel.create(doc);
-      // }
+      for (var i = 0; i < usercontact1.length; i++) {
+        var contact_id = usercontact1[i].contact_id;
+        var user_id = usercontact1[i].user_id;
+        const doc = {
+          user_id: user_id,
+          contact_id: contact_id,
+          message: `${req.user.owner_name_english} has changed their Profile data`,
+        };
+        await NotificationModel.create(doc);
+      }
       return res.status(200).json({
         success: true,
         data: user1,
@@ -2665,7 +2665,7 @@ class UserController {
     let Notification = await NotificationModel.aggregate([
       {
         $match: {
-          user_id: req.user._id,
+          user_id: new mongoose.Types.ObjectId(req.user._id),
         },
       },
       {
@@ -3619,17 +3619,17 @@ class UserController {
           status: 0,
         });
         // ensure notification exists
-        // const existingNotif = await NotificationModel.findOne({
-        //   user_id: targetId,
-        //   contact_id: meId,
-        // });
-        // if (!existingNotif) {
-        //   await NotificationModel.create({
-        //     user_id: targetId,
-        //     contact_id: meId,
-        //     message: `${me.owner_name_english} has sent you a contact request`,
-        //   });
-        // }
+        const existingNotif = await NotificationModel.findOne({
+          user_id: targetId,
+          contact_id: meId,
+        });
+        if (!existingNotif) {
+          await NotificationModel.create({
+            user_id: targetId,
+            contact_id: meId,
+            message: `${me.owner_name_english} has sent you a contact request`,
+          });
+        }
         return res
           .status(200)
           .json({ success: true, message: "Contact request re-sent" });
@@ -3708,15 +3708,15 @@ class UserController {
           }
 
           // Notify target that their request was accepted
-          // try {
-          //   await NotificationModel.create({
-          //     user_id: targetId,
-          //     contact_id: meId,
-          //     message: `${me.owner_name_english} accepted your contact request`,
-          //   });
-          // } catch (e) {
-          //   console.error("Failed creating acceptance notification", e);
-          // }
+          try {
+            await NotificationModel.create({
+              user_id: targetId,
+              contact_id: meId,
+              message: `${me.owner_name_english} accepted your contact request`,
+            });
+          } catch (e) {
+            console.error("Failed creating acceptance notification", e);
+          }
 
           return res
             .status(200)
@@ -3738,21 +3738,21 @@ class UserController {
         status: 0,
       });
       // Create notification for the recipient if not already present
-      // try {
-      //   const existingNotif = await NotificationModel.findOne({
-      //     user_id: targetId,
-      //     contact_id: meId,
-      //   });
-      //   if (!existingNotif) {
-      //     await NotificationModel.create({
-      //       user_id: targetId,
-      //       contact_id: meId,
-      //       message: `${me.owner_name_english} has sent you a contact request`,
-      //     });
-      //   }
-      // } catch (e) {
-      //   console.error("Failed creating contact notification", e);
-      // }
+      try {
+        const existingNotif = await NotificationModel.findOne({
+          user_id: targetId,
+          contact_id: meId,
+        });
+        if (!existingNotif) {
+          await NotificationModel.create({
+            user_id: targetId,
+            contact_id: meId,
+            message: `${me.owner_name_english} has sent you a contact request`,
+          });
+        }
+      } catch (e) {
+        console.error("Failed creating contact notification", e);
+      }
 
       return res
         .status(200)
