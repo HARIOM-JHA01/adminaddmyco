@@ -713,10 +713,7 @@ class UserController {
       owner_name_english: "required",
       owner_name_chinese: "required",
       telegramId: "required",
-      contact: "required",
       address1: "required",
-      address2: "required",
-      address3: "required",
     });
     console.log("validator", validator);
     if (!(await validator.check())) {
@@ -808,8 +805,6 @@ class UserController {
       owner_name_chinese: "required",
       telegramId: "required",
       address1: "required",
-      address2: "required",
-      address3: "required",
     });
     console.log("update api called");
     if (!(await validator.check())) {
