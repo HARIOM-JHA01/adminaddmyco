@@ -13,6 +13,8 @@ const chamberSchema = new mongoose.Schema({
   chamber_order: { type: Number, default: 1 },
   video: { type: String, trim: true, get: setImageUrl },
   image: { type: String, trim: true, get: setImageUrl },
+  images: [{ type: String, trim: true }],
+  videos: [{ type: String, trim: true }],
   WhatsApp: { type: String },
   WeChat: { type: String },
   Line: { type: String },
