@@ -3155,6 +3155,63 @@ class UserController {
     }
   };
 
+  // Host the user's generated QR PNG at a real https URL so it can be saved
+  // from inside the Telegram WebView (data: URLs cannot be downloaded there).
+  // Uses a fixed per-user filename so repeated downloads overwrite (no growth).
+  static UploadQrCode = async (req, res) => {
+    try {
+      const user = req.user;
+      if (!user) return res.sendStatus(401);
+
+      if (!req.files || !req.files.file) {
+        return res
+          .status(400)
+          .json({ success: false, message: "No file provided" });
+      }
+
+      const file = req.files.file;
+
+      if (file.mimetype !== "image/png") {
+        return res
+          .status(415)
+          .json({ success: false, message: "Unsupported file type" });
+      }
+
+      // 5 MB cap
+      if (file.size > 5 * 1024 * 1024) {
+        return res
+          .status(413)
+          .json({ success: false, message: "File too large" });
+      }
+
+      const assetsRoot = path.resolve(__dirname, "assets");
+      const uploadDir = await makeDir(path.join(assetsRoot, "qrcode"));
+
+      const fileName = `qr_${user._id}.png`;
+      const uploadPath = path.join(uploadDir, fileName);
+      await file.mv(uploadPath);
+
+      if (!fs.existsSync(uploadPath)) {
+        console.error(`UploadQrCode: file not found after mv(): ${uploadPath}`);
+        return res
+          .status(500)
+          .json({ success: false, message: "File write failed" });
+      }
+
+      const cleanBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+      const fileUrl = `${cleanBase}/assets/qrcode/${fileName}`;
+
+      return res.status(201).json({
+        success: true,
+        data: { fileName, fileUrl },
+        message: "QR uploaded successfully",
+      });
+    } catch (err) {
+      console.error("UploadQrCode error:", err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+  };
+
   static GetBackgroundimage = async (req, res) => {
     try {
       let data = req.body;

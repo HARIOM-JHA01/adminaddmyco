@@ -54,6 +54,8 @@ user.post("/backgroundimage", isUser, UserController.BackgroundImages);
 // Multipart upload endpoint for background images (premium users only)
 user.post("/uploadBackground", isUser, UserController.UploadBackground);
 user.get("/getbackground", isUser, UserController.GetBackgroundimage);
+// Host generated QR PNG so it can be saved inside Telegram WebView
+user.post("/uploadqr", isUser, UserController.UploadQrCode);
 user.post("/colorbackground", isUser, UserController.ColorBackground);
 user.get("/getcolorbackground", UserController.Colorbackground);
 user.get("/system", UserController.SystemImages);
