@@ -51,5 +51,3 @@ export const getVideoInfo = async (filePath) => {
     }
   });
 };
-
-export { QUALITY_PRESETS };
