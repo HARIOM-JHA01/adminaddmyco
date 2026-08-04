@@ -76,8 +76,6 @@ class LandingVideoController {
         fs.unlinkSync(originalFullPath);
       }
 
-      fs.renameSync(compressedPath, uploadPath);
-
       const doc = new LandingVideoModel({
         title: title || "",
         videoUrl: compressedRelative,
