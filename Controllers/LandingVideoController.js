@@ -1,5 +1,5 @@
 import { Validator } from "node-input-validator";
-import { validatorError } from "../Common.js";
+import { validatorError, assets } from "../Common.js";
 import { __dirname, baseUrl, view } from "../Config.js";
 import makeDir from "make-dir";
 import fs from "fs";
@@ -139,7 +139,7 @@ class LandingVideoController {
         data: {
           _id: randomVideo._id,
           title: randomVideo.title,
-          videoUrl: randomVideo.videoUrl,
+          videoUrl: assets(randomVideo.videoUrl),
           linkUrl: randomVideo.linkUrl,
           isCompressed: randomVideo.isCompressed,
           originalSize: randomVideo.originalSize,
