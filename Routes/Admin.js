@@ -463,6 +463,33 @@ admin.get(
   LandingVideoController.uploadLandingVideoView,
 );
 
+// Admin API (called by EJS AJAX or admin tools)
+admin.post(
+  "/landing-video/upload",
+  isAdmin,
+  LandingVideoController.uploadLandingVideo,
+);
+admin.get(
+  "/api/v1/landing-video",
+  isAdmin,
+  LandingVideoController.listLandingVideos,
+);
+admin.patch(
+  "/landing-video/:id/toggle",
+  isAdmin,
+  LandingVideoController.toggleLandingVideo,
+);
+admin.delete(
+  "/landing-video/:id",
+  isAdmin,
+  LandingVideoController.deleteLandingVideo,
+);
+admin.get(
+  "/landing-video/upload",
+  isAdmin,
+  LandingVideoController.uploadLandingVideoView,
+);
+
 // Admin API
 admin.post(
   "/api/v1/admin/landing-video/upload",
