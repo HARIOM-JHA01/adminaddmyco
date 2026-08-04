@@ -484,32 +484,5 @@ admin.delete(
   isAdmin,
   LandingVideoController.deleteLandingVideo,
 );
-admin.get(
-  "/landing-video/upload",
-  isAdmin,
-  LandingVideoController.uploadLandingVideoView,
-);
-
-// Admin API
-admin.post(
-  "/api/v1/admin/landing-video/upload",
-  isAdmin,
-  LandingVideoController.uploadLandingVideo,
-);
-admin.get(
-  "/api/v1/admin/landing-video",
-  isAdmin,
-  LandingVideoController.listLandingVideos,
-);
-admin.patch(
-  "/api/v1/admin/landing-video/:id/toggle",
-  isAdmin,
-  LandingVideoController.toggleLandingVideo,
-);
-admin.delete(
-  "/api/v1/admin/landing-video/:id",
-  isAdmin,
-  LandingVideoController.deleteLandingVideo,
-);
 
 export default admin;
