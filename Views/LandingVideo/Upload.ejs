@@ -27,7 +27,7 @@
               <div class="col-xl-7 col-md-8">
                 <form class="form form-vertical" id="landing_video_form"
                       action="<%= baseUrl %>admin/landing-video/upload"
-                      method="post" enctype="multipart/form-data">
+                      method="post" enctype="multipart/form-data" novalidate>
 
                   <input type="hidden" name="_token" value="landing-video-token">
 
@@ -101,6 +101,66 @@
 </div>
 
 <script>
+  $('#landing_video_form').on('submit', function (e) {
+    e.preventDefault();
+
+    var form = this;
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    var baseUrl = '<%= baseUrl %>';
+    swal({
+      title: "Upload this video?",
+      text: "The video will be compressed and set as the active landing video.",
+      icon: "warning",
+      buttons: true,
+      dangerMode: false,
+    }).then((willUpload) => {
+      if (!willUpload) return;
+
+      var submitBtn = $('#submit_btn');
+      submitBtn.prop('disabled', true);
+
+      $.ajax({
+        type: "POST",
+        url: baseUrl + 'admin/landing-video/upload',
+        data: new FormData(form),
+        processData: false,
+        contentType: false,
+        dataType: "json",
+      }).done(function (res) {
+        Toastify({
+          text: (res && res.message) || "Landing video uploaded successfully...",
+          duration: 3000,
+          newWindow: true,
+          close: true,
+          gravity: "top",
+          position: "right",
+          stopOnFocus: true,
+          style: { background: "#0b6a3c" },
+        }).showToast();
+        setTimeout(function () {
+          window.location.href = baseUrl + 'admin/landing-video';
+        }, 1000);
+      }).fail(function (xhr) {
+        var message = (xhr.responseJSON && xhr.responseJSON.message) || "Error uploading landing video";
+        Toastify({
+          text: message,
+          duration: 4000,
+          newWindow: true,
+          close: true,
+          gravity: "top",
+          position: "right",
+          stopOnFocus: true,
+          style: { background: "#ff2c2c" },
+        }).showToast();
+        submitBtn.prop('disabled', false);
+      });
+    });
+  });
+
   $('.dropify').dropify({
     tpl: {
       wrap: '<div class="dropify-wrapper"></div>',
