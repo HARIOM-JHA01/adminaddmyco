@@ -52,17 +52,6 @@
 
                       <div class="col-12">
                         <div class="form-group">
-                          <label for="quality">Compression Quality</label>
-                          <select id="quality" name="quality" class="form-control">
-                            <option value="medium">Medium (balanced)</option>
-                            <option value="low">Low (smallest size)</option>
-                            <option value="high">High (best quality)</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div class="col-12">
-                        <div class="form-group">
                           <label for="video">Video File *</label>
                           <input name="video" type="file" accept="video/mp4,video/webm,video/quicktime"
                                  class="dropify document" id="video" required>
@@ -113,7 +102,7 @@
     var baseUrl = '<%= baseUrl %>';
     swal({
       title: "Upload this video?",
-      text: "The video will be compressed and set as the active landing video.",
+      text: "The video will be compressed and added as an active landing video (shown at random alongside other active videos).",
       icon: "warning",
       buttons: true,
       dangerMode: false,

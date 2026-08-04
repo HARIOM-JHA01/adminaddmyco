@@ -14,7 +14,7 @@ class LandingVideoController {
    */
   static uploadLandingVideo = async (req, res) => {
     try {
-      const { title, linkUrl, quality } = req.body;
+      const { title, linkUrl } = req.body;
 
       let validator = new Validator(req.body, {
         linkUrl: "required|url",
@@ -64,7 +64,7 @@ class LandingVideoController {
       await video.mv(uploadPath);
 
       const compressedPath = path.join(uploadDir, "compressed_" + storedName);
-      await compressVideo(uploadPath, compressedPath, quality || "medium");
+      await compressVideo(uploadPath, compressedPath);
 
       const compressedSize = fs.statSync(compressedPath).size;
 

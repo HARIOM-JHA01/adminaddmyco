@@ -6,41 +6,19 @@ import { execSync } from "child_process";
 
 ffmpeg.setFfmpegPath(ffmpegStatic);
 
-const QUALITY_PRESETS = {
-  low: {
-    videoBitrate: "500k",
-    audioBitrate: "96k",
-    width: 640,
-    height: 1136,
-  },
-  medium: {
-    videoBitrate: "1000k",
-    audioBitrate: "128k",
-    width: 720,
-    height: 1280,
-  },
-  high: {
-    videoBitrate: "2000k",
-    audioBitrate: "192k",
-    width: 1080,
-    height: 1920,
-  },
+const BALANCED_PRESET = {
+  videoBitrate: "1000k",
+  audioBitrate: "128k",
 };
 
-export const compressVideo = async (
-  inputPath,
-  outputPath,
-  quality = "medium",
-) => {
-  const preset = QUALITY_PRESETS[quality] || QUALITY_PRESETS.medium;
-
+export const compressVideo = async (inputPath, outputPath) => {
   return new Promise((resolve, reject) => {
     ffmpeg(inputPath)
       .videoCodec("libx264")
       .audioCodec("aac")
-      .addOption("-b:v", preset.videoBitrate)
-      .addOption("-b:a", preset.audioBitrate)
-      .addOption("-vf", `scale=${preset.width}:${preset.height}:force_original_aspect_ratio=decrease,setsar=1`)
+      .addOption("-b:v", BALANCED_PRESET.videoBitrate)
+      .addOption("-b:a", BALANCED_PRESET.audioBitrate)
+      .addOption("-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2,setsar=1")
       .addOption("-movflags", "+faststart")
       .format("mp4")
       .on("end", () => resolve())
@@ -51,9 +29,9 @@ export const compressVideo = async (
   });
 };
 
-export const compressVideoInPlace = async (filePath, quality = "medium") => {
+export const compressVideoInPlace = async (filePath) => {
   const tempPath = `${filePath}.compressed.mp4`;
-  await compressVideo(filePath, tempPath, quality);
+  await compressVideo(filePath, tempPath);
   fs.unlinkSync(filePath);
   fs.renameSync(tempPath, filePath);
   return filePath;
