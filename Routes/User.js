@@ -6,6 +6,13 @@ import ReferralController from "../Controllers/ReferralController.js";
 // import DashboardController from "../Controllers/DashboardController.js";
 import multer from "multer";
 import PaymentController from "../Controllers/paymentController.js";
+import LandingVideoController from "../Controllers/LandingVideoController.js";
+
+// Public: get active landing video for the addmyco landing page
+user.get(
+  "/api/v1/landing-video/active",
+  LandingVideoController.getActiveLandingVideo,
+);
 
 user.post("/register", UserController.Register);
 user.post("/username", UserController.Username);

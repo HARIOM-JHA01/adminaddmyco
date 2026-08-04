@@ -8,6 +8,7 @@ import { isAdmin } from "../Middleware/AdminAuthentication.js";
 import PartnerAdminController from "../Controllers/PartnerAdminController.js";
 import EnterpriseAdminController from "../Controllers/EnterpriseAdminController.js";
 import EnterpriseController from "../Controllers/EnterpriseController.js";
+import LandingVideoController from "../Controllers/LandingVideoController.js";
 
 // .........................DASHBOARD-CONTROLLER........................
 admin.get("/", DashboardController.signIn);
@@ -447,6 +448,41 @@ admin.post(
   "/enterprise/employee/delete/:id",
   isAdmin,
   EnterpriseAdminController.DeleteEmployee,
+);
+
+// ..........................LANDING VIDEO..............................
+// Admin views (EJS)
+admin.get(
+  "/landing-video",
+  isAdmin,
+  LandingVideoController.listLandingVideosView,
+);
+admin.get(
+  "/landing-video/upload",
+  isAdmin,
+  LandingVideoController.uploadLandingVideoView,
+);
+
+// Admin API
+admin.post(
+  "/api/v1/admin/landing-video/upload",
+  isAdmin,
+  LandingVideoController.uploadLandingVideo,
+);
+admin.get(
+  "/api/v1/admin/landing-video",
+  isAdmin,
+  LandingVideoController.listLandingVideos,
+);
+admin.patch(
+  "/api/v1/admin/landing-video/:id/toggle",
+  isAdmin,
+  LandingVideoController.toggleLandingVideo,
+);
+admin.delete(
+  "/api/v1/admin/landing-video/:id",
+  isAdmin,
+  LandingVideoController.deleteLandingVideo,
 );
 
 export default admin;

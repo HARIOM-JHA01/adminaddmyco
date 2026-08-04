@@ -1,0 +1,184 @@
+<%- include('../Layout/Header') %>
+<div id="app">
+  <%- include('../Layout/Sidebar') %>
+  <div id="main">
+    <div class="page-heading">
+      <div class="page-title mb-3">
+        <div class="row">
+          <div class="col-12 col-md-6 order-md-1 order-last">
+            <h3><a href="<%= baseUrl %>admin/dashboard" class="text-primary"><i
+                  class="fas fa-arrow-left me-2"></i></i>Landing Videos</h3>
+          </div>
+          <div class="col-12 col-md-6 order-md-2 order-first">
+            <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="<%= baseUrl %>admin/dashboard">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Landing Videos</li>
+              </ol>
+            </nav>
+          </div>
+        </div>
+      </div>
+      <section class="section">
+        <div class="card">
+          <div class="card-header text-end">
+            <a href="<%= baseUrl %>admin/landing-video/upload"
+               class="btn icon icon-left btn-primary btn-sm">
+              <i class="bi bi-plus-lg"></i> Upload New Video
+            </a>
+          </div>
+          <div class="card-body">
+            <% if (typeof error === 'string') { %>
+              <div class="alert alert-danger"><%= error %></div>
+            <% } %>
+            <div class="dataTable-container">
+              <table class="table table-striped dataTable-table" id="table1">
+                <thead>
+                  <tr>
+                    <th>No.</th>
+                    <th>Preview</th>
+                    <th>Link URL</th>
+                    <th>Compressed</th>
+                    <th>Size</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% var i = 1; videos.forEach(function(v) { %>
+                    <tr data-id="<%= v._id %>">
+                      <td><%= i %></td>
+                      <td>
+                        <video src="<%= v.videoUrl %>" width="80" height="80" controls></video>
+                      </td>
+                      <td><a href="<%= v.linkUrl %>" target="_blank"><%= v.linkUrl %></a></td>
+                      <td><%= v.isCompressed ? 'Yes' : 'No' %></td>
+                      <td>
+                        <% if (v.compressedSize) { %>
+                          <%= (v.compressedSize / 1024 / 1024).toFixed(2) %> MB
+                        <% } else if (v.originalSize) { %>
+                          <%= (v.originalSize / 1024 / 1024).toFixed(2) %> MB
+                        <% } else { %> - <% } %>
+                      </td>
+                      <td>
+                        <% if (v.isActive) { %>
+                          <span class="badge bg-success">Active</span>
+                        <% } else { %>
+                          <span class="badge bg-secondary">Inactive</span>
+                        <% } %>
+                      </td>
+                      <td><%= new Date(v.date).toLocaleString() %></td>
+                      <td>
+                        <% if (v.isActive) { %>
+                          <button type="button" data-id="<%= v._id %>"
+                                  class="btn btn-sm btn-warning toggle-video">
+                            <i class="bi bi-pause-circle"></i> Deactivate
+                          </button>
+                        <% } else { %>
+                          <button type="button" data-id="<%= v._id %>"
+                                  class="btn btn-sm btn-success toggle-video">
+                            <i class="bi bi-play-circle"></i> Activate
+                          </button>
+                        <% } %>
+                        <button type="button" data-id="<%= v._id %>"
+                                class="btn btn-sm btn-danger delete-video">
+                          <i class="bi bi-trash"></i> Delete
+                        </button>
+                      </td>
+                    </tr>
+                    <% i++; }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <footer>
+          <div class="footer clearfix mb-0 text-muted">
+            <div class="float-start">
+              <p>2023 &copy; All rights are reserved</p>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function () {
+    $('#table1').DataTable();
+  });
+
+  $('.toggle-video').on('click', function () {
+    var id = $(this).data('id');
+    var baseUrl = '<%= baseUrl %>';
+    swal({
+      title: "Are you sure?",
+      text: "Toggle active state for this landing video?",
+      icon: "warning",
+      buttons: true,
+      dangerMode: true,
+    }).then((willToggle) => {
+      if (willToggle) {
+        $.ajax({
+          type: "PATCH",
+          url: baseUrl + 'api/v1/admin/landing-video/' + id + '/toggle',
+          dataType: "json",
+          statusCode: {
+            200: function (xhr) {
+              Toastify({
+                text: "Toggled successfully...",
+                duration: 3000,
+                newWindow: true,
+                close: true,
+                gravity: "top",
+                position: "right",
+                stopOnFocus: true,
+                style: { background: "#0b6a3c" },
+              }).showToast();
+              setTimeout(function () { location.reload(); }, 1000);
+            }
+          }
+        });
+      }
+    });
+  });
+
+  $('.delete-video').on('click', function () {
+    var id = $(this).data('id');
+    var baseUrl = '<%= baseUrl %>';
+    swal({
+      title: "Are you sure?",
+      text: "Delete this landing video?",
+      icon: "warning",
+      buttons: true,
+      dangerMode: true,
+    }).then((willDelete) => {
+      if (willDelete) {
+        $.ajax({
+          type: "DELETE",
+          url: baseUrl + 'api/v1/admin/landing-video/' + id,
+          dataType: "json",
+          statusCode: {
+            200: function (xhr) {
+              Toastify({
+                text: "Deleted successfully...",
+                duration: 3000,
+                newWindow: true,
+                close: true,
+                gravity: "top",
+                position: "right",
+                stopOnFocus: true,
+                style: { background: "#ff2c2c" },
+              }).showToast();
+              setTimeout(function () { location.reload(); }, 1000);
+            }
+          }
+        });
+      }
+    });
+  });
+</script>
+
+<%- include('../Layout/Footer') %>

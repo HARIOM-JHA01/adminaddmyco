@@ -64,6 +64,13 @@
           </a>
         </li>
 
+        <li class="sidebar-item <%= (path == 'landing-video') ? 'active' : '' %>">
+          <a href="<%= baseUrl %>admin/landing-video" class='sidebar-link'>
+            <i class="bi bi-play-circle"></i>
+            <span>Landing Video</span>
+          </a>
+        </li>
+
         <li class="sidebar-item has-sub <%= (path == 'advertisements') || (path == 'advertisements/manage') || (path == 'advertisements/packages') || (path == 'advertisements/rates') || (path == 'advertisements/credit-payments') || (path == 'advertisements/sponsor') ? 'active' : '' %>">
           <a href="#" class='sidebar-link'>
             <i class="bi bi-megaphone"></i>
