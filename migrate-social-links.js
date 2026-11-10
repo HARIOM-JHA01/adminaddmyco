@@ -41,7 +41,7 @@ async function run(Model, label) {
 }
 
 async function migrate() {
-  await mongoose.connect(DATABASE_URL);
+  await mongoose.connect(DATABASE_URL, { dbName: process.env.DBNAME });
   await run(CompanyModel, "Company");
   await run(ChamberModel, "Chamber");
   await mongoose.disconnect();
