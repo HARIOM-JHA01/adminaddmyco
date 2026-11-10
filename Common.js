@@ -87,3 +87,34 @@ export const validatorError = (res, errors) => {
     
 
  
+/**
+ * Parse + sanitize a `socialLinks` payload (JSON string from multipart forms or an array).
+ * Returns an array of { type, url } with unique types, or `undefined` when the field was not sent.
+ */
+export const parseSocialLinks = (raw) => {
+  if (typeof raw === "undefined" || raw === null) return undefined;
+  let list = raw;
+  if (typeof raw === "string") {
+    if (raw.trim() === "") return [];
+    try {
+      list = JSON.parse(raw);
+    } catch (e) {
+      return undefined;
+    }
+  }
+  if (!Array.isArray(list)) return undefined;
+  const seen = new Set();
+  const out = [];
+  for (const item of list) {
+    const type = String(item?.type || "")
+      .trim()
+      .toLowerCase();
+    const url = String(item?.url || "")
+      .trim()
+      .slice(0, 500);
+    if (!/^[a-z0-9_]{1,30}$/.test(type) || !url || seen.has(type)) continue;
+    seen.add(type);
+    out.push({ type, url });
+  }
+  return out;
+};

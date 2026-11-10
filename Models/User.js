@@ -43,6 +43,7 @@ const userSchema = new mongoose.Schema(
     SnapChat: { type: String },
     Skype: { type: String },
     TikTok: { type: String },
+    socialLinks: { type: [{ _id: false, type: { type: String }, url: { type: String } }], default: undefined },
     tags: { type: String },
     count: { type: Number, default: 0 },
     usertype: { type: Number, default: 0 },

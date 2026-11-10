@@ -22,6 +22,8 @@ const profileSchema = new mongoose.Schema({
   SnapChat: { type: String },
   Skype: { type: String },
   TikTok: { type: String },
+  // Ordered optional/extra links: [{ type, url }]. First = Optional 1, second = Optional 2, rest = extras.
+  socialLinks: { type: [{ _id: false, type: { type: String }, url: { type: String } }], default: undefined },
   tags: { type: String },
   profile_image: { type: String, trim: true, get: setImageUrl },
   profilestatus : {type:Number,default:0},

@@ -24,6 +24,8 @@ const companySchema = new mongoose.Schema({
   SnapChat: { type: String },
   Skype: { type: String },
   TikTok: { type: String },
+  // Ordered optional/extra links: [{ type, url }]. First = Optional 1, second = Optional 2, rest = extras.
+  socialLinks: { type: [{ _id: false, type: { type: String }, url: { type: String } }], default: undefined },
   telegramId: { type: String },
   contact: { type: String },
   fax: { type: String },

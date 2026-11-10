@@ -9,6 +9,7 @@ import {
   decrypt,
   assets,
   encrypt,
+  parseSocialLinks,
 } from "../Common.js";
 import { baseUrl, view, assetsUrl, __dirname } from "../Config.js";
 import makeDir from "make-dir";
@@ -745,6 +746,7 @@ class UserController {
       SnapChat: req.body.SnapChat,
       Skype: req.body.Skype,
       TikTok: req.body.TikTok,
+      socialLinks: parseSocialLinks(req.body.socialLinks),
       user_id: req.user._id,
     };
     // .....image......
@@ -840,6 +842,7 @@ class UserController {
         SnapChat: req.body.SnapChat || "",
         Skype: req.body.Skype || "",
         TikTok: req.body.TikTok || "",
+        socialLinks: parseSocialLinks(req.body.socialLinks),
         tags: req.body.tags,
         user_id: req.user._id,
         // image: imagename
@@ -1417,6 +1420,7 @@ class UserController {
         SnapChat: req.body.SnapChat,
         Skype: req.body.Skype,
         TikTok: req.body.TikTok,
+        socialLinks: parseSocialLinks(req.body.socialLinks),
         telegramId: req.body.telegramId,
         contact: req.body.contact,
         fax: req.body.fax,
@@ -1580,6 +1584,10 @@ class UserController {
       const doc = {};
       for (const k of allowed) {
         if (typeof body[k] !== "undefined") doc[k] = body[k];
+      }
+      {
+        const sl = parseSocialLinks(body.socialLinks);
+        if (typeof sl !== "undefined") doc.socialLinks = sl;
       }
 
       // Reject if image/video fields are provided as base64/data URIs in form fields
@@ -2079,6 +2087,7 @@ class UserController {
         SnapChat: req.body.SnapChat,
         Skype: req.body.Skype,
         TikTok: req.body.TikTok,
+        socialLinks: parseSocialLinks(req.body.socialLinks),
         tgchannel: req.body.tgchannel,
         chamberfanpage: req.body.chamberfanpage,
         chamberwebsite: req.body.chamberwebsite,
@@ -2228,6 +2237,10 @@ class UserController {
       const doc = {};
       for (const k of allowed) {
         if (typeof body[k] !== "undefined") doc[k] = body[k];
+      }
+      {
+        const sl = parseSocialLinks(body.socialLinks);
+        if (typeof sl !== "undefined") doc.socialLinks = sl;
       }
 
       // Reject base64/data URIs sent as form fields
